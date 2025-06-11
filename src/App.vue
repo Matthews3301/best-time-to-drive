@@ -16,7 +16,7 @@
         />
       </div>
       
-      <div class="chart-section" v-if="selectedRoute">
+      <div class="chart-section" v-if="selectedRoute" ref="chartSection">
         <ChartComponent 
           :route-data="selectedRoute"
           :forecast-data="forecastData"
@@ -68,6 +68,15 @@ export default {
       
       // Placeholder data for now
       this.forecastData = this.generateMockForecastData(routeData)
+      
+      // Scroll to the chart section after calculation is done
+      await this.$nextTick()
+      if (this.$refs.chartSection) {
+        this.$refs.chartSection.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        })
+      }
     },
     
     generateMockForecastData(routeData = null) {

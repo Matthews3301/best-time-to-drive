@@ -39,6 +39,10 @@
                 :key="index"
                 class="bar-wrapper"
                 @click="selectTime(dataPoint)"
+                @mouseenter="hoveredBarIndex = index"
+                @mouseleave="hoveredBarIndex = null"
+                @touchstart="handleTouchStart(index)"
+                @touchend="handleTouchEnd"
               >
                 <div class="bar-container">
                   <div 
@@ -47,7 +51,14 @@
                     :style="getBarStyle(dataPoint)"
                     :title="`${dataPoint.label}: ${formatDurationLong(dataPoint.duration)} total journey time`"
                   >
-                    <div class="bar-value" v-if="shouldShowValue(index)">
+                    <div 
+                      class="bar-value" 
+                      :class="{ 
+                        'hover-value': hoveredBarIndex === index,
+                        'always-show': shouldShowValue(index)
+                      }"
+                      v-if="shouldShowValue(index) || hoveredBarIndex === index"
+                    >
                       {{ formatDuration(dataPoint.duration) }}
                     </div>
                   </div>
@@ -139,7 +150,9 @@ export default {
     return {
       selectedTimeSlot: null,
       windowWidth: window.innerWidth,
-      showScrollHint: true
+      showScrollHint: true,
+      hoveredBarIndex: null,
+      touchTimeout: null
     }
   },
   computed: {
@@ -374,6 +387,22 @@ export default {
     
     hideScrollHint() {
       this.showScrollHint = false
+    },
+    
+    handleTouchStart(index) {
+      // Clear any existing timeout
+      if (this.touchTimeout) {
+        clearTimeout(this.touchTimeout)
+      }
+      // Show the bar value on touch
+      this.hoveredBarIndex = index
+    },
+    
+    handleTouchEnd() {
+      // Hide the bar value after a delay on touch end
+      this.touchTimeout = setTimeout(() => {
+        this.hoveredBarIndex = null
+      }, 2000) // Hide after 2 seconds
     }
   },
   mounted() {
@@ -397,6 +426,11 @@ export default {
     if (chartBarsContainer) {
       chartBarsContainer.removeEventListener('scroll', this.hideScrollHint)
       chartBarsContainer.removeEventListener('touchstart', this.hideScrollHint)
+    }
+    
+    // Clean up touch timeout
+    if (this.touchTimeout) {
+      clearTimeout(this.touchTimeout)
     }
   }
 }
@@ -622,10 +656,26 @@ export default {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   padding: 1px 3px;
   position: absolute;
-  top: -18px;
   background: rgba(0, 0, 0, 0.7);
   border-radius: 4px;
   white-space: nowrap;
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.bar-value.always-show {
+  top: -18px;
+}
+
+.bar-value.hover-value {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.85);
+  font-size: 0.65rem;
+  padding: 2px 4px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .time-label {
@@ -838,6 +888,11 @@ export default {
     padding: 1px 3px;
   }
   
+  .bar-value.hover-value {
+    font-size: 0.6rem;
+    padding: 2px 3px;
+  }
+  
   .insights {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -931,6 +986,16 @@ export default {
   
   .x-axis-line {
     bottom: 22px;
+  }
+  
+  .bar-value {
+    font-size: 0.6rem;
+    padding: 1px 3px;
+  }
+  
+  .bar-value.hover-value {
+    font-size: 0.6rem;
+    padding: 2px 3px;
   }
   
   .chart-footer {
