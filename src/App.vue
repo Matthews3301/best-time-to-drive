@@ -1,8 +1,10 @@
 <template>
   <div class="app">
     <header class="header">
-      <h1 class="title">Best Time to Drive</h1>
-      <p class="subtitle">Find the optimal time to travel based on traffic forecasts</p>
+      <div class="header-content">
+        <h1 class="title">Best Time to Drive</h1>
+        <p class="subtitle">Find the optimal time to travel based on real-time traffic forecasts</p>
+      </div>
     </header>
     
     <main class="main-content">
@@ -167,11 +169,18 @@ export default {
 
 .header {
   text-align: center;
-  padding: 4rem 2rem 3rem;
-  background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
-  backdrop-filter: blur(20px) saturate(120%);
-  border-bottom: 1px solid rgba(0,0,0,0.06);
+  padding: 3rem 2rem 3rem;
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.08) 0%, 
+    rgba(139, 92, 246, 0.06) 25%,
+    rgba(236, 72, 153, 0.04) 50%,
+    rgba(59, 130, 246, 0.06) 75%,
+    rgba(16, 185, 129, 0.04) 100%
+  );
+  backdrop-filter: blur(24px) saturate(150%);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.12);
   position: relative;
+  overflow: hidden;
 }
 
 .header::before {
@@ -181,32 +190,132 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(600px circle at 50% 0%, rgba(99, 102, 241, 0.03), transparent 50%);
+  background: 
+    radial-gradient(800px circle at 30% 0%, rgba(99, 102, 241, 0.06), transparent 50%),
+    radial-gradient(600px circle at 70% 0%, rgba(139, 92, 246, 0.04), transparent 50%),
+    linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.92) 100%);
   pointer-events: none;
 }
 
-.title {
-  font-size: 3.25rem;
-  font-weight: 400;
-  color: #1a1d29;
-  margin: 0 0 1rem 0;
-  letter-spacing: -0.04em;
-  line-height: 1.1;
-  font-family: 'Roboto', Arial, sans-serif;
+.header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    transparent 0%, 
+    rgba(99, 102, 241, 0.02) 25%, 
+    transparent 50%, 
+    rgba(139, 92, 246, 0.02) 75%, 
+    transparent 100%
+  );
+  animation: shimmer 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
+.header-content {
   position: relative;
   z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header-icon {
+  margin-bottom: 1.5rem;
+  animation: float 6s ease-in-out infinite;
+}
+
+.header-icon svg {
+  width: 64px;
+  height: 64px;
+  filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.15));
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header-icon:hover svg {
+  transform: scale(1.1) rotate(5deg);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.title {
+  font-size: 3.0rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, 
+    #1a1d29 0%, 
+    #4f46e5 50%, 
+    #7c3aed 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 1rem 0;
+  letter-spacing: -0.05em;
+  line-height: 1.1;
+  font-family: 'Inter', -apple-system, 'Roboto', Arial, sans-serif;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .subtitle {
-  font-size: 1.125rem;
-  color: #64748b;
-  margin: 0;
+  font-size: 1.25rem;
+  color: #475569;
+  margin: 0 0 1rem 0;
   font-weight: 400;
-  line-height: 1.6;
-  max-width: 480px;
-  margin: 0 auto;
+  line-height: 1.7;
+  max-width: 620px;
+  margin-left: auto;
+  margin-right: auto;
   position: relative;
   z-index: 1;
+  opacity: 0.9;
+}
+
+.header-decoration {
+  width: 120px;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    #6366f1 0%, 
+    #8b5cf6 25%, 
+    #ec4899 50%, 
+    #3b82f6 75%, 
+    #10b981 100%
+  );
+  border-radius: 2px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-decoration::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.6) 50%, 
+    transparent 100%
+  );
+  animation: slide 3s ease-in-out infinite;
+}
+
+@keyframes slide {
+  0% { left: -100%; }
+  50%, 100% { left: 100%; }
 }
 
 .main-content {
@@ -284,16 +393,26 @@ export default {
 
 @media (max-width: 768px) {
   .header {
-    padding: 3rem 1.5rem 2rem;
+    padding: 3rem 1.5rem 3rem;
+  }
+  
+  .header-icon svg {
+    width: 56px;
+    height: 56px;
   }
   
   .title {
-    font-size: 2.5rem;
-    letter-spacing: -0.03em;
+    font-size: 2.75rem;
+    letter-spacing: -0.04em;
   }
   
   .subtitle {
-    font-size: 1rem;
+    font-size: 1.125rem;
+    max-width: 420px;
+  }
+  
+  .header-decoration {
+    width: 100px;
   }
   
   .main-content {
@@ -312,11 +431,31 @@ export default {
 
 @media (max-width: 480px) {
   .header {
-    padding: 2.5rem 1rem 1.5rem;
+    padding: 2.5rem 1rem 2.5rem;
+  }
+  
+  .header-icon {
+    margin-bottom: 1rem;
+  }
+  
+  .header-icon svg {
+    width: 48px;
+    height: 48px;
   }
   
   .title {
-    font-size: 2rem;
+    font-size: 2.25rem;
+    margin-bottom: 1rem;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .header-decoration {
+    width: 80px;
+    height: 3px;
   }
   
   .main-content {
