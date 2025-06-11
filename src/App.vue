@@ -355,6 +355,7 @@ export default {
   border: 1px solid rgba(0, 0, 0, 0.06);
   padding: 2rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
 .chart-section:hover {
@@ -422,6 +423,7 @@ export default {
   
   .chart-section {
     padding: 1.5rem;
+    overflow: hidden;
   }
   
   .placeholder-message {
@@ -465,6 +467,7 @@ export default {
   
   .chart-section {
     padding: 1.25rem;
+    overflow: hidden;
   }
 }
 </style> 

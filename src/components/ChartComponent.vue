@@ -529,7 +529,6 @@ export default {
   font-size: 0.75rem;
   color: #6b7280;
   transform: translateY(50%);
-  background: white;
   padding: 0 4px;
 }
 
@@ -756,6 +755,7 @@ export default {
   .chart-wrapper {
     padding: 1rem;
     position: relative;
+    overflow: hidden;
   }
   
   .chart-wrapper::after {
@@ -785,6 +785,7 @@ export default {
   
   .chart-area {
     height: 220px;
+    overflow: hidden;
   }
   
   .y-axis {
@@ -801,17 +802,21 @@ export default {
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
     padding-top: 20px;
+    overflow-x: auto;
+    overflow-y: visible;
   }
   
   .chart-bars {
     gap: 2px;
     padding: 0 8px;
-    width: 800px;
+    width: 600px;
+    min-width: 500px;
   }
   
   .bar-wrapper {
-    min-width: 28px;
-    width: 28px;
+    min-width: 22px;
+    width: 22px;
+    flex: 0 0 22px;
   }
   
   .bar-container {
@@ -880,6 +885,7 @@ export default {
   .chart-wrapper {
     padding: 0.75rem;
     position: relative;
+    overflow: hidden;
   }
   
   .chart-legend {
@@ -892,6 +898,7 @@ export default {
   
   .chart-area {
     height: 180px;
+    overflow: hidden;
   }
   
   .y-axis {
@@ -905,14 +912,16 @@ export default {
   }
   
   .chart-bars {
-    gap: 3px;
-    padding: 0 8px;
-    width: 1000px;
+    gap: 1px;
+    padding: 0 4px;
+    width: 480px;
+    min-width: 400px;
   }
   
   .bar-wrapper {
-    min-width: 36px;
-    width: 36px;
+    min-width: 18px;
+    width: 18px;
+    flex: 0 0 18px;
   }
   
   .time-label {
