@@ -2,7 +2,7 @@
   <div class="app">
     <header class="header">
       <div class="header-content">
-        <h1 class="title">Best Time to Drive</h1>
+        <h1 class="title">Rush Hour Planner</h1>
         <p class="subtitle">Find the optimal time to travel based on real-time traffic forecasts</p>
       </div>
     </header>
