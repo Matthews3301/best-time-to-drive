@@ -32,7 +32,7 @@
 </template>
 
 <script>
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from '@vercel/analytics/vue';
 import MapComponent from './components/MapComponent.vue'
 import ChartComponent from './components/ChartComponent.vue'
 
