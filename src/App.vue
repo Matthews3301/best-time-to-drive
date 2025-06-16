@@ -26,11 +26,13 @@
       <div class="placeholder-message" v-else>
         <p>Select a route to see the traffic forecast timeline</p>
       </div>
+      <Analytics />
     </main>
   </div>
 </template>
 
 <script>
+import { Analytics } from "@vercel/analytics/next"
 import MapComponent from './components/MapComponent.vue'
 import ChartComponent from './components/ChartComponent.vue'
 
