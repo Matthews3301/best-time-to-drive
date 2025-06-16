@@ -1,7 +1,6 @@
 import { createApp } from 'vue'
-import { Analytics } from '@vercel/analytics/vue'
+import { inject } from '@vercel/analytics'
 import App from './App.vue'
 
-const app = createApp(App)
-app.use(Analytics)
-app.mount('#app') 
+inject() // Initialize Vercel Analytics
+createApp(App).mount('#app') 
