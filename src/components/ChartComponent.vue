@@ -12,10 +12,6 @@
             <span>Optimal Time ({{ optimalTime }})</span>
           </div>
           <div class="legend-item">
-            <div class="legend-color current"></div>
-            <span>Current Time</span>
-          </div>
-          <div class="legend-item">
             <div class="legend-color high-traffic"></div>
             <span>Heavy Traffic</span>
           </div>
@@ -133,307 +129,262 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ChartComponent',
-  props: {
-    routeData: {
-      type: Object,
-      required: true
-    },
-    forecastData: {
-      type: Array,
-      required: true
-    }
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
+
+const props = defineProps({
+  routeData: {
+    type: Object,
+    required: true
   },
-  data() {
-    return {
-      selectedTimeSlot: null,
-      windowWidth: window.innerWidth,
-      showScrollHint: true,
-      hoveredBarIndex: null,
-      touchTimeout: null
-    }
-  },
-  computed: {
-    currentTime() {
-      return new Date().toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      })
-    },
-    
-    maxDuration() {
-      // For visual scaling, use all times including excluded ones
-      return Math.max(...this.forecastData.map(d => d.duration))
-    },
-    
-    minDuration() {
-      // Only consider non-excluded times for min/max calculations
-      const availableTimes = this.forecastData.filter(dataPoint => !dataPoint.isExcluded)
-      return availableTimes.length > 0 ? Math.min(...availableTimes.map(d => d.duration)) : Math.min(...this.forecastData.map(d => d.duration))
-    },
-    
-    yAxisMax() {
-      // Round up to nearest 10 minutes for clean axis, ensure we start from a reasonable max
-      return Math.ceil(this.maxDuration / 10) * 10
-    },
-    
-    yAxisTicks() {
-      // Use clean, even time intervals for the Y-axis
-      const maxDuration = this.yAxisMax
-      const preferredIntervals = [10, 15, 20, 30, 45, 60, 90, 120, 150, 180, 240, 300, 360]
-      
-      // Find the best interval based on the max duration
-      let interval = 10
-      if (maxDuration <= 60) {
-        interval = 10 // 10min intervals for short trips
-      } else if (maxDuration <= 120) {
-        interval = 15 // 15min intervals for medium trips
-      } else if (maxDuration <= 180) {
-        interval = 30 // 30min intervals for longer trips
-      } else {
-        interval = 60 // 1h intervals for very long trips
-      }
-      
-      const ticks = []
-      for (let i = 0; i <= maxDuration; i += interval) {
-        ticks.push(i)
-      }
-      
-      // Ensure we always include the max value if it's not already included
-      if (ticks[ticks.length - 1] < maxDuration) {
-        ticks.push(maxDuration)
-      }
-      
-      return ticks
-    },
-    
-    optimalTimeData() {
-      // Only consider non-excluded times for optimal calculation
-      const availableTimes = this.forecastData.filter(dataPoint => !dataPoint.isExcluded)
-      return availableTimes.reduce((min, current) => 
-        current.duration < min.duration ? current : min
-      )
-    },
-    
-    optimalTime() {
-      return this.formatTimeLabel(this.optimalTimeData.label)
-    },
-    
-    optimalDuration() {
-      return this.optimalTimeData.duration
-    },
-    
-    currentDuration() {
-      // First data point is current time (current hour)
-      return this.forecastData[0]?.duration || 0
-    },
-    
-    timeSaved() {
-      // Only calculate time saved if current time is not excluded
-      const currentTimeData = this.forecastData[0]
-      if (currentTimeData && currentTimeData.isExcluded) {
-        return 0 // No meaningful comparison if current time is excluded
-      }
-      return Math.max(0, this.currentDuration - this.optimalDuration)
-    },
-    
-    rushHourIncrease() {
-      const increase = ((this.maxDuration - this.minDuration) / this.minDuration) * 100
-      return Math.round(increase)
-    },
-    
-    hasExcludedTimes() {
-      return this.forecastData.some(dataPoint => dataPoint.isExcluded)
-    }
-  },
-  methods: {
-    getBarStyle(dataPoint) {
-      // Calculate height as percentage of yAxisMax, ensuring bars start from 0
-      const heightPercent = (dataPoint.duration / this.yAxisMax) * 100
-      return {
-        height: `${Math.max(heightPercent, 1)}%` // Minimum 1% height for visibility
-      }
-    },
-    
-    getBarClass(dataPoint) {
-      const isCurrent = dataPoint === this.forecastData[0] // First hour is current
-      const isExcluded = dataPoint.isExcluded
-      
-      // If the dataPoint is excluded but also current, show as both
-      if (isExcluded && isCurrent) {
-        return { 'excluded': true, 'current': true }
-      }
-      
-      // If just excluded, show as excluded
-      if (isExcluded) {
-        return { 'excluded': true }
-      }
-      
-      const isOptimal = dataPoint.duration === this.minDuration
-      const isHighTraffic = dataPoint.duration > (this.minDuration * 1.3)
-      
-      return {
-        'optimal': isOptimal,
-        'high-traffic': isHighTraffic && !isOptimal,
-        'current': isCurrent,
-        'normal': !isOptimal && !isHighTraffic && !isCurrent
-      }
-    },
-    
-    getYAxisLabelStyle(tick) {
-      // Adjust positioning to keep labels above the X-axis line (28px from bottom)
-      const chartHeight = 100 - (28 / 3); // Adjust for X-axis spacing
-      const position = (tick / this.yAxisMax) * chartHeight
-      return {
-        bottom: `${position + 10}%` // Add 10% offset to keep above X-axis
-      }
-    },
-    
-    shouldShowTimeLabel(index) {
-      // Responsive label display based on window width
-      if (this.windowWidth >= 1200) {
-        // Desktop: Show every hour
-        return true
-      } else if (this.windowWidth >= 768) {
-        // Tablet: Show every 2 hours
-        return index % 2 === 0
-      } else if (this.windowWidth >= 480) {
-        // Small tablet: Show every 3 hours
-        return index % 3 === 0
-      } else {
-        // Mobile: Show every 4 hours
-        return index % 4 === 0
-      }
-    },
-    
-    shouldShowValue(index) {
-      // Show value for optimal and peak times, or on hover
-      const dataPoint = this.forecastData[index]
-      return dataPoint.duration === this.minDuration || dataPoint.duration === this.maxDuration
-    },
-    
-    formatTimeLabel(timeString) {
-      // Handle both "HH:MM" and full time strings
-      const timePart = timeString.includes('T') ? 
-        new Date(timeString).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) :
-        timeString
-      
-      const [hour, minute] = timePart.split(':')
-      const hourNum = parseInt(hour)
-      
-      // For chart labels, show in 12-hour format without space
-      if (hourNum === 0) return '12AM'
-      if (hourNum === 12) return '12PM'
-      if (hourNum < 12) return `${hourNum}AM`
-      return `${hourNum - 12}PM`
-    },
-    
-    formatDuration(minutes) {
-      // Format duration in a user-friendly way
-      if (minutes >= 60) {
-        const hours = Math.floor(minutes / 60)
-        const remainingMinutes = minutes % 60
-        if (remainingMinutes === 0) {
-          return `${hours}h`
-        }
-        return `${hours}h ${remainingMinutes}m`
-      }
-      return `${minutes}m`
-    },
-    
-    formatDurationLong(minutes) {
-      // Format duration for longer descriptions
-      if (minutes >= 60) {
-        const hours = Math.floor(minutes / 60)
-        const remainingMinutes = minutes % 60
-        if (remainingMinutes === 0) {
-          return `${hours} hour${hours > 1 ? 's' : ''}`
-        }
-        return `${hours} hour${hours > 1 ? 's' : ''} ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}`
-      }
-      return `${minutes} minute${minutes > 1 ? 's' : ''}`
-    },
-    
-    selectTime(dataPoint) {
-      this.selectedTimeSlot = dataPoint
-      this.$emit('time-selected', dataPoint)
-    },
-    
-    formatCurrentHour() {
-      const currentDate = new Date()
-      const currentHour = currentDate.getHours()
-      const formattedHour = currentHour.toString().padStart(2, '0')
-      const formattedMinute = currentDate.getMinutes().toString().padStart(2, '0')
-      return `${formattedHour}:${formattedMinute}`
-    },
-    
-    handleResize() {
-      this.windowWidth = window.innerWidth
-    },
-    
-    scrollToCurrentTime() {
-      if (this.windowWidth <= 768) {
-        this.$nextTick(() => {
-          const chartBarsContainer = this.$el.querySelector('.chart-bars-container')
-          if (chartBarsContainer) {
-            // Scroll to show the first few bars (current time area)
-            chartBarsContainer.scrollLeft = 0
-          }
-        })
-      }
-    },
-    
-    hideScrollHint() {
-      this.showScrollHint = false
-    },
-    
-    handleTouchStart(index) {
-      // Clear any existing timeout
-      if (this.touchTimeout) {
-        clearTimeout(this.touchTimeout)
-      }
-      // Show the bar value on touch
-      this.hoveredBarIndex = index
-    },
-    
-    handleTouchEnd() {
-      // Hide the bar value after a delay on touch end
-      this.touchTimeout = setTimeout(() => {
-        this.hoveredBarIndex = null
-      }, 2000) // Hide after 2 seconds
-    }
-  },
-  mounted() {
-    window.addEventListener('resize', this.handleResize)
-    this.scrollToCurrentTime()
-    
-    // Add scroll listener to hide hint after user interacts
-    this.$nextTick(() => {
-      const chartBarsContainer = this.$el.querySelector('.chart-bars-container')
-      if (chartBarsContainer) {
-        chartBarsContainer.addEventListener('scroll', this.hideScrollHint)
-        chartBarsContainer.addEventListener('touchstart', this.hideScrollHint)
-      }
-    })
-  },
-  beforeUnmount() {
-    window.removeEventListener('resize', this.handleResize)
-    
-    // Clean up scroll listeners
-    const chartBarsContainer = this.$el?.querySelector('.chart-bars-container')
-    if (chartBarsContainer) {
-      chartBarsContainer.removeEventListener('scroll', this.hideScrollHint)
-      chartBarsContainer.removeEventListener('touchstart', this.hideScrollHint)
-    }
-    
-    // Clean up touch timeout
-    if (this.touchTimeout) {
-      clearTimeout(this.touchTimeout)
-    }
+  forecastData: {
+    type: Array,
+    required: true
   }
-}
+});
+
+const emit = defineEmits(['time-selected']);
+
+const selectedTimeSlot = ref(null);
+const windowWidth = ref(window.innerWidth);
+const showScrollHint = ref(true);
+const hoveredBarIndex = ref(null);
+const touchTimeout = ref(null);
+
+const currentTime = computed(() => {
+  return new Date().toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+});
+
+const maxDuration = computed(() => {
+  return Math.max(...props.forecastData.map(d => d.duration));
+});
+
+const minDuration = computed(() => {
+  const availableTimes = props.forecastData.filter(dataPoint => !dataPoint.isExcluded);
+  return availableTimes.length > 0 ? Math.min(...availableTimes.map(d => d.duration)) : Math.min(...props.forecastData.map(d => d.duration));
+});
+
+const yAxisMax = computed(() => {
+  return Math.ceil(maxDuration.value / 10) * 10;
+});
+
+const yAxisTicks = computed(() => {
+  const maxDuration = yAxisMax.value;
+  const preferredIntervals = [10, 15, 20, 30, 45, 60, 90, 120, 150, 180, 240, 300, 360];
+  let interval = 10;
+  if (maxDuration <= 60) {
+    interval = 10;
+  } else if (maxDuration <= 120) {
+    interval = 15;
+  } else if (maxDuration <= 180) {
+    interval = 30;
+  } else {
+    interval = 60;
+  }
+  const ticks = [];
+  for (let i = 0; i <= maxDuration; i += interval) {
+    ticks.push(i);
+  }
+  if (ticks[ticks.length - 1] < maxDuration) {
+    ticks.push(maxDuration);
+  }
+  return ticks;
+});
+
+const optimalTimeData = computed(() => {
+  const availableTimes = props.forecastData.filter(dataPoint => !dataPoint.isExcluded);
+  return availableTimes.reduce((min, current) => 
+    current.duration < min.duration ? current : min
+  );
+});
+
+const optimalTime = computed(() => {
+  return formatTimeLabel(optimalTimeData.value.label);
+});
+
+const optimalDuration = computed(() => {
+  return optimalTimeData.value.duration;
+});
+
+const currentDuration = computed(() => {
+  return props.forecastData[0]?.duration || 0;
+});
+
+const timeSaved = computed(() => {
+  const currentTimeData = props.forecastData[0];
+  if (currentTimeData && currentTimeData.isExcluded) {
+    return 0;
+  }
+  return Math.max(0, currentDuration.value - optimalDuration.value);
+});
+
+const rushHourIncrease = computed(() => {
+  const increase = ((maxDuration.value - minDuration.value) / minDuration.value) * 100;
+  return Math.round(increase);
+});
+
+const hasExcludedTimes = computed(() => {
+  return props.forecastData.some(dataPoint => dataPoint.isExcluded);
+});
+
+const getBarStyle = (dataPoint) => {
+  const heightPercent = (dataPoint.duration / yAxisMax.value) * 100;
+  return {
+    height: `${Math.max(heightPercent, 1)}%`
+  };
+};
+
+const getBarClass = (dataPoint) => {
+  const isCurrent = dataPoint === props.forecastData[0];
+  const isExcluded = dataPoint.isExcluded;
+  if (isExcluded && isCurrent) {
+    return { 'excluded': true, 'current': true };
+  }
+  if (isExcluded) {
+    return { 'excluded': true };
+  }
+  const isOptimal = dataPoint.duration === minDuration.value;
+  const isHighTraffic = dataPoint.duration > (minDuration.value * 1.3);
+  return {
+    'optimal': isOptimal,
+    'high-traffic': isHighTraffic && !isOptimal,
+    'current': isCurrent,
+    'normal': !isOptimal && !isHighTraffic && !isCurrent
+  };
+};
+
+const getYAxisLabelStyle = (tick) => {
+  const chartHeight = 100 - (28 / 3);
+  const position = (tick / yAxisMax.value) * chartHeight;
+  return {
+    bottom: `${position + 10}%`
+  };
+};
+
+const shouldShowTimeLabel = (index) => {
+  if (windowWidth.value >= 1200) {
+    return true;
+  } else if (windowWidth.value >= 768) {
+    return index % 2 === 0;
+  } else if (windowWidth.value >= 480) {
+    return index % 3 === 0;
+  } else {
+    return index % 4 === 0;
+  }
+};
+
+const shouldShowValue = (index) => {
+  const dataPoint = props.forecastData[index];
+  return dataPoint.duration === minDuration.value || dataPoint.duration === maxDuration.value;
+};
+
+const formatTimeLabel = (timeString) => {
+  const timePart = timeString.includes('T') ? 
+    new Date(timeString).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) :
+    timeString;
+  const [hour, minute] = timePart.split(':');
+  const hourNum = parseInt(hour);
+  if (hourNum === 0) return '12AM';
+  if (hourNum === 12) return '12PM';
+  if (hourNum < 12) return `${hourNum}AM`;
+  return `${hourNum - 12}PM`;
+};
+
+const formatDuration = (minutes) => {
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) {
+      return `${hours}h`;
+    }
+    return `${hours}h ${remainingMinutes}m`;
+  }
+  return `${minutes}m`;
+};
+
+const formatDurationLong = (minutes) => {
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) {
+      return `${hours} hour${hours > 1 ? 's' : ''}`;
+    }
+    return `${hours} hour${hours > 1 ? 's' : ''} ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}`;
+  }
+  return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+};
+
+const selectTime = (dataPoint) => {
+  selectedTimeSlot.value = dataPoint;
+  emit('time-selected', dataPoint);
+};
+
+const formatCurrentHour = () => {
+  const currentDate = new Date();
+  const currentHour = currentDate.getHours();
+  const formattedHour = currentHour.toString().padStart(2, '0');
+  const formattedMinute = currentDate.getMinutes().toString().padStart(2, '0');
+  return `${formattedHour}:${formattedMinute}`;
+};
+
+const handleResize = () => {
+  windowWidth.value = window.innerWidth;
+};
+
+const scrollToCurrentTime = () => {
+  if (windowWidth.value <= 768) {
+    nextTick(() => {
+      const chartBarsContainer = document.querySelector('.chart-bars-container');
+      if (chartBarsContainer) {
+        chartBarsContainer.scrollLeft = 0;
+      }
+    });
+  }
+};
+
+const hideScrollHint = () => {
+  showScrollHint.value = false;
+};
+
+const handleTouchStart = (index) => {
+  if (touchTimeout.value) {
+    clearTimeout(touchTimeout.value);
+  }
+  hoveredBarIndex.value = index;
+};
+
+const handleTouchEnd = () => {
+  touchTimeout.value = setTimeout(() => {
+    hoveredBarIndex.value = null;
+  }, 2000);
+};
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize);
+  scrollToCurrentTime();
+  nextTick(() => {
+    const chartBarsContainer = document.querySelector('.chart-bars-container');
+    if (chartBarsContainer) {
+      chartBarsContainer.addEventListener('scroll', hideScrollHint);
+      chartBarsContainer.addEventListener('touchstart', hideScrollHint);
+    }
+  });
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize);
+  const chartBarsContainer = document.querySelector('.chart-bars-container');
+  if (chartBarsContainer) {
+    chartBarsContainer.removeEventListener('scroll', hideScrollHint);
+    chartBarsContainer.removeEventListener('touchstart', hideScrollHint);
+  }
+  if (touchTimeout.value) {
+    clearTimeout(touchTimeout.value);
+  }
+});
 </script>
 
 <style scoped>

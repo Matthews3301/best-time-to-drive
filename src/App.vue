@@ -26,143 +26,142 @@
       <div class="placeholder-message" v-else>
         <p>Select a route to see the traffic forecast timeline</p>
       </div>
+
+      <footer class="footer">
+        <div class="footer-content">
+          <a href="https://x.com/matthews8000" target="_blank" rel="noopener noreferrer" class="contact-link">
+            Contact / Feedback
+          </a>
+        </div>
+      </footer>
     </main>
   </div>
 </template>
 
-<script>
-import MapComponent from './components/MapComponent.vue'
-import ChartComponent from './components/ChartComponent.vue'
+<script setup>
+import { ref, onMounted, nextTick, watch, computed } from 'vue';
+import { v4 as uuidv4 } from 'uuid';
+import MapComponent from './components/MapComponent.vue';
+import ChartComponent from './components/ChartComponent.vue';
 
-export default {
-  name: 'App',
-  components: {
-    MapComponent,
-    ChartComponent
-  },
-  data() {
-    return {
-      selectedRoute: null,
-      forecastData: [],
-      excludeNightHours: true
-    }
-  },
-  methods: {
-    handleRouteSelected(routeData) {
-      this.selectedRoute = routeData
-      // TODO: Fetch forecast data based on route
-      this.fetchForecastData(routeData)
-    },
-    
-    handleExcludeNightHoursChanged(excludeNightHours) {
-      this.excludeNightHours = excludeNightHours
-      // Regenerate forecast data if route is selected
-      if (this.selectedRoute) {
-        this.fetchForecastData(this.selectedRoute)
-      }
-    },
-    
-    async fetchForecastData(routeData) {
-      // TODO: Implement API call to get traffic forecast
-      console.log('Fetching forecast for route:', routeData)
-      
-      // Placeholder data for now
-      this.forecastData = this.generateMockForecastData(routeData)
-      
-      // Scroll to the chart section after calculation is done
-      await this.$nextTick()
-      if (this.$refs.chartSection) {
-        this.$refs.chartSection.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        })
-      }
-    },
-    
-    generateMockForecastData(routeData = null) {
-      // Generate 24 hours of mock data starting from current time
-      const data = []
-      const now = new Date()
-      // Round to the nearest hour
-      const startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), 0, 0, 0)
-      
-      // Extract base journey time from routeData or use default
-      let baseTime = 30 // Default fallback
-      if (routeData && routeData.baseTime) {
-        // Parse the baseTime string from Google Maps (e.g., "2 hours 15 mins", "45 mins", "1 hour")
-        const timeString = routeData.baseTime.toLowerCase()
-        let totalMinutes = 0
-        
-        // Extract hours
-        const hoursMatch = timeString.match(/(\d+)\s*(hour|hr)s?/)
-        if (hoursMatch) {
-          totalMinutes += parseInt(hoursMatch[1]) * 60
-        }
-        
-        // Extract minutes
-        const minutesMatch = timeString.match(/(\d+)\s*(minute|min)s?/)
-        if (minutesMatch) {
-          totalMinutes += parseInt(minutesMatch[1])
-        }
-        
-        // If we found time components, use them
-        if (totalMinutes > 0) {
-          baseTime = totalMinutes
-        } else {
-          // Fallback: if no explicit time units, assume the first number is minutes
-          const numberMatch = timeString.match(/(\d+)/)
-          if (numberMatch) {
-            baseTime = parseInt(numberMatch[1])
-          }
-        }
-      }
-      
-      for (let i = 0; i < 24; i++) {
-        const time = new Date(startTime.getTime() + (i * 60 * 60 * 1000))
-        const hour = time.getHours()
-        
-        // Create realistic traffic patterns
-        let trafficMultiplier = 1
-        
-        // Morning rush hour (7-9 AM)
-        if (hour >= 7 && hour <= 9) {
-          trafficMultiplier = 1.4 + (Math.random() * 0.3)
-        }
-        // Evening rush hour (5-7 PM)  
-        else if (hour >= 17 && hour <= 19) {
-          trafficMultiplier = 1.5 + (Math.random() * 0.4)
-        }
-        // Late night (11 PM - 5 AM) - lighter traffic
-        else if (hour >= 23 || hour <= 5) {
-          trafficMultiplier = 0.8 + (Math.random() * 0.2)
-        }
-        // Normal hours with some variation
-        else {
-          trafficMultiplier = 0.9 + (Math.random() * 0.4)
-        }
-        
-        const duration = Math.round(baseTime * trafficMultiplier)
-        
-        // Check if this hour should be excluded from optimal time calculations
-        const isExcluded = this.excludeNightHours && (hour >= 23 || hour <= 5)
-        
-        data.push({
-          time: time.toISOString(),
-          duration: duration,
-          label: time.toLocaleTimeString('en-US', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: false 
-          }),
-          hour: hour,
-          isExcluded: isExcluded
-        })
-      }
-      
-      return data
-    }
+const selectedRoute = ref(null);
+const forecastData = ref([]);
+const excludeNightHours = ref(true);
+const sessionUuid = ref(uuidv4());
+const forecastIndex = ref(0);
+
+const analyticsData = computed(() => ({
+  sessionUuid: sessionUuid.value,
+  forecastData: forecastData.value,
+  selectedRoute: selectedRoute.value,
+  excludeNightHours: excludeNightHours.value,
+  forecastIndex: forecastIndex.value
+}));
+
+function handleRouteSelected(routeData) {
+  selectedRoute.value = routeData;
+  fetchForecastData(routeData);
+}
+
+function handleExcludeNightHoursChanged(exclude) {
+  excludeNightHours.value = exclude;
+  if (selectedRoute.value) {
+    fetchForecastData(selectedRoute.value);
+    forecastIndex.value += 1;
   }
 }
+
+async function fetchForecastData(routeData) {
+  console.log('Fetching forecast for route:', routeData);
+  forecastData.value = generateMockForecastData(routeData);
+  await nextTick();
+  const chartSection = document.querySelector('.chart-section');
+  if (chartSection) {
+    chartSection.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
+}
+
+function generateMockForecastData(routeData = null) {
+  const data = [];
+  const now = new Date();
+  const startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), 0, 0, 0);
+  let baseTime = 30;
+  if (routeData && routeData.baseTime) {
+    const timeString = routeData.baseTime.toLowerCase();
+    let totalMinutes = 0;
+    const hoursMatch = timeString.match(/(\d+)\s*(hour|hr)s?/);
+    if (hoursMatch) {
+      totalMinutes += parseInt(hoursMatch[1]) * 60;
+    }
+    const minutesMatch = timeString.match(/(\d+)\s*(minute|min)s?/);
+    if (minutesMatch) {
+      totalMinutes += parseInt(minutesMatch[1]);
+    }
+    if (totalMinutes > 0) {
+      baseTime = totalMinutes;
+    } else {
+      const numberMatch = timeString.match(/(\d+)/);
+      if (numberMatch) {
+        baseTime = parseInt(numberMatch[1]);
+      }
+    }
+  }
+  for (let i = 0; i < 24; i++) {
+    const time = new Date(startTime.getTime() + (i * 60 * 60 * 1000));
+    const hour = time.getHours();
+    let trafficMultiplier = 1;
+    if (hour >= 7 && hour <= 9) {
+      trafficMultiplier = 1.4 + (Math.random() * 0.3);
+    } else if (hour >= 17 && hour <= 19) {
+      trafficMultiplier = 1.5 + (Math.random() * 0.4);
+    } else if (hour >= 23 || hour <= 5) {
+      trafficMultiplier = 0.8 + (Math.random() * 0.2);
+    } else {
+      trafficMultiplier = 0.9 + (Math.random() * 0.4);
+    }
+    const duration = Math.round(baseTime * trafficMultiplier);
+    const isExcluded = excludeNightHours.value && (hour >= 23 || hour <= 5);
+    data.push({
+      time: time.toISOString(),
+      duration: duration,
+      label: time.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
+      }),
+      hour: hour,
+      isExcluded: isExcluded
+    });
+  }
+  return data;
+}
+
+async function saveDataToAnalytics(data) {
+  const analyticsUrl = 'https://api.retool.com/v1/workflows/b5c55582-095b-48c3-8b67-24bd6ac5400f/startTrigger';
+  const response = await fetch(analyticsUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Workflow-Api-Key': 'retool_wk_6d7b6aa6f8734973a56134548127ed60'
+    },
+    body: JSON.stringify({
+      created_at: new Date().toISOString(),
+      session_uuid: data.sessionUuid,
+      options: data
+    })
+  });
+}
+
+watch(analyticsData, (newData) => {
+  console.log('Saving data to analytics:', newData);
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (!isLocalhost) {
+    saveDataToAnalytics(newData);
+  }
+});
 </script>
 
 <style>
@@ -399,6 +398,28 @@ export default {
   height: 4px;
   background: linear-gradient(90deg, #e2e8f0, #cbd5e1, #e2e8f0);
   border-radius: 2px;
+}
+
+.footer {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.footer-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0.5rem;
+}
+
+.contact-link {
+  color: #6366f1;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.contact-link:hover {
+  color: #6366f1;
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {

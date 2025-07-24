@@ -116,361 +116,326 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'MapComponent',
-  props: {
-    selectedRoute: {
-      type: Object,
-      default: null
-    }
-  },
-  data() {
-    return {
-      startLocation: '',
-      endLocation: '',
-      map: null,
-      directionsService: null,
-      directionsRenderer: null,
-      startAutocomplete: null,
-      endAutocomplete: null,
-      mapLoaded: false,
-      loadingError: null,
-      isCalculating: false,
-      currentRoute: null,
-      googleMapsLoaded: false,
-      excludeNightHours: true
-    }
-  },
-  computed: {
-    canCalculateRoute() {
-      return this.startLocation.trim() && this.endLocation.trim() && this.mapLoaded
-    },
-    
-    apiKey() {
-      return import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-    }
-  },
-  mounted() {
-    this.initializeGoogleMaps()
-    // Load locations from URL query parameters
-    this.loadLocationsFromURL()
-    // Emit initial exclude night hours state
-    this.$emit('exclude-night-hours-changed', this.excludeNightHours)
-  },
-  methods: {
-    initializeGoogleMaps() {
-      // Check if API key is configured
-      if (!this.apiKey || this.apiKey === 'PASTE_YOUR_GOOGLE_MAPS_API_KEY_HERE' || this.apiKey === 'your_google_maps_api_key_here') {
-        this.loadingError = 'Google Maps API key not configured. Please check your .env file.'
-        return
-      }
+<script setup>
+import { ref, computed, onMounted, watch, nextTick, defineProps, onBeforeUnmount } from 'vue';
 
-      // Check if Google Maps is already loaded
-      if (window.google && window.google.maps) {
-        this.setupMap()
-        return
-      }
+const props = defineProps({
+  selectedRoute: {
+    type: Object,
+    default: null
+  }
+});
 
-      // Load Google Maps script dynamically
-      this.loadGoogleMapsScript()
-    },
-    
-    loadGoogleMapsScript() {
-      const script = document.createElement('script')
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${this.apiKey}&libraries=places,geometry&callback=initGoogleMaps`
-      script.async = true
-      script.defer = true
-      
-      // Set up global callback
-      window.initGoogleMaps = () => {
-        this.googleMapsLoaded = true
-        this.setupMap()
+const emit = defineEmits(['exclude-night-hours-changed', 'route-selected']);
+
+const startLocation = ref('');
+const endLocation = ref('');
+const map = ref(null);
+const directionsService = ref(null);
+const directionsRenderer = ref(null);
+const startAutocomplete = ref(null);
+const endAutocomplete = ref(null);
+const mapLoaded = ref(false);
+const loadingError = ref(null);
+const isCalculating = ref(false);
+const currentRoute = ref(null);
+const googleMapsLoaded = ref(false);
+const excludeNightHours = ref(true);
+
+const canCalculateRoute = computed(() => {
+  return startLocation.value.trim() && endLocation.value.trim() && mapLoaded.value;
+});
+
+const apiKey = computed(() => {
+  return import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+});
+
+onMounted(() => {
+  initializeGoogleMaps();
+  loadLocationsFromURL();
+  emit('exclude-night-hours-changed', excludeNightHours.value);
+});
+
+function initializeGoogleMaps() {
+  if (!apiKey.value || apiKey.value === 'PASTE_YOUR_GOOGLE_MAPS_API_KEY_HERE' || apiKey.value === 'your_google_maps_api_key_here') {
+    loadingError.value = 'Google Maps API key not configured. Please check your .env file.';
+    return;
+  }
+
+  if (window.google && window.google.maps) {
+    setupMap();
+    return;
+  }
+
+  loadGoogleMapsScript();
+}
+
+function loadGoogleMapsScript() {
+  const script = document.createElement('script');
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey.value}&libraries=places,geometry&callback=initGoogleMaps`;
+  script.async = true;
+  script.defer = true;
+
+  window.initGoogleMaps = () => {
+    googleMapsLoaded.value = true;
+    setupMap();
+  };
+
+  script.onerror = () => {
+    loadingError.value = 'Failed to load Google Maps. Please check your API key and internet connection.';
+  };
+
+  document.head.appendChild(script);
+}
+
+function setupMap() {
+  try {
+    map.value = new google.maps.Map(document.querySelector('.google-map'), {
+      zoom: 10,
+      center: { lat: 37.7749, lng: -122.4194 },
+      mapTypeControl: true,
+      streetViewControl: false,
+      fullscreenControl: true
+    });
+
+    directionsService.value = new google.maps.DirectionsService();
+    directionsRenderer.value = new google.maps.DirectionsRenderer({
+      draggable: true,
+      panel: null
+    });
+    directionsRenderer.value.setMap(map.value);
+
+    setupAutocomplete();
+
+    directionsRenderer.value.addListener('directions_changed', () => {
+      const directions = directionsRenderer.value.getDirections();
+      updateRouteFromDirections(directions);
+    });
+
+    mapLoaded.value = true;
+    loadingError.value = null;
+
+    nextTick(() => {
+      const startInput = document.querySelector('input[ref="startInput"]');
+      if (startInput) {
+        startInput.focus();
       }
-      
-      script.onerror = () => {
-        this.loadingError = 'Failed to load Google Maps. Please check your API key and internet connection.'
-      }
-      
-      document.head.appendChild(script)
-    },
-    
-    setupMap() {
-      try {
-        // Initialize map
-        this.map = new google.maps.Map(this.$refs.mapElement, {
-          zoom: 10,
-          center: { lat: 37.7749, lng: -122.4194 }, // San Francisco default
-          mapTypeControl: true,
-          streetViewControl: false,
-          fullscreenControl: true
-        })
-        
-        // Initialize directions service and renderer
-        this.directionsService = new google.maps.DirectionsService()
-        this.directionsRenderer = new google.maps.DirectionsRenderer({
-          draggable: true,
-          panel: null
-        })
-        this.directionsRenderer.setMap(this.map)
-        
-        // Set up autocomplete
-        this.setupAutocomplete()
-        
-        // Listen for route changes when user drags the route
-        this.directionsRenderer.addListener('directions_changed', () => {
-          const directions = this.directionsRenderer.getDirections()
-          this.updateRouteFromDirections(directions)
-        })
-        
-        this.mapLoaded = true
-        this.loadingError = null
-        
-        // Auto-focus on the start input after map loads
-        this.$nextTick(() => {
-          if (this.$refs.startInput) {
-            this.$refs.startInput.focus()
-          }
-        })
-        
-        // Try to get user's location
-        this.getCurrentLocation()
-        
-      } catch (error) {
-        console.error('Error setting up Google Maps:', error)
-        this.loadingError = `Error setting up Google Maps: ${error.message}`
-      }
-    },
-    
-    setupAutocomplete() {
-      if (!window.google || !window.google.maps) return
-      
-      try {
-        // Set up autocomplete for start location
-        this.startAutocomplete = new google.maps.places.Autocomplete(this.$refs.startInput)
-        this.startAutocomplete.addListener('place_changed', () => {
-          const place = this.startAutocomplete.getPlace()
-          if (place.formatted_address) {
-            this.startLocation = place.formatted_address
-            // Update URL when autocomplete selection changes
-            this.updateURLWithLocations()
-          }
-        })
-        
-        // Set up autocomplete for end location
-        this.endAutocomplete = new google.maps.places.Autocomplete(this.$refs.endInput)
-        this.endAutocomplete.addListener('place_changed', () => {
-          const place = this.endAutocomplete.getPlace()
-          if (place.formatted_address) {
-            this.endLocation = place.formatted_address
-            // Update URL when autocomplete selection changes
-            this.updateURLWithLocations()
-          }
-        })
-      } catch (error) {
-        console.error('Error setting up autocomplete:', error)
-      }
-    },
-    
-    getCurrentLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const pos = {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
-            }
-            this.map.setCenter(pos)
-            this.map.setZoom(13)
-            
-            // Reverse geocode to get address
-            const geocoder = new google.maps.Geocoder()
-            geocoder.geocode({ location: pos }, (results, status) => {
-              if (status === 'OK' && results[0]) {
-                // Only set if start location is empty (don't override URL params)
-                if (!this.startLocation.trim()) {
-                  this.startLocation = results[0].formatted_address
-                  // Update URL when current location is detected
-                  this.updateURLWithLocations()
-                }
-              }
-            })
-          },
-          () => {
-            console.log('Geolocation permission denied or unavailable')
-          }
-        )
-      }
-    },
-    
-    async calculateRoute() {
-      if (!this.canCalculateRoute || this.isCalculating) return
-      
-      this.isCalculating = true
-      
-      try {
-        const request = {
-          origin: this.startLocation,
-          destination: this.endLocation,
-          travelMode: google.maps.TravelMode.DRIVING,
-          avoidHighways: false,
-          avoidTolls: false,
-          provideRouteAlternatives: true,
-          drivingOptions: {
-            departureTime: new Date(),
-            trafficModel: google.maps.TrafficModel.BEST_GUESS
-          }
-        }
-        
-        this.directionsService.route(request, (result, status) => {
-          this.isCalculating = false
-          
-          if (status === 'OK') {
-            this.directionsRenderer.setDirections(result)
-            this.updateRouteFromDirections(result)
-          } else {
-            console.error('Directions request failed due to ' + status)
-            alert('Could not calculate route. Please check your locations.')
-          }
-        })
-        
-      } catch (error) {
-        this.isCalculating = false
-        console.error('Error calculating route:', error)
-        alert('Error calculating route. Please try again.')
-      }
-    },
-    
-    updateRouteFromDirections(directions) {
-      const route = directions.routes[0]
-      const leg = route.legs[0]
-      
-      const routeData = {
-        start: leg.start_address,
-        end: leg.end_address,
-        distance: leg.distance.text,
-        baseTime: leg.duration.text,
-        trafficTime: leg.duration_in_traffic ? leg.duration_in_traffic.text : null,
-        coordinates: {
-          start: {
-            lat: leg.start_location.lat(),
-            lng: leg.start_location.lng()
-          },
-          end: {
-            lat: leg.end_location.lat(),
-            lng: leg.end_location.lng()
-          }
-        },
-        polyline: route.overview_polyline,
-        steps: leg.steps
-      }
-      
-      this.currentRoute = routeData
-      this.$emit('route-selected', routeData)
-    },
-    
-    onStartLocationChange() {
-      // Update URL when start location changes
-      this.updateURLWithLocations()
-    },
-    
-    onEndLocationChange() {
-      // Update URL when end location changes
-      this.updateURLWithLocations()
-    },
-    
-    onExcludeNightHoursChange() {
-      // Handle change in excludeNightHours
-      this.$emit('exclude-night-hours-changed', this.excludeNightHours)
-      // Update URL when exclude night hours changes
-      this.updateURLWithLocations()
-    },
-    
-    handleEnterKey() {
-      // Handle Enter key press with proper timing
-      this.$nextTick(() => {
-        this.calculateRoute()
-      })
-    },
-    
-    // Add URL query parameter methods
-    updateURLWithLocations() {
-      const params = new URLSearchParams(window.location.search)
-      
-      if (this.startLocation.trim()) {
-        params.set('from', this.startLocation)
-      } else {
-        params.delete('from')
-      }
-      
-      if (this.endLocation.trim()) {
-        params.set('to', this.endLocation)
-      } else {
-        params.delete('to')
-      }
-      
-      // Handle exclude night hours parameter
-      if (this.excludeNightHours) {
-        params.set('exclude', 'true')
-      } else {
-        params.delete('exclude')
-      }
-      
-      // Update URL without page reload
-      const newURL = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`
-      window.history.replaceState({}, '', newURL)
-    },
-    
-    loadLocationsFromURL() {
-      const params = new URLSearchParams(window.location.search)
-      const fromParam = params.get('from')
-      const toParam = params.get('to')
-      const excludeParam = params.get('exclude')
-      
-      if (fromParam) {
-        this.startLocation = decodeURIComponent(fromParam)
-      }
-      
-      if (toParam) {
-        this.endLocation = decodeURIComponent(toParam)
-      }
-      
-      // Set exclude night hours based on URL parameter
-      if (excludeParam !== null) {
-        this.excludeNightHours = excludeParam === 'true'
-        // Emit the state change when loaded from URL
-        this.$emit('exclude-night-hours-changed', this.excludeNightHours)
-      }
-      
-      // Auto-calculate route if both locations are present
-      if (fromParam && toParam) {
-        // Wait for map to be ready before calculating
-        this.$nextTick(() => {
-          const checkMapReady = () => {
-            if (this.mapLoaded) {
-              this.calculateRoute()
-            } else {
-              setTimeout(checkMapReady, 100)
-            }
-          }
-          checkMapReady()
-        })
-      }
-    }
-  },
-  
-  beforeUnmount() {
-    if (this.startAutocomplete) {
-      google.maps.event.clearInstanceListeners(this.startAutocomplete)
-    }
-    if (this.endAutocomplete) {
-      google.maps.event.clearInstanceListeners(this.endAutocomplete)
-    }
-    if (this.directionsRenderer) {
-      google.maps.event.clearInstanceListeners(this.directionsRenderer)
-    }
+    });
+
+    getCurrentLocation();
+  } catch (error) {
+    console.error('Error setting up Google Maps:', error);
+    loadingError.value = `Error setting up Google Maps: ${error.message}`;
   }
 }
+
+function setupAutocomplete() {
+  if (!window.google || !window.google.maps) return;
+
+  try {
+    startAutocomplete.value = new google.maps.places.Autocomplete(document.querySelector('input[ref="startInput"]'));
+    startAutocomplete.value.addListener('place_changed', () => {
+      const place = startAutocomplete.value.getPlace();
+      if (place.formatted_address) {
+        startLocation.value = place.formatted_address;
+        updateURLWithLocations();
+      }
+    });
+
+    endAutocomplete.value = new google.maps.places.Autocomplete(document.querySelector('input[ref="endInput"]'));
+    endAutocomplete.value.addListener('place_changed', () => {
+      const place = endAutocomplete.value.getPlace();
+      if (place.formatted_address) {
+        endLocation.value = place.formatted_address;
+        updateURLWithLocations();
+      }
+    });
+  } catch (error) {
+    console.error('Error setting up autocomplete:', error);
+  }
+}
+
+function getCurrentLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const pos = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        map.value.setCenter(pos);
+        map.value.setZoom(13);
+
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ location: pos }, (results, status) => {
+          if (status === 'OK' && results[0]) {
+            if (!startLocation.value.trim()) {
+              startLocation.value = results[0].formatted_address;
+              updateURLWithLocations();
+            }
+          }
+        });
+      },
+      () => {
+        console.log('Geolocation permission denied or unavailable');
+      }
+    );
+  }
+}
+
+async function calculateRoute() {
+  if (!canCalculateRoute.value || isCalculating.value) return;
+
+  isCalculating.value = true;
+
+  try {
+    const request = {
+      origin: startLocation.value,
+      destination: endLocation.value,
+      travelMode: google.maps.TravelMode.DRIVING,
+      avoidHighways: false,
+      avoidTolls: false,
+      provideRouteAlternatives: true,
+      drivingOptions: {
+        departureTime: new Date(),
+        trafficModel: google.maps.TrafficModel.BEST_GUESS
+      }
+    };
+
+    directionsService.value.route(request, (result, status) => {
+      isCalculating.value = false;
+
+      if (status === 'OK') {
+        directionsRenderer.value.setDirections(result);
+        updateRouteFromDirections(result);
+      } else {
+        console.error('Directions request failed due to ' + status);
+        alert('Could not calculate route. Please check your locations.');
+      }
+    });
+  } catch (error) {
+    isCalculating.value = false;
+    console.error('Error calculating route:', error);
+    alert('Error calculating route. Please try again.');
+  }
+}
+
+function updateRouteFromDirections(directions) {
+  const route = directions.routes[0];
+  const leg = route.legs[0];
+
+  const routeData = {
+    start: leg.start_address,
+    end: leg.end_address,
+    distance: leg.distance.text,
+    baseTime: leg.duration.text,
+    trafficTime: leg.duration_in_traffic ? leg.duration_in_traffic.text : null,
+    coordinates: {
+      start: {
+        lat: leg.start_location.lat(),
+        lng: leg.start_location.lng()
+      },
+      end: {
+        lat: leg.end_location.lat(),
+        lng: leg.end_location.lng()
+      }
+    },
+    polyline: route.overview_polyline,
+    steps: leg.steps
+  };
+
+  currentRoute.value = routeData;
+  emit('route-selected', routeData);
+}
+
+function onStartLocationChange() {
+  updateURLWithLocations();
+}
+
+function onEndLocationChange() {
+  updateURLWithLocations();
+}
+
+function onExcludeNightHoursChange() {
+  emit('exclude-night-hours-changed', excludeNightHours.value);
+  updateURLWithLocations();
+}
+
+function handleEnterKey() {
+  nextTick(() => {
+    calculateRoute();
+  });
+}
+
+function updateURLWithLocations() {
+  const params = new URLSearchParams(window.location.search);
+
+  if (startLocation.value.trim()) {
+    params.set('from', startLocation.value);
+  } else {
+    params.delete('from');
+  }
+
+  if (endLocation.value.trim()) {
+    params.set('to', endLocation.value);
+  } else {
+    params.delete('to');
+  }
+
+  if (excludeNightHours.value) {
+    params.set('exclude', 'true');
+  } else {
+    params.delete('exclude');
+  }
+
+  const newURL = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+  window.history.replaceState({}, '', newURL);
+}
+
+function loadLocationsFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const fromParam = params.get('from');
+  const toParam = params.get('to');
+  const excludeParam = params.get('exclude');
+
+  if (fromParam) {
+    startLocation.value = decodeURIComponent(fromParam);
+  }
+
+  if (toParam) {
+    endLocation.value = decodeURIComponent(toParam);
+  }
+
+  if (excludeParam !== null) {
+    excludeNightHours.value = excludeParam === 'true';
+    emit('exclude-night-hours-changed', excludeNightHours.value);
+  }
+
+  if (fromParam && toParam) {
+    nextTick(() => {
+      const checkMapReady = () => {
+        if (mapLoaded.value) {
+          calculateRoute();
+        } else {
+          setTimeout(checkMapReady, 100);
+        }
+      };
+      checkMapReady();
+    });
+  }
+}
+
+onBeforeUnmount(() => {
+  if (startAutocomplete.value) {
+    google.maps.event.clearInstanceListeners(startAutocomplete.value);
+  }
+  if (endAutocomplete.value) {
+    google.maps.event.clearInstanceListeners(endAutocomplete.value);
+  }
+  if (directionsRenderer.value) {
+    google.maps.event.clearInstanceListeners(directionsRenderer.value);
+  }
+});
 </script>
 
 <style scoped>
@@ -678,6 +643,7 @@ export default {
   transform: rotate(45deg);
   opacity: 0;
   transition: opacity 0.2s ease;
+  margin-top: -3px;
 }
 
 .checkbox-input:checked + .checkbox-custom {
