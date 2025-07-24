@@ -184,6 +184,13 @@ const yAxisTicks = computed(() => {
   } else {
     interval = 60;
   }
+  // Calculate the number of ticks based on the interval
+  let numberOfTicks = Math.ceil(maxDuration / interval);
+  // Adjust the interval if the number of ticks exceeds 20
+  while (numberOfTicks > 12) {
+    interval *= 2;
+    numberOfTicks = Math.ceil(maxDuration / interval);
+  }
   const ticks = [];
   for (let i = 0; i <= maxDuration; i += interval) {
     ticks.push(i);
@@ -503,7 +510,7 @@ onBeforeUnmount(() => {
 
 .y-axis {
   top: 20px;
-  width: 60px;
+  width: 70px;
   position: relative;
   border-right: 2px solid #e5e7eb;
 }
