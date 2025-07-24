@@ -52,8 +52,8 @@ const forecastIndex = ref(0);
 
 const analyticsData = computed(() => ({
   sessionUuid: sessionUuid.value,
-  forecastData: forecastData.value,
-  selectedRoute: selectedRoute.value,
+  startLocation: selectedRoute.value?.start,
+  endLocation: selectedRoute.value?.end,
   excludeNightHours: excludeNightHours.value,
   forecastIndex: forecastIndex.value
 }));
