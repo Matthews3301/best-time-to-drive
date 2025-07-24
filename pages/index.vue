@@ -71,12 +71,12 @@ function handleExcludeNightHoursChanged(exclude) {
   excludeNightHours.value = exclude;
   if (selectedRoute.value) {
     fetchForecastData(selectedRoute.value);
-    forecastIndex.value += 1;
   }
 }
 
 async function fetchForecastData(routeData) {
   console.log('Fetching forecast for route:', routeData);
+  forecastIndex.value += 1;
   forecastData.value = generateMockForecastData(routeData);
   await nextTick();
   const chartSection = document.querySelector('.chart-section');
