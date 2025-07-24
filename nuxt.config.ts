@@ -21,7 +21,7 @@ export default defineNuxtConfig({
       title: 'Rush Hour Planner - Traffic Forecast & Route Optimizer | Avoid Rush Hour',
       meta: [
         { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' },
         { name: 'description', content: 'Plan your commute and avoid rush hour traffic with real-time traffic forecasts. Find the optimal time to drive, analyze traffic patterns, and save time with our 24-hour traffic analysis tool powered by Google Maps.' },
         { name: 'keywords', content: 'rush hour planner, traffic forecast, avoid rush hour, route planner, traffic analysis, Google Maps, driving time, traffic patterns, commute planner, travel optimization, when is the best time to drive, best time to drive to work, what time should I leave to avoid traffic, when to leave for work, rush hour times, traffic congestion planner, optimal driving time, best time to travel, when is traffic lightest, avoid morning rush hour, avoid evening rush hour, commute time calculator, traffic prediction app, drive time optimizer, when should I leave, best departure time, traffic timing tool, rush hour avoidance, peak traffic hours, off peak driving times, traffic flow analysis, smart commute timing, when to drive to avoid congestion, best time to drive home, morning commute planner, evening commute planner, traffic schedule planner, drive time predictor, when is rush hour, traffic peak times, best driving hours, optimal travel time, traffic light times, when to leave home, commute optimization, traffic timing strategy' },
         { name: 'author', content: 'Rush Hour Planner' },
