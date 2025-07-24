@@ -65,7 +65,7 @@
               </div>
             </div>
             
-            <div class="x-axis-line"></div>
+            <!-- <div class="x-axis-line"></div> -->
           </div>
         </div>
       </div>
@@ -767,7 +767,6 @@ onBeforeUnmount(() => {
   }
   
   .chart-wrapper::after {
-    content: "← Swipe to explore all hours →";
     position: absolute;
     bottom: 0.5rem;
     left: 50%;
