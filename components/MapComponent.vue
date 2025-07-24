@@ -28,14 +28,6 @@
         </div>
         
         <div style="text-align: center;">
-          <button 
-            @click="calculateRoute" 
-            :disabled="!canCalculateRoute || isCalculating"
-            class="calculate-btn"
-          >
-            {{ isCalculating ? 'Calculating...' : 'Calculate Route' }}
-          </button>
-          
           <div class="filter-controls">
             <div class="checkbox-group">
               <label class="checkbox-label">
@@ -50,6 +42,10 @@
               </label>
             </div>
           </div>
+        </div>
+
+        <div class="calculating-message-container">
+          <p v-if="isCalculating">Calculating...</p>
         </div>
       </div>
       
@@ -244,27 +240,39 @@ export default {
     
     setupAutocomplete() {
       if (!window.google || !window.google.maps) return
-      
+
       try {
         // Set up autocomplete for start location
-        this.startAutocomplete = new google.maps.places.Autocomplete(this.$refs.startInput)
+        this.startAutocomplete = new google.maps.places.Autocomplete(this.$refs.startInput, {
+          componentRestrictions: { country: 'us' }
+        })
         this.startAutocomplete.addListener('place_changed', () => {
           const place = this.startAutocomplete.getPlace()
           if (place.formatted_address) {
             this.startLocation = place.formatted_address
             // Update URL when autocomplete selection changes
             this.updateURLWithLocations()
+            // Trigger route calculation
+            if (this.canCalculateRoute) {
+              this.calculateRoute()
+            }
           }
         })
-        
+
         // Set up autocomplete for end location
-        this.endAutocomplete = new google.maps.places.Autocomplete(this.$refs.endInput)
+        this.endAutocomplete = new google.maps.places.Autocomplete(this.$refs.endInput, {
+          componentRestrictions: { country: 'us' }
+        })
         this.endAutocomplete.addListener('place_changed', () => {
           const place = this.endAutocomplete.getPlace()
           if (place.formatted_address) {
             this.endLocation = place.formatted_address
             // Update URL when autocomplete selection changes
             this.updateURLWithLocations()
+            // Trigger route calculation
+            if (this.canCalculateRoute) {
+              this.calculateRoute()
+            }
           }
         })
       } catch (error) {
@@ -422,39 +430,39 @@ export default {
     },
     
     loadLocationsFromURL() {
-      const params = new URLSearchParams(window.location.search)
-      const fromParam = params.get('from')
-      const toParam = params.get('to')
-      const excludeParam = params.get('exclude')
-      
+      const params = new URLSearchParams(window.location.search);
+      const fromParam = params.get('from');
+      const toParam = params.get('to');
+      const excludeParam = params.get('exclude');
+
       if (fromParam) {
-        this.startLocation = decodeURIComponent(fromParam)
+        this.startLocation = decodeURIComponent(fromParam);
       }
-      
+
       if (toParam) {
-        this.endLocation = decodeURIComponent(toParam)
+        this.endLocation = decodeURIComponent(toParam);
       }
-      
+
       // Set exclude night hours based on URL parameter
       if (excludeParam !== null) {
-        this.excludeNightHours = excludeParam === 'true'
+        this.excludeNightHours = excludeParam === 'true';
         // Emit the state change when loaded from URL
-        this.$emit('exclude-night-hours-changed', this.excludeNightHours)
+        this.$emit('exclude-night-hours-changed', this.excludeNightHours);
       }
-      
+
       // Auto-calculate route if both locations are present
-      if (fromParam && toParam) {
+      if (this.startLocation.trim() && this.endLocation.trim()) {
         // Wait for map to be ready before calculating
         this.$nextTick(() => {
           const checkMapReady = () => {
             if (this.mapLoaded) {
-              this.calculateRoute()
+              this.calculateRoute();
             } else {
-              setTimeout(checkMapReady, 100)
+              setTimeout(checkMapReady, 100);
             }
-          }
-          checkMapReady()
-        })
+          };
+          checkMapReady();
+        });
       }
     }
   },
@@ -469,7 +477,7 @@ export default {
     if (this.directionsRenderer) {
       google.maps.event.clearInstanceListeners(this.directionsRenderer)
     }
-  }
+  },
 }
 </script>
 
@@ -514,7 +522,6 @@ export default {
   background: #ffffff;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   display: grid;
-  gap: 2rem;
   width: 100%;
   box-sizing: border-box;
 }
@@ -1012,6 +1019,14 @@ export default {
   .route-summary h4 {
     font-size: 1rem;
   }
+}
+
+.calculating-message-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+  min-height: 2rem;
+  height: 2rem; /* Set fixed height */
 }
 
 /* Very small screens - portrait phones */
