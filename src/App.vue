@@ -141,24 +141,28 @@ function generateMockForecastData(routeData = null) {
 
 async function saveDataToAnalytics(data) {
   const analyticsUrl = 'https://api.retool.com/v1/workflows/b5c55582-095b-48c3-8b67-24bd6ac5400f/startTrigger';
-  const response = await fetch(analyticsUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Workflow-Api-Key': 'retool_wk_6d7b6aa6f8734973a56134548127ed60'
-    },
-    body: JSON.stringify({
-      created_at: new Date().toISOString(),
-      session_uuid: data.sessionUuid,
-      options: data
-    })
-  });
+  try {
+    await fetch(analyticsUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Workflow-Api-Key': 'retool_wk_6d7b6aa6f8734973a56134548127ed60'
+      },
+      body: JSON.stringify({
+        created_at: new Date().toISOString(),
+        session_uuid: data.sessionUuid,
+        options: data
+      })
+   });
+  } catch (error) {
+    console.error('Error saving data to analytics:', error);
+  }
 }
 
 watch(analyticsData, (newData) => {
   console.log('Saving data to analytics:', newData);
   const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (!isLocalhost) {
+  if (!isLocalhost && false) {
     saveDataToAnalytics(newData);
   }
 });
