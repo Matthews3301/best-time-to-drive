@@ -553,7 +553,7 @@ export default {
   padding: 1.25rem 1rem;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 12px;
-  font-size: 0.95rem;
+  font-size: 1rem; /* 16px */
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: #fafbfc;
   color: #1a1d29;
@@ -706,7 +706,7 @@ export default {
 }
 
 .checkbox-text {
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: #374151;
   font-weight: 500;
   user-select: none;
