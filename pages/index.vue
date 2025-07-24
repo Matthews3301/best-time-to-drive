@@ -43,6 +43,10 @@ import { ref, onMounted, nextTick, watch, computed } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 import MapComponent from '../components/MapComponent.vue';
 import ChartComponent from '../components/ChartComponent.vue';
+import { inject } from '@vercel/analytics';
+
+// Initialize Vercel Analytics
+inject();
 
 const selectedRoute = ref(null);
 const forecastData = ref([]);
