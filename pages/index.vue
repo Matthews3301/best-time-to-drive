@@ -41,8 +41,8 @@
 <script setup>
 import { ref, onMounted, nextTick, watch, computed } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
-import MapComponent from './components/MapComponent.vue';
-import ChartComponent from './components/ChartComponent.vue';
+import MapComponent from '../components/MapComponent.vue';
+import ChartComponent from '../components/ChartComponent.vue';
 
 const selectedRoute = ref(null);
 const forecastData = ref([]);
@@ -140,20 +140,11 @@ function generateMockForecastData(routeData = null) {
 }
 
 async function saveDataToAnalytics(data) {
-  const analyticsUrl = 'https://api.retool.com/v1/workflows/b5c55582-095b-48c3-8b67-24bd6ac5400f/startTrigger';
   try {
-    await fetch(analyticsUrl, {
+    const response = await fetch('/api/analytics', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Workflow-Api-Key': 'retool_wk_6d7b6aa6f8734973a56134548127ed60'
-      },
-      body: JSON.stringify({
-        created_at: new Date().toISOString(),
-        session_uuid: data.sessionUuid,
-        options: data
-      })
-   });
+      body: JSON.stringify(data)
+    });
   } catch (error) {
     console.error('Error saving data to analytics:', error);
   }
@@ -162,14 +153,14 @@ async function saveDataToAnalytics(data) {
 watch(analyticsData, (newData) => {
   console.log('Saving data to analytics:', newData);
   const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (!isLocalhost && false) {
+  if (!isLocalhost) {
     saveDataToAnalytics(newData);
   }
 });
 
 onMounted(() => {
   const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (!isLocalhost && false) {
+  if (!isLocalhost) {
     saveDataToAnalytics(analyticsData.value);
   }
 });
