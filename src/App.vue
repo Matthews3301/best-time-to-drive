@@ -166,6 +166,13 @@ watch(analyticsData, (newData) => {
     saveDataToAnalytics(newData);
   }
 });
+
+onMounted(() => {
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (!isLocalhost && false) {
+    saveDataToAnalytics(analyticsData.value);
+  }
+});
 </script>
 
 <style>

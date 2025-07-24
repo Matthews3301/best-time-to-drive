@@ -586,7 +586,7 @@ export default {
   overflow: hidden;
   text-transform: none;
   letter-spacing: -0.01em;
-  min-width: 160px;
+  min-width: 12rem;
   justify-self: center;
 }
 
