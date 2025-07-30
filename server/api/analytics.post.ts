@@ -5,7 +5,7 @@ export default defineLazyEventHandler(async () => {
     const { sessionUuid } = body;
     const analyticsUrl = 'https://api.retool.com/v1/workflows/b5c55582-095b-48c3-8b67-24bd6ac5400f/startTrigger';
     try {
-      await fetch(analyticsUrl, {
+      /* await fetch(analyticsUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -16,7 +16,7 @@ export default defineLazyEventHandler(async () => {
           session_uuid: sessionUuid,
           options: body
         })
-      });
+      }); */
     } catch (error) {
       console.error('Error saving data to analytics:', error);
     }
