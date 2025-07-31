@@ -3,7 +3,7 @@ export default defineLazyEventHandler(async () => {
   return defineEventHandler(async (event: any) => {
     const body = JSON.parse(await readBody(event));
     const { sessionUuid } = body;
-    const analyticsUrl = 'https://api.retool.com/v1/workflows/b5c55582-095b-48c3-8b67-24bd6ac5400f/startTrigger';
+    // const analyticsUrl = 'https://api.retool.com/v1/workflows/xxxxx/startTrigger';
     try {
       /* await fetch(analyticsUrl, {
         method: 'POST',

@@ -5,6 +5,11 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     viteGoogleMapsApiKey: process.env.VITE_GOOGLE_MAPS_API_KEY,
+    public: {
+      posthogPublicKey: 'phc_FmUMk4eqO4o2qhDhzzp2nhXZmmQE9mA1CGwrxpyxuhd',
+      posthogHost: 'https://us.i.posthog.com',
+      posthogDefaults: '2025-05-24'
+    }
   },
 
   css: ['~/global.css'],

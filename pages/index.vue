@@ -43,10 +43,7 @@ import { ref, onMounted, nextTick, watch, computed } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 import MapComponent from '../components/MapComponent.vue';
 import ChartComponent from '../components/ChartComponent.vue';
-import { inject } from '@vercel/analytics';
 
-// Initialize Vercel Analytics
-inject();
 
 const selectedRoute = ref(null);
 const forecastData = ref([]);
@@ -145,10 +142,7 @@ function generateMockForecastData(routeData = null) {
 
 async function saveDataToAnalytics(data) {
   try {
-    const response = await fetch('/api/analytics', {
-      method: 'POST',
-      body: JSON.stringify(data)
-    });
+    posthog.capture('route_selected', data);
   } catch (error) {
     console.error('Error saving data to analytics:', error);
   }

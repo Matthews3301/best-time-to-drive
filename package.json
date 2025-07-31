@@ -12,11 +12,11 @@
   "dependencies": {
     "@types/md5": "^2.3.5",
     "@types/node": "22.5.5",
-    "@vercel/analytics": "^1.4.1",    
     "autoprefixer": "^10.4.20",
     "md5": "^2.3.0",
     "nuxt": "^3.15.0",
     "postcss": "^8.4.49",
+    "posthog-js": "^1.258.3",
     "tailwindcss": "^3.4.17",
     "typescript": "5.6.2",
     "vue": "latest",
