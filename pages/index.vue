@@ -52,6 +52,35 @@ inject();
 const { $posthog } = useNuxtApp();
 const posthog = $posthog ? $posthog() : null;
 
+// Dynamic canonical URL based on URL parameters
+const route = useRoute();
+const canonicalUrl = computed(() => {
+  const params = new URLSearchParams();
+  
+  if (route.query.from) {
+    params.set('from', String(route.query.from));
+  }
+  if (route.query.exclude) {
+    params.set('exclude', String(route.query.exclude));
+  }
+  if (route.query.to) {
+    params.set('to', String(route.query.to));
+  }
+  
+  const queryString = params.toString();
+  return `https://rushhourplanner.com/${queryString ? '?' + queryString : ''}`;
+});
+
+// Set dynamic canonical URL
+useHead({
+  link: [
+    {
+      rel: 'canonical',
+      href: canonicalUrl
+    }
+  ]
+});
+
 
 const selectedRoute = ref(null);
 const forecastData = ref([]);

@@ -59,7 +59,6 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
         { rel: 'alternate icon', type: 'image/svg+xml', href: '/favicon.svg' },
         { rel: 'mask-icon', href: '/favicon.svg', color: '#4f46e5' },
-        { rel: 'canonical', href: 'https://rushhourplanner.com/' },
         { rel: 'dns-prefetch', href: '//fonts.googleapis.com' },
         { rel: 'dns-prefetch', href: '//fonts.gstatic.com' },
         { rel: 'dns-prefetch', href: '//cdn-static.wework.com' },
