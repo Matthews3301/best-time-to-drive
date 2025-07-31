@@ -144,7 +144,10 @@ function generateMockForecastData(routeData = null) {
 
 async function saveDataToAnalytics(data) {
   try {
-    $posthog.capture('route_selected', data);
+    if ($posthog) {
+      const posthog = $posthog()
+      posthog.capture('route_selected', data);
+    }
   } catch (error) {
     console.error('Error saving data to analytics:', error);
   }
