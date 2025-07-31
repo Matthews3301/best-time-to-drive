@@ -44,6 +44,8 @@ import { v4 as uuidv4 } from 'uuid';
 import MapComponent from '../components/MapComponent.vue';
 import ChartComponent from '../components/ChartComponent.vue';
 
+const { $posthog } = useNuxtApp();
+
 
 const selectedRoute = ref(null);
 const forecastData = ref([]);
@@ -142,7 +144,7 @@ function generateMockForecastData(routeData = null) {
 
 async function saveDataToAnalytics(data) {
   try {
-    posthog.capture('route_selected', data);
+    $posthog.capture('route_selected', data);
   } catch (error) {
     console.error('Error saving data to analytics:', error);
   }
