@@ -45,6 +45,10 @@ import { v4 as uuidv4 } from 'uuid';
 import MapComponent from '../components/MapComponent.vue';
 import ChartComponent from '../components/ChartComponent.vue';
 
+// Initialize Vercel Analytics
+import { inject } from '@vercel/analytics';
+inject();
+
 const { $posthog } = useNuxtApp();
 const posthog = $posthog ? $posthog() : null;
 
