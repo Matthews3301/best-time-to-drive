@@ -71,8 +71,21 @@ const canonicalUrl = computed(() => {
   return `https://rushhourplanner.com/${queryString ? '?' + queryString : ''}`;
 });
 
-// Set dynamic canonical URL
+// Dynamic title based on URL parameters
+const dynamicTitle = computed(() => {
+  const from = route.query.from;
+  const to = route.query.to;
+  
+  if (from && to) {
+    return `${from} -> ${to} | Best time to drive - Rush Hour Planner`;
+  }
+  
+  return 'Rush Hour Planner - Traffic Forecast & Route Optimizer | Avoid Rush Hour';
+});
+
+// Set dynamic canonical URL and title
 useHead({
+  title: dynamicTitle,
   link: [
     {
       rel: 'canonical',
