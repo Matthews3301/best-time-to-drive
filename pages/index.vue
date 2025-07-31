@@ -154,9 +154,9 @@ async function saveDataToAnalytics(data) {
 
 function handleRouteSelectedError(error) {
   posthog?.capture('route_selected_error', {
-    startLocation: selectedRoute.value?.start,
-    endLocation: selectedRoute.value?.end,
-    excludeNightHours: excludeNightHours.value,
+    startLocation: selectedRoute.value?.start || 'unknown',
+    endLocation: selectedRoute.value?.end || 'unknown',
+    excludeNightHours: excludeNightHours.value || null,
     error: error
   });
 }
