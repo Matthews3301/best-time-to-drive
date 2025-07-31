@@ -11,6 +11,7 @@
       <div class="map-section">
         <MapComponent 
           @route-selected="handleRouteSelected"
+          @route-selected-error="handleRouteSelectedError"
           @exclude-night-hours-changed="handleExcludeNightHoursChanged"
           :selected-route="selectedRoute"
         />
@@ -45,6 +46,7 @@ import MapComponent from '../components/MapComponent.vue';
 import ChartComponent from '../components/ChartComponent.vue';
 
 const { $posthog } = useNuxtApp();
+const posthog = $posthog ? $posthog() : null;
 
 
 const selectedRoute = ref(null);
@@ -144,13 +146,19 @@ function generateMockForecastData(routeData = null) {
 
 async function saveDataToAnalytics(data) {
   try {
-    if ($posthog) {
-      const posthog = $posthog()
-      posthog.capture('route_selected', data);
-    }
+    posthog?.capture('route_selected', data);
   } catch (error) {
     console.error('Error saving data to analytics:', error);
   }
+}
+
+function handleRouteSelectedError(error) {
+  posthog?.capture('route_selected_error', {
+    startLocation: selectedRoute.value?.start,
+    endLocation: selectedRoute.value?.end,
+    excludeNightHours: excludeNightHours.value,
+    error: error
+  });
 }
 
 watch(analyticsData, (newData) => {

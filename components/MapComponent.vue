@@ -339,6 +339,7 @@ export default {
           } else {
             console.error('Directions request failed due to ' + status)
             alert('Could not calculate route. Please check your locations.')
+            this.$emit('route-selected-error', status);
           }
         })
         
