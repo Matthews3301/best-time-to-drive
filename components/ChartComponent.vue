@@ -493,19 +493,19 @@ onBeforeUnmount(() => {
 }
 
 .legend-color.optimal {
-  background: linear-gradient(135deg, #10b981, #059669);
-}
-
-.legend-color.current {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
 }
 
+.legend-color.current {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
 .legend-color.high-traffic {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background: linear-gradient(135deg, #f87171, #ef4444);
 }
 
 .legend-color.excluded {
-  background: linear-gradient(135deg, #9ca3af, #6b7280);
+  background: linear-gradient(135deg, #d1d5db, #9ca3af);
   opacity: 0.7;
 }
 
@@ -590,23 +590,23 @@ onBeforeUnmount(() => {
 }
 
 .bar.optimal {
-  background: linear-gradient(135deg, #10b981, #059669);
-}
-
-.bar.current {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
 }
 
+.bar.current {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
 .bar.high-traffic {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background: linear-gradient(135deg, #f87171, #ef4444);
 }
 
 .bar.normal {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  background: linear-gradient(135deg, #6b7280, #4b5563);
 }
 
 .bar.excluded {
-  background: linear-gradient(135deg, #9ca3af, #6b7280);
+  background: linear-gradient(135deg, #d1d5db, #9ca3af);
   opacity: 0.7;
 }
 
@@ -711,7 +711,7 @@ onBeforeUnmount(() => {
 }
 
 .best-time .insight-icon {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
 }
 
@@ -721,7 +721,7 @@ onBeforeUnmount(() => {
 }
 
 .rush-hour .insight-icon {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+  background: linear-gradient(135deg, #ef4444, #dc2626);
   color: white;
 }
 
@@ -733,7 +733,7 @@ onBeforeUnmount(() => {
 }
 
 .optimal-time {
-  color: #10b981;
+  color: #3b82f6;
   font-weight: 700;
   font-size: 1.3rem;
   margin: 0;
