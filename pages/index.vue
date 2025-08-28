@@ -4,12 +4,38 @@
       <div class="header-content">
         <h1 class="title">Rush Hour Planner</h1>
         <p class="subtitle">Find the optimal time to travel based on real-time traffic forecasts</p>
+        
+        <div class="sample-routes">
+          <div class="sample-routes-grid">
+            <button 
+              class="sample-route-btn" 
+              @click="selectSampleRoute('Pasadena, CA', 'Long Beach, CA')"
+            >
+              Pasadena, CA → Long Beach, CA
+            </button>
+            <button 
+              class="sample-route-btn" 
+              @click="selectSampleRoute('Eugene, OR', 'Vancouver, WA')"
+            >
+              Eugene, OR → Vancouver, WA
+            </button>
+            <button 
+              class="sample-route-btn" 
+              @click="selectSampleRoute('Spring, TX', 'Houston, TX')"
+            >
+              Spring, TX → Houston, TX
+            </button>
+          </div>
+        </div>
       </div>
+
+      
     </header>
     
     <main class="main-content">
       <div class="map-section">
         <MapComponent 
+          ref="mapComponent"
           @route-selected="handleRouteSelected"
           @route-selected-error="handleRouteSelectedError"
           @exclude-night-hours-changed="handleExcludeNightHoursChanged"
@@ -100,6 +126,7 @@ const forecastData = ref([]);
 const excludeNightHours = ref(true);
 const sessionUuid = ref(uuidv4());
 const forecastIndex = ref(0);
+const mapComponent = ref(null);
 
 const analyticsData = computed(() => ({
   sessionUuid: sessionUuid.value,
@@ -205,6 +232,12 @@ function handleRouteSelectedError(error) {
     excludeNightHours: excludeNightHours.value || null,
     error: error
   });
+}
+
+function selectSampleRoute(from, to) {
+  if (mapComponent.value) {
+    mapComponent.value.setRouteLocations(from, to);
+  }
 }
 
 watch(analyticsData, (newData) => {
@@ -347,6 +380,82 @@ onMounted(() => {
   position: relative;
   z-index: 1;
   opacity: 0.9;
+}
+
+.sample-routes {
+  margin-top: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.sample-routes-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0 0 1rem 0;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sample-routes-grid {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.sample-route-btn {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6366f1;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.sample-route-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(99, 102, 241, 0.1) 50%, 
+    transparent 100%
+  );
+  transition: left 0.5s ease;
+}
+
+.sample-route-btn:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #4f46e5;
+  transform: translateY(-1px);
+  box-shadow: 
+    0 4px 12px rgba(99, 102, 241, 0.15),
+    0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.sample-route-btn:hover::before {
+  left: 100%;
+}
+
+.sample-route-btn:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 8px rgba(99, 102, 241, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .header-decoration {
@@ -501,6 +610,19 @@ onMounted(() => {
     max-width: 420px;
   }
   
+  .sample-routes {
+    margin-top: 1.5rem;
+  }
+  
+  .sample-routes-grid {
+    gap: 0.5rem;
+  }
+  
+  .sample-route-btn {
+    padding: 0.625rem 1rem;
+    font-size: 0.8125rem;
+  }
+  
   .header-decoration {
     width: 100px;
   }
@@ -542,6 +664,24 @@ onMounted(() => {
   .subtitle {
     font-size: 1rem;
     margin-bottom: 1.5rem;
+  }
+  
+  .sample-routes {
+    margin-top: 1rem;
+  }
+  
+  .sample-routes-label {
+    font-size: 0.75rem;
+  }
+  
+  .sample-routes-grid {
+    gap: 0.375rem;
+  }
+  
+  .sample-route-btn {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.75rem;
+    border-radius: 8px;
   }
   
   .header-decoration {

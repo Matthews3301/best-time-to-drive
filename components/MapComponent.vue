@@ -89,26 +89,6 @@
         </div>
       </div>
     </div>
-    
-    <div class="map-footer" v-if="selectedRoute">
-      <div class="route-summary">
-        <h4>Route Summary</h4>
-        <div class="summary-stats">
-          <div class="stat">
-            <span class="label">Distance:</span>
-            <span class="value">{{ selectedRoute.distance }}</span>
-          </div>
-          <div class="stat">
-            <span class="label">Duration:</span>
-            <span class="value">{{ selectedRoute.baseTime }}</span>
-          </div>
-          <div class="stat" v-if="selectedRoute.trafficTime">
-            <span class="label">With Traffic:</span>
-            <span class="value">{{ selectedRoute.trafficTime }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -657,6 +637,8 @@ onBeforeUnmount(() => {
   font-weight: 500;
   user-select: none;
 }
+
+
 
 .map-container-inner {
   flex: 1;

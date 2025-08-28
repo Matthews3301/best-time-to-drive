@@ -2,6 +2,7 @@
   <div class="chart-container">
     <div class="chart-header">
       <h3>24-Hour Traffic Forecast</h3>
+      <p class="route-subtitle">{{ routeData.start }} → {{ routeData.end }} ({{ routeData.distance }})</p>
     </div>
     
     <div class="chart-content">
@@ -423,6 +424,14 @@ onBeforeUnmount(() => {
   margin: 0 0 1rem 0;
   color: #666;
   font-size: 0.9rem;
+}
+
+.route-subtitle {
+  margin: 0 0 1rem 0;
+  color: #6b7280;
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
 }
 
 .chart-controls {
