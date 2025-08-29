@@ -48,6 +48,8 @@
           :route-data="selectedRoute"
           :forecast-data="forecastData"
         />
+
+        
       </div>
       
       <div class="placeholder-message" v-else>
@@ -235,8 +237,12 @@ function handleRouteSelectedError(error) {
 }
 
 function selectSampleRoute(from, to) {
+  console.log('selectSampleRoute called with:', from, to);
   if (mapComponent.value) {
+    console.log('mapComponent found, calling setRouteLocations');
     mapComponent.value.setRouteLocations(from, to);
+  } else {
+    console.log('mapComponent not found');
   }
 }
 
@@ -420,6 +426,9 @@ onMounted(() => {
   white-space: nowrap;
   position: relative;
   overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
 }
 
 .sample-route-btn::before {
@@ -456,6 +465,19 @@ onMounted(() => {
   box-shadow: 
     0 2px 8px rgba(99, 102, 241, 0.1),
     0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Mobile-specific improvements */
+@media (hover: none) and (pointer: coarse) {
+  .sample-route-btn {
+    min-height: 44px; /* Minimum touch target size */
+    padding: 0.875rem 1.5rem;
+  }
+  
+  .sample-route-btn:active {
+    background: rgba(255, 255, 255, 0.95);
+    transform: scale(0.98);
+  }
 }
 
 .header-decoration {

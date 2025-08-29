@@ -386,6 +386,32 @@ function handleEnterKey () {
 }
 
 /* ------------------------------------------------------------------
+ * Public methods for external use
+ * ----------------------------------------------------------------*/
+function setRouteLocations(from, to) {
+  console.log('setRouteLocations called with:', from, to);
+  startLocation.value = from
+  endLocation.value = to
+  updateURLWithLocations()
+  
+  if (canCalculateRoute.value) {
+    console.log('canCalculateRoute is true, calling calculateRoute');
+    nextTick(() => calculateRoute())
+  } else {
+    console.log('canCalculateRoute is false:', {
+      startLocation: startLocation.value,
+      endLocation: endLocation.value,
+      mapLoaded: mapLoaded.value
+    });
+  }
+}
+
+// Expose the method to parent components
+defineExpose({
+  setRouteLocations
+})
+
+/* ------------------------------------------------------------------
  * Lifecycle hooks
  * ----------------------------------------------------------------*/
 onMounted(() => {
