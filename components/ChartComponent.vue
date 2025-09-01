@@ -456,7 +456,7 @@ onBeforeUnmount(() => {
 
 .chart-wrapper {
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 1.5rem;
   background: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -674,7 +674,7 @@ onBeforeUnmount(() => {
 .chart-footer {
   background: linear-gradient(135deg, #f8fafc, #f1f5f9);
   padding: 2rem;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid #e2e8f0;
 }
 
@@ -701,7 +701,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 10px;
   flex-shrink: 0;
 }
 

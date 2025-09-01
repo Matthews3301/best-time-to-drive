@@ -1,7 +1,7 @@
 <template>
   <div class="share-card">
     <div class="share-card-header">
-      <h3>Route Guesser</h3>
+      <h3>Share your Route</h3>
     </div>
 
     <div class="share-card-body">
@@ -9,10 +9,8 @@
 
       <div class="actions">
         <button class="btn btn-x" @click="shareOnX">Share on X</button>
-        <button class="btn" @click="copyShare">Copy</button>
+        <button class="btn" @click="copyShare">{{ copied ? 'Copied!' : 'Copy' }}</button>
       </div>
-
-      <p v-if="copied" class="copied">Copied!</p>
     </div>
   </div>
 </template>
@@ -29,109 +27,85 @@ const copied = ref(false)
 
 const available = computed(() => props.forecastData.filter(d => !d.isExcluded))
 const minDuration = computed(() => available.value.length ? Math.min(...available.value.map(d => d.duration)) : Math.min(...props.forecastData.map(d => d.duration)))
-const thresholds = computed(() => ({
-  medium: minDuration.value * 1.2,
-  heavy:  minDuration.value * 1.4
-}))
+const maxDuration = computed(() => available.value.length ? Math.max(...available.value.map(d => d.duration)) : Math.max(...props.forecastData.map(d => d.duration)))
 
 const startState = computed(() => extractState(props.routeData.start))
 const endState   = computed(() => extractState(props.routeData.end))
 const stateLine  = computed(() => startState.value && endState.value ? (startState.value === endState.value ? startState.value : `${startState.value}→${endState.value}`) : '')
 const distanceLine = computed(() => String(props.routeData.distance || '').trim())
 
-function rangeSummary (startHour, endHour) {
-  const points = props.forecastData.filter(p => {
-    const hour = extractHour(p)
-    return hour >= startHour && hour < endHour && !p.isExcluded
-  })
-  if (!points.length) return { emoji: '⬛', time: '—' }
-  const worst = points.reduce((max, cur) => cur.duration > max.duration ? cur : max)
-  const dur = worst.duration
-  let emoji = '🔵'
-  if (dur > thresholds.value.heavy) emoji = '🔴'
-  else if (dur > thresholds.value.medium) emoji = '⚫'
-  return { emoji, time: formatDurationShort(dur) }
-}
+// Find best and worst times
+const bestTimeSlot = computed(() => {
+  const best = available.value.reduce((min, cur) => cur.duration < min.duration ? cur : min)
+  return {
+    time: formatTime(best.time || best.label),
+    duration: formatDurationShort(best.duration)
+  }
+})
 
-const morning6to8     = computed(() => rangeSummary(6, 8))
-const morning8to10    = computed(() => rangeSummary(8, 10))
-const morning10to12   = computed(() => rangeSummary(10, 12))
-const afternoon12to14 = computed(() => rangeSummary(12, 14))
-const afternoon14to16 = computed(() => rangeSummary(14, 16))
-const evening16to18   = computed(() => rangeSummary(16, 18))
-const evening18to20   = computed(() => rangeSummary(18, 20))
-const evening20to22   = computed(() => rangeSummary(20, 22))
+const worstTimeSlot = computed(() => {
+  const worst = available.value.reduce((max, cur) => cur.duration > max.duration ? cur : max)
+  return {
+    time: formatTime(worst.time || worst.label),
+    duration: formatDurationShort(worst.duration)
+  }
+})
 
-const allIntervals = computed(() => [
-  morning6to8.value,
-  morning8to10.value,
-  morning10to12.value,
-  afternoon12to14.value,
-  afternoon14to16.value,
-  evening16to18.value,
-  evening18to20.value,
-  evening20to22.value
-])
+const timeSaved = computed(() => {
+  const worstDuration = available.value.reduce((max, cur) => cur.duration > max.duration ? cur : max).duration
+  const bestDuration = available.value.reduce((min, cur) => cur.duration < min.duration ? cur : min).duration
+  const saved = worstDuration - bestDuration
+  return formatDurationShort(saved)
+})
 
-const minTime = computed(() => {
-  const validIntervals = allIntervals.value.filter(interval => interval.time !== '—')
-  if (!validIntervals.length) return null
-  return Math.min(...validIntervals.map(interval => {
-    const timeStr = interval.time
-    if (timeStr.includes('h')) {
-      const [h, m] = timeStr.split('h')
-      return parseInt(h) * 60 + (m ? parseInt(m.replace('m', '')) : 0)
-    }
-    return parseInt(timeStr.replace('m', ''))
-  }))
+// Generate random challenge questions
+const challengeQuestions = [
+  "What's your worst traffic story?",
+  "How early would you wake up to avoid traffic?",
+  "What's your secret traffic-avoiding route?",
+  "Would you rather leave 2 hours early or sit in traffic?",
+  "What's your traffic playlist?",
+  "How do you stay sane in traffic?",
+  "What's your traffic survival snack?",
+  "Would you pay $50 to skip traffic?",
+  "What's your traffic pet peeve?",
+  "How do you pass time in traffic?"
+]
+
+const challengeQuestion = computed(() => {
+  const randomIndex = Math.floor(Math.random() * challengeQuestions.length)
+  return challengeQuestions[randomIndex]
 })
 
 const shareText = computed(() => {
-  const state = stateLine.value ? `${stateLine.value}` : ''
-  const distance = distanceLine.value ? `${distanceLine.value}` : ''
-  
-  const formatInterval = (interval) => {
-    if (interval.time === '—') return interval.emoji
-    const timeStr = interval.time
-    let timeInMinutes
-    if (timeStr.includes('h')) {
-      const [h, m] = timeStr.split('h')
-      timeInMinutes = parseInt(h) * 60 + (m ? parseInt(m.replace('m', '')) : 0)
-    } else {
-      timeInMinutes = parseInt(timeStr.replace('m', ''))
-    }
-    
-    if (minTime.value && timeInMinutes === minTime.value) {
-      return '🔵'
-    }
-    return interval.emoji
-  }
+  const routeDisplay = `${props.routeData.start} → ${props.routeData.end} (${props.routeData.distance})`
   
   const lines = [
-    'Guess the Route from Distance and Traffic',
-    '\n',
-    state,
-    distance,
-    '\n',
-    `6–8AM: ${formatInterval(morning6to8.value)} ${morning6to8.value.time}`,
-    `8–10AM: ${formatInterval(morning8to10.value)} ${morning8to10.value.time}`,
-    `10AM–12PM: ${formatInterval(morning10to12.value)} ${morning10to12.value.time}`,
-    `12–2PM: ${formatInterval(afternoon12to14.value)} ${afternoon12to14.value.time}`,
-    `2–4PM: ${formatInterval(afternoon14to16.value)} ${afternoon14to16.value.time}`,
-    `4–6PM: ${formatInterval(evening16to18.value)} ${evening16to18.value.time}`,
-    `6–8PM: ${formatInterval(evening18to20.value)} ${evening18to20.value.time}`,
-    `8–10PM: ${formatInterval(evening20to22.value)} ${evening20to22.value.time}`,
-    '\n',
-    '#RushHourPlanner'
-  ].filter(Boolean)
+    '📍 Route: ' + routeDisplay,
+    '',
+    'What\'s the best time to avoid traffic on this route?',
+    '',
+    '✅ DO: Leave at ' + bestTimeSlot.value.time + ' (' + bestTimeSlot.value.duration + ')',
+    '❌ DON\'T: Leave at ' + worstTimeSlot.value.time + ' (' + worstTimeSlot.value.duration + ')',
+    '',
+    'Time saved: ' + timeSaved.value + ' (Rush Hour Planner)',
+    '',
+    '🎯 Challenge: how else to optimize this journey?',
+  ]
   return lines.join('\n')
 })
 
-function extractHour (dataPoint) {
-  if (dataPoint.time) return new Date(dataPoint.time).getHours()
-  const label = dataPoint.label || ''
-  const [h] = label.split(':')
-  return parseInt(h, 10)
+function formatTime(timeStr) {
+  if (!timeStr) return 'Unknown'
+  if (timeStr.includes('T')) {
+    const date = new Date(timeStr)
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    })
+  }
+  return timeStr
 }
 
 function formatDurationShort (minutes) {
@@ -168,7 +142,7 @@ function shareOnX () {
 <style scoped>
 .share-card {
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid #e2e8f0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   padding: 1rem;
@@ -186,9 +160,9 @@ function shareOnX () {
   width: 100%;
 }
 
-.share-card-header h4 {
+.share-card-header h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: #1f2937;
   font-weight: 600;
 }
@@ -209,7 +183,7 @@ function shareOnX () {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
   justify-content: center;
 }
 
@@ -221,14 +195,23 @@ function shareOnX () {
   padding: 0.5rem 0.75rem;
   font-size: 0.9rem;
   cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 5.5rem;
 }
 
-.btn:hover { border-color: #cbd5e1; }
+.btn:hover { 
+  border-color: #cbd5e1; 
+  transform: translateY(-1px);
+}
 
 .btn-x {
   background: #000000;
   color: #ffffff;
   border-color: #000000;
+}
+
+.btn-x:hover {
+  background: #1a1a1a;
 }
 
 .copied {
@@ -237,8 +220,32 @@ function shareOnX () {
   margin: 0;
 }
 
+.social-challenge {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  color: white;
+  text-align: center;
+  width: 100%;
+}
+
+.challenge-text {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.challenge-question {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.95;
+  font-style: italic;
+}
+
 @media (max-width: 480px) {
   .share-preview { font-size: 0.85rem; }
+  .social-challenge { padding: 0.5rem; }
 }
 </style>
 

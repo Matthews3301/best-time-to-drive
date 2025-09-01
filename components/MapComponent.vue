@@ -504,7 +504,7 @@ onBeforeUnmount(() => {
 .input-group input {
   padding: 1.25rem 1rem;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 1rem; /* 16px */
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: #fafbfc;
@@ -532,7 +532,7 @@ onBeforeUnmount(() => {
   background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
