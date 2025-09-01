@@ -2,7 +2,7 @@
   <div class="app">
     <header class="header">
       <div class="header-content">
-        <h1 class="title">Rush Hour Planner</h1>
+        <h1 class="title"><img src="/favicon.svg" alt="Rush Hour Planner logo" class="title-logo" />Rush Hour Planner</h1>
         <p class="subtitle">Find the optimal time to travel based on real-time traffic forecasts</p>
         
         <div class="sample-routes">
@@ -372,6 +372,15 @@ onMounted(() => {
   position: relative;
   z-index: 1;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.title-logo {
+  width: 40px;
+  height: 40px;
 }
 
 .subtitle {
@@ -627,6 +636,11 @@ onMounted(() => {
     letter-spacing: -0.04em;
   }
   
+  .title-logo {
+    width: 36px;
+    height: 36px;
+  }
+  
   .subtitle {
     font-size: 1.125rem;
     max-width: 420px;
@@ -681,6 +695,11 @@ onMounted(() => {
   .title {
     font-size: 2.25rem;
     margin-bottom: 1rem;
+  }
+  
+  .title-logo {
+    width: 32px;
+    height: 32px;
   }
   
   .subtitle {
