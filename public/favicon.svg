@@ -16,6 +16,9 @@
   <!-- Soft ground shadow -->
   <ellipse cx="50" cy="92" rx="16" ry="4" fill="#000000" opacity="0.08"/>
 
+  <!-- White outer border -->
+  <path d="M50 10 C65 10 78 23 78 38 C78 56 62 69 50 90 C38 69 22 56 22 38 C22 23 35 10 50 10 Z" fill="none" stroke="#ffffff" stroke-width="6" stroke-linejoin="round"/>
+
   <!-- Map marker body -->
   <path d="M50 10 C65 10 78 23 78 38 C78 56 62 69 50 90 C38 69 22 56 22 38 C22 23 35 10 50 10 Z" fill="url(#markerGradient)" stroke="#312e81" stroke-width="1" filter="url(#dropShadow)"/>
 
