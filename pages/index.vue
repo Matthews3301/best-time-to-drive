@@ -43,13 +43,20 @@
         />
       </div>
       
-      <div class="chart-section" v-if="selectedRoute" ref="chartSection">
-        <ChartComponent 
-          :route-data="selectedRoute"
-          :forecast-data="forecastData"
-        />
+      <div v-if="selectedRoute">
+        <div class="chart-section" ref="chartSection">
+          <ChartComponent 
+            :route-data="selectedRoute"
+            :forecast-data="forecastData"
+          />
+        </div>
 
-        
+        <div class="share-section">
+          <TrafficShareCard 
+            :route-data="selectedRoute" 
+            :forecast-data="forecastData" 
+          />
+        </div>
       </div>
       
       <div class="placeholder-message" v-else>
@@ -72,6 +79,7 @@ import { ref, onMounted, nextTick, watch, computed } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 import MapComponent from '../components/MapComponent.vue';
 import ChartComponent from '../components/ChartComponent.vue';
+import TrafficShareCard from '../components/TrafficShareCard.vue';
 
 // Initialize Vercel Analytics
 import { inject } from '@vercel/analytics';
