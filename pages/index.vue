@@ -51,7 +51,7 @@
           />
         </div>
 
-        <div class="share-section">
+        <div class="chart-section" style="margin-top: 2rem;">
           <TrafficShareCard 
             :route-data="selectedRoute" 
             :forecast-data="forecastData" 

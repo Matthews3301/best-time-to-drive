@@ -1,5 +1,5 @@
 <template>
-  <div class="share-card">
+  <div>
     <div class="share-card-header">
       <h3>Share your Route</h3>
     </div>
@@ -140,17 +140,6 @@ function shareOnX () {
 </script>
 
 <style scoped>
-.share-card {
-  background: #ffffff;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  padding: 1rem;
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
 
 .share-card-header {
   display: flex;
@@ -173,10 +162,16 @@ function shareOnX () {
   border-radius: 8px;
   padding: 0.75rem;
   white-space: pre-wrap;
-  margin: 0 0 0.5rem 0;
+  margin: 0 auto 0.5rem auto;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 0.9rem;
   color: #0f172a;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .actions {
@@ -244,7 +239,16 @@ function shareOnX () {
 }
 
 @media (max-width: 480px) {
-  .share-preview { font-size: 0.85rem; }
+  .share-card {
+    padding: 0.75rem;
+    margin: 0.75rem 0.5rem 0 0.5rem;
+    width: calc(100% - 1rem);
+    max-width: calc(100vw - 1rem);
+  }
+  .share-preview { 
+    font-size: 0.85rem; 
+    padding: 0.5rem;
+  }
   .social-challenge { padding: 0.5rem; }
 }
 </style>

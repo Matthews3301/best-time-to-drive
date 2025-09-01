@@ -513,7 +513,7 @@ onBeforeUnmount(() => {
   display: flex;
   height: 300px;
   position: relative;
-  max-width: 100%;
+  max-width: calc(100vw - 6.5rem);
   overflow: hidden;
 }
 
