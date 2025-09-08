@@ -14,6 +14,20 @@
               @keydown.enter="handleEnterKey"
             />
           </div>
+          <div class="swap-button-container">
+            <button 
+              class="swap-button"
+              @click="swapLocations"
+              type="button"
+              title="Swap locations"
+            >
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 16L3 12L7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M17 8L21 12L17 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M3 12H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
           <div class="input-group">
             <label>To:</label>
             <input 
@@ -216,7 +230,7 @@ function setupAutocomplete () {
 
   try {
     // Start location autocomplete
-    startAutocomplete.value = new google.maps.places.Autocomplete(startInput.value, { componentRestrictions: { country: 'us' } })
+    startAutocomplete.value = new google.maps.places.Autocomplete(startInput.value, { componentRestrictions: { country: ['us', 'gb'] } })
     startAutocomplete.value.addListener('place_changed', () => {
       const place = startAutocomplete.value.getPlace()
       if (place.formatted_address) {
@@ -227,7 +241,7 @@ function setupAutocomplete () {
     })
 
     // End location autocomplete
-    endAutocomplete.value = new google.maps.places.Autocomplete(endInput.value, { componentRestrictions: { country: 'us' } })
+    endAutocomplete.value = new google.maps.places.Autocomplete(endInput.value, { componentRestrictions: { country: ['us', 'gb'] } })
     endAutocomplete.value.addListener('place_changed', () => {
       const place = endAutocomplete.value.getPlace()
       if (place.formatted_address) {
@@ -385,6 +399,20 @@ function handleEnterKey () {
   nextTick(() => calculateRoute())
 }
 
+function swapLocations () {
+  const temp = startLocation.value
+  startLocation.value = endLocation.value
+  endLocation.value = temp
+  
+  // Update URL with swapped locations
+  updateURLWithLocations()
+  
+  // Recalculate route if both locations are filled
+  if (canCalculateRoute.value) {
+    nextTick(() => calculateRoute())
+  }
+}
+
 /* ------------------------------------------------------------------
  * Public methods for external use
  * ----------------------------------------------------------------*/
@@ -480,8 +508,9 @@ onBeforeUnmount(() => {
 
 .route-inputs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: end;
   margin: 0 2rem;
   width: calc(100% - 4rem);
   box-sizing: border-box;
@@ -525,6 +554,52 @@ onBeforeUnmount(() => {
 
 .input-group input::placeholder {
   color: #9ca3af;
+}
+
+.swap-button-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 0.5rem; /* Align with input bottom */
+}
+
+.swap-button {
+  background: transparent;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #6b7280;
+  position: relative;
+  overflow: hidden;
+}
+
+.swap-button:hover {
+  background: rgba(99, 102, 241, 0.05);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #6366f1;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+
+.swap-button:active {
+  transform: scale(0.95);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.swap-button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.swap-button:hover svg {
+  transform: rotate(180deg);
 }
 
 .calculate-btn {
@@ -866,6 +941,22 @@ onBeforeUnmount(() => {
     gap: 1rem;
     margin: 0;
     width: 100%;
+  }
+  
+  .swap-button-container {
+    padding-bottom: 0;
+    padding-top: 0.5rem;
+    justify-self: center;
+  }
+  
+  .swap-button {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  
+  .swap-button svg {
+    width: 1rem;
+    height: 1rem;
   }
   
   .input-group input {
