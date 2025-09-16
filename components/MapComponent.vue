@@ -159,6 +159,7 @@ const directionsService   = ref(null)
 const directionsRenderer  = ref(null)
 const startAutocomplete   = ref(null)
 const endAutocomplete     = ref(null)
+const trafficLayer        = ref(null)
 const mapLoaded           = ref(false)
 const loadingError        = ref(null)
 const isCalculating       = ref(false)
@@ -382,6 +383,9 @@ function setupMap () {
     directionsRenderer.value = new google.maps.DirectionsRenderer({ draggable: true })
     directionsRenderer.value.setMap(map.value)
 
+    // Initialize traffic layer
+    trafficLayer.value = new google.maps.TrafficLayer()
+    
     setupAutocomplete()
 
     directionsRenderer.value.addListener('directions_changed', () => {
@@ -394,6 +398,9 @@ function setupMap () {
 
     nextTick(() => startInput.value?.focus())
     getCurrentLocation()
+    
+    // Set initial traffic layer state
+    toggleTrafficLayer()
   } catch (error) {
     console.error('Error setting up Google Maps:', error)
     loadingError.value = `Error setting up Google Maps: ${error.message}`
@@ -505,6 +512,16 @@ function updateRouteFromDirections (directions) {
   emit('route-selected', routeData)
 }
 
+function toggleTrafficLayer() {
+  if (!trafficLayer.value || !map.value) return
+  
+  if (selectedDepartureTime.value === 'Now') {
+    trafficLayer.value.setMap(map.value)
+  } else {
+    trafficLayer.value.setMap(null)
+  }
+}
+
 /* ------------------------------------------------------------------
  * URL helpers
  * ----------------------------------------------------------------*/
@@ -585,6 +602,7 @@ function onExcludeNightHoursChange () {
 watch(selectedDepartureTime, () => {
   emit('departure-date-changed', selectedDepartureDate.value)
   updateURLWithLocations()
+  toggleTrafficLayer()
 })
 function handleEnterKey () {
   nextTick(() => calculateRoute())

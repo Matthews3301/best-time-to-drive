@@ -176,13 +176,6 @@ async function fetchForecastData(routeData) {
   forecastIndex.value += 1;
   forecastData.value = generateMockForecastData(routeData, selectedDepartDate.value);
   await nextTick();
-  const chartSection = document.querySelector('.chart-section');
-  if (chartSection) {
-    chartSection.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
-    });
-  }
 }
 
 function generateMockForecastData(routeData = null, departDate = null) {
