@@ -5,6 +5,62 @@
       <p class="route-subtitle">{{ routeData.start }} → {{ routeData.end }} ({{ routeData.distance }})</p>
       <p class="route-subtitle">Current drive time: {{ formatDuration(currentDuration) }}</p>
     </div>
+
+    <div class="chart-footer">
+      <div class="insights">
+        <div class="insight-item best-time">
+          <div class="insight-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 12C3 4.5 9 4 9 4C9 4 9 4.5 12 4.5C15 4.5 15 4 15 4C15 4 21 4.5 21 12C21 19.5 15 20 15 20H9C9 20 3 19.5 3 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="9" cy="10" r="1" fill="currentColor"/>
+              <circle cx="15" cy="10" r="1" fill="currentColor"/>
+              <path d="M9 15H15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M7 7L17 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="insight-content">
+            <h4>Best Time to Leave</h4>
+            <p class="optimal-time">{{ optimalTime }}</p>
+            <span class="optimal-duration">{{ formatDurationLong(optimalDuration) }} total journey</span>
+          </div>
+        </div>
+        
+        <div class="insight-item time-saved" v-if="!departDate">
+          <div class="insight-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8 2L4 6M16 2L20 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="insight-content">
+            <h4>Time Saved</h4>
+            <p class="time-saved-value">{{ formatDuration(timeSaved) }}</p>
+            <span class="vs-current">vs. leaving now</span>
+          </div>
+        </div>
+        
+        <div class="insight-item rush-hour" v-if="!departDate">
+          <div class="insight-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+              <circle cx="9" cy="9" r="2" fill="currentColor"/>
+              <path d="M13 5V9L17 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="6" cy="15.5" r="1" fill="currentColor"/>
+              <circle cx="10" cy="15.5" r="1" fill="currentColor"/>
+              <circle cx="14" cy="15.5" r="1" fill="currentColor"/>
+              <circle cx="18" cy="15.5" r="1" fill="currentColor"/>
+              <path d="M6 18.5H18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="insight-content">
+            <h4>Rush Hour Impact</h4>
+            <p class="rush-impact-value">+{{ rushHourIncrease }}%</p>
+            <span class="rush-description">longer during peak</span>
+          </div>
+        </div>
+      </div>
+    </div>
     
     <div class="chart-content">
       <div class="chart-wrapper" :class="{ 'hide-hint': !showScrollHint }">
@@ -73,61 +129,6 @@
       </div>
     </div>
     
-    <div class="chart-footer">
-      <div class="insights">
-        <div class="insight-item best-time">
-          <div class="insight-icon">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 12C3 4.5 9 4 9 4C9 4 9 4.5 12 4.5C15 4.5 15 4 15 4C15 4 21 4.5 21 12C21 19.5 15 20 15 20H9C9 20 3 19.5 3 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="9" cy="10" r="1" fill="currentColor"/>
-              <circle cx="15" cy="10" r="1" fill="currentColor"/>
-              <path d="M9 15H15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M7 7L17 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div class="insight-content">
-            <h4>Best Time to Leave</h4>
-            <p class="optimal-time">{{ optimalTime }}</p>
-            <span class="optimal-duration">{{ formatDurationLong(optimalDuration) }} total journey</span>
-          </div>
-        </div>
-        
-        <div class="insight-item time-saved" v-if="!departDate">
-          <div class="insight-icon">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-              <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M8 2L4 6M16 2L20 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div class="insight-content">
-            <h4>Time Saved</h4>
-            <p class="time-saved-value">{{ formatDuration(timeSaved) }}</p>
-            <span class="vs-current">vs. leaving now</span>
-          </div>
-        </div>
-        
-        <div class="insight-item rush-hour" v-if="!departDate">
-          <div class="insight-icon">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-              <circle cx="9" cy="9" r="2" fill="currentColor"/>
-              <path d="M13 5V9L17 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="6" cy="15.5" r="1" fill="currentColor"/>
-              <circle cx="10" cy="15.5" r="1" fill="currentColor"/>
-              <circle cx="14" cy="15.5" r="1" fill="currentColor"/>
-              <circle cx="18" cy="15.5" r="1" fill="currentColor"/>
-              <path d="M6 18.5H18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div class="insight-content">
-            <h4>Rush Hour Impact</h4>
-            <p class="rush-impact-value">+{{ rushHourIncrease }}%</p>
-            <span class="rush-description">longer during peak</span>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -689,6 +690,7 @@ onBeforeUnmount(() => {
 .chart-footer {
   background: linear-gradient(135deg, #f8fafc, #f1f5f9);
   padding: 2rem;
+  margin-bottom: 1.5rem;
   border-radius: 10px;
   border: 1px solid #e2e8f0;
 }

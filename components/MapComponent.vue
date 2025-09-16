@@ -419,6 +419,10 @@ function setupAutocomplete () {
         startLocation.value = place.formatted_address
         updateURLWithLocations()
         if (canCalculateRoute.value) calculateRoute()
+        // Autofocus on the "to" field after selecting a "from" location
+        nextTick(() => {
+          endInput.value?.focus()
+        })
       }
     })
 
