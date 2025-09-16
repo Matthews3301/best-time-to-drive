@@ -3,7 +3,7 @@ import { join } from 'path'
 
 export default defineEventHandler(async (event) => {
   try {
-    const slug = getRouterParam(event, 'slug')
+    const slug = getRouterParam(event, 'blog_title')
     
     // Read the blog posts JSON file from the public directory
     const blogPostsPath = join(process.cwd(), 'public', 'blog-posts.json')

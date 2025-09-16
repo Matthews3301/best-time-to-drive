@@ -11,6 +11,7 @@ export default defineNuxtConfig({
     prerender: {
       routes: [
         '/blog',
+        '/blog/beat-traffic-chiefs-vs-giants-commute-tips',
         '/blog/science-behind-rush-hour-traffic-patterns',
         '/blog/best-times-to-drive-city-guide',
         '/blog/how-weather-affects-traffic'
