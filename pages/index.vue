@@ -39,6 +39,7 @@
           @route-selected="handleRouteSelected"
           @route-selected-error="handleRouteSelectedError"
           @exclude-night-hours-changed="handleExcludeNightHoursChanged"
+          @departure-date-changed="handleDepartureDateChanged"
           :selected-route="selectedRoute"
         />
       </div>
@@ -48,6 +49,7 @@
           <ChartComponent 
             :route-data="selectedRoute"
             :forecast-data="forecastData"
+            :depart-date="selectedDepartDate"
           />
         </div>
 
@@ -102,6 +104,9 @@ const canonicalUrl = computed(() => {
   if (route.query.to) {
     params.set('to', String(route.query.to));
   }
+  if (route.query.depart) {
+    params.set('depart', String(route.query.depart));
+  }
   
   const queryString = params.toString();
   return `https://rushhourplanner.com/${queryString ? '?' + queryString : ''}`;
@@ -137,6 +142,7 @@ const excludeNightHours = ref(true);
 const sessionUuid = ref(uuidv4());
 const forecastIndex = ref(0);
 const mapComponent = ref(null);
+const selectedDepartDate = ref(null);
 
 const analyticsData = computed(() => ({
   sessionUuid: sessionUuid.value,
@@ -158,10 +164,17 @@ function handleExcludeNightHoursChanged(exclude) {
   }
 }
 
+function handleDepartureDateChanged(date) {
+  selectedDepartDate.value = date;
+  if (selectedRoute.value) {
+    fetchForecastData(selectedRoute.value);
+  }
+}
+
 async function fetchForecastData(routeData) {
   console.log('Fetching forecast for route:', routeData);
   forecastIndex.value += 1;
-  forecastData.value = generateMockForecastData(routeData);
+  forecastData.value = generateMockForecastData(routeData, selectedDepartDate.value);
   await nextTick();
   const chartSection = document.querySelector('.chart-section');
   if (chartSection) {
@@ -172,10 +185,15 @@ async function fetchForecastData(routeData) {
   }
 }
 
-function generateMockForecastData(routeData = null) {
+function generateMockForecastData(routeData = null, departDate = null) {
   const data = [];
   const now = new Date();
-  const startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), 0, 0, 0);
+  let startTime;
+  if (departDate instanceof Date) {
+    startTime = new Date(departDate.getFullYear(), departDate.getMonth(), departDate.getDate(), 0, 0, 0, 0);
+  } else {
+    startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), 0, 0, 0);
+  }
   let baseTime = 30;
   if (routeData && routeData.baseTime) {
     const timeString = routeData.baseTime.toLowerCase();

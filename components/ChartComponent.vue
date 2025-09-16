@@ -1,7 +1,7 @@
 <template>
   <div class="chart-container">
     <div class="chart-header">
-      <h3>24-Hour Traffic Forecast</h3>
+      <h3>{{ chartTitle }}</h3>
       <p class="route-subtitle">{{ routeData.start }} → {{ routeData.end }} ({{ routeData.distance }})</p>
     </div>
     
@@ -91,7 +91,7 @@
           </div>
         </div>
         
-        <div class="insight-item time-saved">
+        <div class="insight-item time-saved" v-if="!departDate">
           <div class="insight-icon">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
@@ -106,7 +106,7 @@
           </div>
         </div>
         
-        <div class="insight-item rush-hour">
+        <div class="insight-item rush-hour" v-if="!departDate">
           <div class="insight-icon">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
@@ -141,7 +141,21 @@ const props = defineProps({
   forecastData: {
     type: Array,
     required: true
+  },
+  departDate: {
+    type: [Date, null],
+    required: false,
+    default: null
   }
+});
+const chartTitle = computed(() => {
+  if (props.departDate instanceof Date) {
+    const y = props.departDate.getFullYear();
+    const m = String(props.departDate.getMonth() + 1).padStart(2, '0');
+    const d = String(props.departDate.getDate()).padStart(2, '0');
+    return `24-Hour Traffic Forecast for ${y}-${m}-${d}`;
+  }
+  return '24-Hour Traffic Forecast';
 });
 
 const emit = defineEmits(['time-selected']);

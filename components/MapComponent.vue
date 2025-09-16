@@ -43,6 +43,22 @@
         
         <div style="text-align: center;">
           <div class="filter-controls">
+            <div class="departure-select-group">
+              <label class="departure-label">Depart at:</label>
+              <select 
+                v-model="selectedDepartureTime"
+                class="departure-select"
+              >
+                <option 
+                  v-for="option in departureTimeOptions" 
+                  :key="option" 
+                  :value="option"
+                >
+                  {{ option }}
+                </option>
+              </select>
+            </div>
+
             <div class="checkbox-group">
               <label class="checkbox-label">
                 <input 
@@ -107,7 +123,7 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 
 /* ------------------------------------------------------------------
  * Props & Emits
@@ -122,7 +138,8 @@ const { selectedRoute } = defineProps({
 const emit = defineEmits([
   'route-selected',
   'route-selected-error',
-  'exclude-night-hours-changed'
+  'exclude-night-hours-changed',
+  'departure-date-changed'
 ])
 
 /* ------------------------------------------------------------------
@@ -148,6 +165,12 @@ const isCalculating       = ref(false)
 const currentRoute        = ref(null)
 const googleMapsLoaded    = ref(false)
 const excludeNightHours   = ref(true)
+const selectedDepartureTime = ref('Now')
+
+// Derive actual Date from selectedDepartureTime label
+const selectedDepartureDate = computed(() => {
+  return getDateForOption(selectedDepartureTime.value)
+})
 
 /* ------------------------------------------------------------------
  * Computed helpers
@@ -155,6 +178,158 @@ const excludeNightHours   = ref(true)
 const canCalculateRoute = computed(() =>
   startLocation.value.trim() && endLocation.value.trim() && mapLoaded.value
 )
+
+const departureTimeOptions = computed(() => {
+  const options = ['Now']
+  const today = new Date()
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  
+  // Add 7 more options starting from tomorrow
+  for (let i = 1; i <= 7; i++) {
+    const date = new Date(today)
+    date.setDate(today.getDate() + i)
+    const dayName = dayNames[date.getDay()]
+    
+    if (i === 1) {
+      options.push('Tomorrow')
+    } else {
+      // Check if this day is in the next week
+      const currentWeek = getWeekNumber(today)
+      const targetWeek = getWeekNumber(date)
+      
+      if (targetWeek > currentWeek) {
+        options.push(`Next ${dayName}`)
+      } else {
+        options.push(dayName)
+      }
+    }
+  }
+  
+  return options
+})
+
+// Helper function to get week number
+function getWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+  const dayNum = d.getUTCDay() || 7
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum)
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
+}
+
+// Map a dropdown option label to an actual Date (local) or null for "Now"
+function getDateForOption(option) {
+  if (!option || option === 'Now') return null
+  const today = new Date()
+  const base = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+  if (option === 'Tomorrow') {
+    const d = new Date(base)
+    d.setDate(d.getDate() + 1)
+    return d
+  }
+
+  let targetLabel = option
+  let isNext = false
+  if (option.startsWith('Next ')) {
+    targetLabel = option.replace('Next ', '')
+    isNext = true
+  }
+
+  const targetIndex = dayNames.indexOf(targetLabel)
+  if (targetIndex === -1) return null
+
+  const todayIndex = base.getDay()
+  let daysUntil = (targetIndex - todayIndex + 7) % 7
+  if (daysUntil === 0) daysUntil = 7
+  let daysToAdd = daysUntil
+  if (isNext) {
+    daysToAdd += 7
+  }
+
+  const d = new Date(base)
+  d.setDate(d.getDate() + daysToAdd)
+  return d
+}
+
+function formatDateParam(date) {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+function getLabelForDate(date) {
+  const today = new Date()
+  const base = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+
+  const diffDays = Math.round((target - base) / 86400000)
+  if (diffDays <= 0) return 'Now'
+  if (diffDays === 1) return 'Tomorrow'
+
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const currentWeek = getWeekNumber(base)
+  const targetWeek = getWeekNumber(target)
+  const dayName = dayNames[target.getDay()]
+  if (targetWeek > currentWeek) {
+    return `Next ${dayName}`
+  }
+  return dayName
+}
+
+// Convert dropdown label to canonical URL token
+function labelToParam(option) {
+  if (!option || option === 'Now') return null
+  const lower = option.toLowerCase()
+  if (lower === 'tomorrow') return 'tomorrow'
+  if (lower.startsWith('next ')) return `next-${lower.replace('next ', '')}`
+  return lower // monday, tuesday, ...
+}
+
+// Convert URL token back to dropdown label
+function paramToLabel(token) {
+  if (!token) return 'Now'
+  const date = getDateForParam(token)
+  if (!date) return 'Now'
+  return getLabelForDate(date)
+}
+
+// Convert URL token to an actual Date (local)
+function getDateForParam(token) {
+  if (!token) return null
+  const lower = token.toLowerCase()
+  const today = new Date()
+  const base = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+
+  if (lower === 'tomorrow') {
+    const d = new Date(base)
+    d.setDate(d.getDate() + 1)
+    return d
+  }
+
+  let isNext = false
+  let dayToken = lower
+  if (lower.startsWith('next-')) {
+    isNext = true
+    dayToken = lower.replace('next-', '')
+  }
+
+  const targetIndex = dayNames.indexOf(dayToken)
+  if (targetIndex === -1) return null
+
+  const todayIndex = base.getDay()
+  let daysUntil = (targetIndex - todayIndex + 7) % 7
+  if (daysUntil === 0) daysUntil = 7
+  let daysToAdd = daysUntil
+  if (isNext) daysToAdd += 7
+
+  const d = new Date(base)
+  d.setDate(d.getDate() + daysToAdd)
+  return d
+}
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
@@ -354,6 +529,11 @@ function updateURLWithLocations () {
     params.delete('exclude')
   }
 
+  // Persist departure selection as weekday token if not Now
+  const departToken = labelToParam(selectedDepartureTime.value)
+  if (departToken) params.set('depart', departToken)
+  else params.delete('depart')
+
   const newURL = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`
   window.history.replaceState({}, '', newURL)
 }
@@ -363,6 +543,7 @@ function loadLocationsFromURL () {
   const fromParam    = params.get('from')
   const toParam      = params.get('to')
   const excludeParam = params.get('exclude')
+  const departParam  = params.get('depart')
 
   if (fromParam) startLocation.value = decodeURIComponent(fromParam)
   if (toParam)   endLocation.value   = decodeURIComponent(toParam)
@@ -370,6 +551,10 @@ function loadLocationsFromURL () {
   if (excludeParam !== null) {
     excludeNightHours.value = excludeParam === 'true'
     emit('exclude-night-hours-changed', excludeNightHours.value)
+  }
+
+  if (departParam) {
+    selectedDepartureTime.value = paramToLabel(departParam)
   }
 
   if (startLocation.value.trim() && endLocation.value.trim()) {
@@ -395,6 +580,12 @@ function onExcludeNightHoursChange () {
   emit('exclude-night-hours-changed', excludeNightHours.value)
   updateURLWithLocations()
 }
+
+// React to departure selection changes
+watch(selectedDepartureTime, () => {
+  emit('departure-date-changed', selectedDepartureDate.value)
+  updateURLWithLocations()
+})
 function handleEnterKey () {
   nextTick(() => calculateRoute())
 }
@@ -446,6 +637,7 @@ onMounted(() => {
   initializeGoogleMaps()
   loadLocationsFromURL()
   emit('exclude-night-hours-changed', excludeNightHours.value)
+  emit('departure-date-changed', selectedDepartureDate.value)
 })
 
 onBeforeUnmount(() => {
@@ -669,7 +861,9 @@ onBeforeUnmount(() => {
 
 .filter-controls {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
   margin-top: 1rem;
 }
 
@@ -737,6 +931,46 @@ onBeforeUnmount(() => {
   color: #374151;
   font-weight: 500;
   user-select: none;
+}
+
+.departure-select-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.departure-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #374151;
+  user-select: none;
+}
+
+.departure-select {
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: #fafbfc;
+  color: #1a1d29;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  min-width: 140px;
+}
+
+.departure-select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 
+    0 0 0 3px rgba(99, 102, 241, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+}
+
+.departure-select:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  background: #ffffff;
 }
 
 
@@ -1004,6 +1238,16 @@ onBeforeUnmount(() => {
   .checkbox-text {
     font-size: 0.8rem;
   }
+  
+  .departure-label {
+    font-size: 0.8rem;
+  }
+  
+  .departure-select {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.85rem;
+    min-width: 120px;
+  }
 }
 
 /* Extra small screens */
@@ -1095,6 +1339,16 @@ onBeforeUnmount(() => {
   
   .checkbox-text {
     font-size: 0.75rem;
+  }
+  
+  .departure-label {
+    font-size: 0.75rem;
+  }
+  
+  .departure-select {
+    padding: 0.5rem 0.625rem;
+    font-size: 0.8rem;
+    min-width: 100px;
   }
 }
 </style> 
