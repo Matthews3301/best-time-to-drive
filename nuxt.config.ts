@@ -2,6 +2,21 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: false },
+  
+  // Enable SSR for better SEO
+  ssr: true,
+  
+  // Pre-render blog routes for better SEO
+  nitro: {
+    prerender: {
+      routes: [
+        '/blog',
+        '/blog/science-behind-rush-hour-traffic-patterns',
+        '/blog/best-times-to-drive-city-guide',
+        '/blog/how-weather-affects-traffic'
+      ]
+    }
+  },
 
   runtimeConfig: {
     viteGoogleMapsApiKey: process.env.VITE_GOOGLE_MAPS_API_KEY,

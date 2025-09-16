@@ -67,6 +67,10 @@
 
       <footer class="footer">
         <div class="footer-content">
+          <a href="/blog" class="contact-link">
+            Blog
+          </a>
+          <span class="footer-separator">•</span>
           <a href="https://x.com/matthews8000" target="_blank" rel="noopener noreferrer" class="contact-link">
             Contact / Feedback
           </a>
@@ -638,6 +642,11 @@ onMounted(() => {
 .contact-link:hover {
   color: #6366f1;
   text-decoration: underline;
+}
+
+.footer-separator {
+  color: #94a3b8;
+  margin: 0 0.75rem;
 }
 
 @media (max-width: 768px) {
