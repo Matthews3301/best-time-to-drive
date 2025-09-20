@@ -1,5 +1,15 @@
 <template>
   <div class="map-container">
+    <!-- Snackbar for error messages -->
+    <SnackbarComponent
+      :show="showSnackbar"
+      :type="snackbarType"
+      :title="snackbarTitle"
+      :message="snackbarMessage"
+      :duration="10000"
+      @dismiss="hideSnackbar"
+    />
+    
     <div class="map-section">
       <div class="map-controls">
         <div class="route-inputs">
@@ -124,6 +134,7 @@
 
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import SnackbarComponent from './SnackbarComponent.vue'
 
 /* ------------------------------------------------------------------
  * Props & Emits
@@ -159,6 +170,8 @@ const directionsService   = ref(null)
 const directionsRenderer  = ref(null)
 const startAutocomplete   = ref(null)
 const endAutocomplete     = ref(null)
+const startAutocompleteActive = ref(false)
+const endAutocompleteActive = ref(false)
 const trafficLayer        = ref(null)
 const mapLoaded           = ref(false)
 const loadingError        = ref(null)
@@ -167,6 +180,12 @@ const currentRoute        = ref(null)
 const googleMapsLoaded    = ref(false)
 const excludeNightHours   = ref(true)
 const selectedDepartureTime = ref('Now')
+
+// Snackbar state
+const showSnackbar = ref(false)
+const snackbarType = ref('error')
+const snackbarTitle = ref('')
+const snackbarMessage = ref('')
 
 // Derive actual Date from selectedDepartureTime label
 const selectedDepartureDate = computed(() => {
@@ -417,6 +436,7 @@ function setupAutocomplete () {
       const place = startAutocomplete.value.getPlace()
       if (place.formatted_address) {
         startLocation.value = place.formatted_address
+        startAutocompleteActive.value = false
         updateURLWithLocations()
         if (canCalculateRoute.value) calculateRoute()
         // Autofocus on the "to" field after selecting a "from" location
@@ -425,6 +445,16 @@ function setupAutocomplete () {
         })
       }
     })
+    
+    // Track when autocomplete suggestions are shown/hidden for start input
+    startAutocomplete.value.addListener('place_changed', () => {
+      startAutocompleteActive.value = false
+    })
+    
+    // Listen for when user types to show suggestions
+    startInput.value.addEventListener('input', () => {
+      startAutocompleteActive.value = true
+    })
 
     // End location autocomplete
     endAutocomplete.value = new google.maps.places.Autocomplete(endInput.value, { componentRestrictions: { country: ['us', 'gb'] } })
@@ -432,9 +462,20 @@ function setupAutocomplete () {
       const place = endAutocomplete.value.getPlace()
       if (place.formatted_address) {
         endLocation.value = place.formatted_address
+        endAutocompleteActive.value = false
         updateURLWithLocations()
         if (canCalculateRoute.value) calculateRoute()
       }
+    })
+    
+    // Track when autocomplete suggestions are shown/hidden for end input
+    endAutocomplete.value.addListener('place_changed', () => {
+      endAutocompleteActive.value = false
+    })
+    
+    // Listen for when user types to show suggestions
+    endInput.value.addEventListener('input', () => {
+      endAutocompleteActive.value = true
     })
   } catch (error) {
     console.error('Error setting up autocomplete:', error)
@@ -463,6 +504,20 @@ function getCurrentLocation () {
 }
 
 /* ------------------------------------------------------------------
+ * Snackbar helpers
+ * ----------------------------------------------------------------*/
+function showErrorSnackbar(title, message = '') {
+  snackbarType.value = 'error'
+  snackbarTitle.value = title
+  snackbarMessage.value = message
+  showSnackbar.value = true
+}
+
+function hideSnackbar() {
+  showSnackbar.value = false
+}
+
+/* ------------------------------------------------------------------
  * Routing logic
  * ----------------------------------------------------------------*/
 function calculateRoute () {
@@ -488,7 +543,50 @@ function calculateRoute () {
       directionsRenderer.value.setDirections(result)
     } else {
       console.error('Directions request failed due to ' + status)
-      alert('Could not calculate route. Please check your locations.')
+      
+      // Handle specific error cases
+      if (status === 'MAX_ROUTE_LENGTH_EXCEEDED') {
+        showErrorSnackbar(
+          'Route too long',
+          'The requested route is too long to calculate. Please try a shorter route or break it into segments.'
+        )
+      } else if (status === 'OVER_QUERY_LIMIT') {
+        showErrorSnackbar(
+          'Query limit exceeded',
+          'The request exceeds the query limit. Please try again later.'
+        )
+      } else if (status === 'ZERO_RESULTS') {
+        showErrorSnackbar(
+          'No route found',
+          'Could not find a route between these locations. Please check your addresses.'
+        )
+      } else if (status === 'NOT_FOUND') {
+        showErrorSnackbar(
+          'Location not found',
+          'One or both locations could not be found. Please check your addresses.'
+        )
+      } else if (status === 'REQUEST_DENIED') {
+        showErrorSnackbar(
+          'Request denied',
+          'The request was denied. Please check your API key and permissions.'
+        )
+      } else if (status === 'INVALID_REQUEST') {
+        showErrorSnackbar(
+          'Invalid request',
+          'The request was invalid. Please check your input and try again.'
+        )
+      } else if (status === 'UNKNOWN_ERROR') {
+        showErrorSnackbar(
+          'Unknown error',
+          'An unknown error occurred. Please try again later.'
+        )
+      } else {
+        showErrorSnackbar(
+          'Route calculation failed',
+          'Could not calculate route. Please check your locations and try again.'
+        )
+      }
+      
       emit('route-selected-error', status)
     }
   })
@@ -608,7 +706,65 @@ watch(selectedDepartureTime, () => {
   updateURLWithLocations()
   toggleTrafficLayer()
 })
-function handleEnterKey () {
+function handleEnterKey (event) {
+  const target = event.target
+  
+  // Check if we're in the start input and autocomplete is active
+  if (target === startInput.value && startAutocompleteActive.value) {
+    // Get predictions for the current input value using AutocompleteService
+    const autocompleteService = new google.maps.places.AutocompleteService()
+    const request = {
+      input: startLocation.value,
+      componentRestrictions: { country: ['us', 'gb'] }
+    }
+    
+    autocompleteService.getPlacePredictions(request, (predictions, status) => {
+      if (status === 'OK' && predictions && predictions.length > 0) {
+        // Use the first prediction
+        const placesService = new google.maps.places.PlacesService(map.value)
+        placesService.getDetails({ placeId: predictions[0].place_id }, (place, detailsStatus) => {
+          if (detailsStatus === 'OK' && place.formatted_address) {
+            startLocation.value = place.formatted_address
+            startAutocompleteActive.value = false
+            updateURLWithLocations()
+            if (canCalculateRoute.value) calculateRoute()
+            nextTick(() => endInput.value?.focus())
+          }
+        })
+        return
+      }
+    })
+    return
+  }
+  
+  // Check if we're in the end input and autocomplete is active
+  if (target === endInput.value && endAutocompleteActive.value) {
+    // Get predictions for the current input value using AutocompleteService
+    const autocompleteService = new google.maps.places.AutocompleteService()
+    const request = {
+      input: endLocation.value,
+      componentRestrictions: { country: ['us', 'gb'] }
+    }
+    
+    autocompleteService.getPlacePredictions(request, (predictions, status) => {
+      if (status === 'OK' && predictions && predictions.length > 0) {
+        // Use the first prediction
+        const placesService = new google.maps.places.PlacesService(map.value)
+        placesService.getDetails({ placeId: predictions[0].place_id }, (place, detailsStatus) => {
+          if (detailsStatus === 'OK' && place.formatted_address) {
+            endLocation.value = place.formatted_address
+            endAutocompleteActive.value = false
+            updateURLWithLocations()
+            if (canCalculateRoute.value) calculateRoute()
+          }
+        })
+        return
+      }
+    })
+    return
+  }
+  
+  // If no autocomplete suggestions are active, proceed with normal route calculation
   nextTick(() => calculateRoute())
 }
 
