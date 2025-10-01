@@ -121,7 +121,7 @@ const renderedMarkdown = computed(() => {
 <style scoped>
 .blog-post-page {
   min-height: 100vh;
-  background: #f5f5f4;
+  background: #eaeaea;
   font-family: 'Inter', sans-serif;
 }
 

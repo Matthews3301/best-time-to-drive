@@ -91,7 +91,7 @@ function dismiss() {
   z-index: 1000;
   max-width: 400px;
   min-width: 300px;
-  background: white;
+  background: #f9fafb;
   border-radius: 8px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),

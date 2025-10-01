@@ -77,7 +77,7 @@ const { data: blogPosts, pending: loading, error } = await useAsyncData('blog-po
 <style scoped>
 .blog-page {
   min-height: 100vh;
-  background: #fafbfc;
+  background: #f3f4f6;
   font-family: 'Inter', sans-serif;
 }
 

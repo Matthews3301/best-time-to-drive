@@ -923,7 +923,7 @@ onBeforeUnmount(() => {
   border-radius: 10px;
   font-size: 1rem; /* 16px */
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: #fafbfc;
+  background: #f3f4f6;
   color: #1a1d29;
   width: 100%;
   box-sizing: border-box;
@@ -1147,7 +1147,7 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   font-size: 0.9rem;
-  background: #fafbfc;
+  background: #f3f4f6;
   color: #1a1d29;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
@@ -1190,7 +1190,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  background: #f3f4f6;
+  background: #e5e7eb;
   color: #6b7280;
   padding: 2rem;
   width: 100%;
@@ -1318,7 +1318,7 @@ onBeforeUnmount(() => {
 
 .map-footer {
   padding: 1.5rem;
-  background: #f9fafb;
+  background: #f3f4f6;
   border-top: 1px solid #e5e7eb;
   width: 100%;
   box-sizing: border-box;

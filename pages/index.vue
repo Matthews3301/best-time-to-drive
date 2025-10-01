@@ -288,7 +288,7 @@ onMounted(() => {
 <style>
 .app {
   min-height: 100vh;
-  background: #fafbfc;
+  background: #f3f4f6;
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -300,11 +300,11 @@ onMounted(() => {
   text-align: center;
   padding: 3rem 2rem 3rem;
   background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 0.08) 0%, 
-    rgba(139, 92, 246, 0.06) 25%,
-    rgba(236, 72, 153, 0.04) 50%,
-    rgba(59, 130, 246, 0.06) 75%,
-    rgba(16, 185, 129, 0.04) 100%
+    rgba(99, 102, 241, 0.12) 0%, 
+    rgba(139, 92, 246, 0.10) 25%,
+    rgba(124, 58, 237, 0.08) 50%,
+    rgba(99, 102, 241, 0.10) 75%,
+    rgba(139, 92, 246, 0.06) 100%
   );
   backdrop-filter: blur(24px) saturate(150%);
   border-bottom: 1px solid rgba(99, 102, 241, 0.12);
@@ -320,9 +320,9 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(800px circle at 30% 0%, rgba(99, 102, 241, 0.06), transparent 50%),
-    radial-gradient(600px circle at 70% 0%, rgba(139, 92, 246, 0.04), transparent 50%),
-    linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.92) 100%);
+    radial-gradient(800px circle at 30% 0%, rgba(99, 102, 241, 0.08), transparent 50%),
+    radial-gradient(600px circle at 70% 0%, rgba(139, 92, 246, 0.06), transparent 50%),
+    linear-gradient(180deg, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.88) 100%);
   pointer-events: none;
 }
 
@@ -335,9 +335,9 @@ onMounted(() => {
   bottom: 0;
   background: linear-gradient(45deg, 
     transparent 0%, 
-    rgba(99, 102, 241, 0.02) 25%, 
+    rgba(99, 102, 241, 0.04) 25%, 
     transparent 50%, 
-    rgba(139, 92, 246, 0.02) 75%, 
+    rgba(139, 92, 246, 0.04) 75%, 
     transparent 100%
   );
   animation: shimmer 8s ease-in-out infinite;

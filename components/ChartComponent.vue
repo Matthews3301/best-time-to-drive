@@ -474,7 +474,7 @@ onBeforeUnmount(() => {
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 1.5rem;
-  background: white;
+  background: #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   height: 100%;
   max-width: 100%;
@@ -688,7 +688,7 @@ onBeforeUnmount(() => {
 }
 
 .chart-footer {
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  background: linear-gradient(135deg, #f1f5f9, #e5e7eb);
   padding: 2rem;
   margin-bottom: 1.5rem;
   border-radius: 10px;

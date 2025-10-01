@@ -157,7 +157,7 @@ function shareOnX () {
 }
 
 .share-preview {
-  background: #f8fafc;
+  background: #f1f5f9;
   border: 1px dashed #cbd5e1;
   border-radius: 8px;
   padding: 0.75rem;
@@ -183,7 +183,7 @@ function shareOnX () {
 }
 
 .btn {
-  background: #ffffff;
+  background: #f8fafc;
   color: #1f2937;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
