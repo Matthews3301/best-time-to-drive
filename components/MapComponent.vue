@@ -54,7 +54,7 @@
         <div style="text-align: center;">
           <div class="filter-controls">
             <div class="departure-select-group">
-              <label class="departure-label">Depart at:</label>
+              <label class="departure-label">Depart on:</label>
               <select 
                 v-model="selectedDepartureTime"
                 class="departure-select"
@@ -86,6 +86,14 @@
 
         <div class="calculating-message-container">
           <p v-if="isCalculating">Calculating...</p>
+          <button 
+            v-else-if="currentRoute"
+            class="show-results-btn"
+            type="button"
+            @click="scrollToResults"
+          >
+            Show results
+          </button>
         </div>
       </div>
       
@@ -612,6 +620,15 @@ function updateRouteFromDirections (directions) {
 
   currentRoute.value = routeData
   emit('route-selected', routeData)
+}
+
+function scrollToResults () {
+  const forecast = document.getElementById('forecast-chart')
+  const results = document.getElementById('results-card')
+  const target = forecast || results
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 }
 
 function toggleTrafficLayer() {
@@ -1492,8 +1509,30 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: center;
   margin-top: 1rem;
-  min-height: 2rem;
-  height: 2rem; /* Set fixed height */
+  min-height: 2.5rem;
+  height: 2.5rem; /* Ensure room for button */
+}
+
+.show-results-btn {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.18);
+}
+
+.show-results-btn:hover {
+  background: linear-gradient(135deg, #5b21b6 0%, #6366f1 100%);
+  transform: translateY(-1px);
+}
+
+.show-results-btn:active {
+  transform: translateY(0);
 }
 
 /* Very small screens - portrait phones */

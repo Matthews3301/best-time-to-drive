@@ -45,7 +45,7 @@
       </div>
       
       <div v-if="selectedRoute">
-        <div class="chart-section" ref="chartSection">
+        <div class="chart-section" ref="chartSection" id="forecast-chart">
           <ChartComponent 
             :route-data="selectedRoute"
             :forecast-data="forecastData"
@@ -53,7 +53,7 @@
           />
         </div>
 
-        <div class="chart-section" style="margin-top: 2rem;">
+        <div class="chart-section" style="margin-top: 2rem;" id="results-card">
           <TrafficShareCard 
             :route-data="selectedRoute" 
             :forecast-data="forecastData" 
@@ -378,7 +378,7 @@ onMounted(() => {
 }
 
 .title {
-  font-size: 3.0rem;
+  font-size: 2.4rem;
   font-weight: 600;
   background: linear-gradient(135deg, 
     #1a1d29 0%, 
@@ -402,8 +402,8 @@ onMounted(() => {
 }
 
 .title-logo {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
 }
 
 .subtitle {
