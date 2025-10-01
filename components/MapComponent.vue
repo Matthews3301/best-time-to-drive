@@ -1367,14 +1367,15 @@ onBeforeUnmount(() => {
   
   .route-inputs {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 0;
     margin: 0;
     width: 100%;
   }
   
   .swap-button-container {
     padding-bottom: 0;
-    padding-top: 0.5rem;
+    padding-top: 1rem;
+    margin-bottom: -0.5rem;
     justify-self: center;
   }
   
