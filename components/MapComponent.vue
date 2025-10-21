@@ -189,6 +189,13 @@ const googleMapsLoaded    = ref(false)
 const excludeNightHours   = ref(true)
 const selectedDepartureTime = ref('Now')
 
+// API optimization state
+const routeCache = ref(new Map())
+const autocompleteService = ref(null)
+const placesService = ref(null)
+let calculateRouteTimeout = null
+let currentCalculationKey = null
+
 // Snackbar state
 const showSnackbar = ref(false)
 const snackbarType = ref('error')
@@ -413,6 +420,10 @@ function setupMap () {
     // Initialize traffic layer
     trafficLayer.value = new google.maps.TrafficLayer()
     
+    // Initialize shared API service instances
+    autocompleteService.value = new google.maps.places.AutocompleteService()
+    placesService.value = new google.maps.places.PlacesService(map.value)
+    
     setupAutocomplete()
 
     directionsRenderer.value.addListener('directions_changed', () => {
@@ -521,15 +532,150 @@ function showErrorSnackbar(title, message = '') {
   showSnackbar.value = true
 }
 
+function showWarningSnackbar(title, message = '') {
+  snackbarType.value = 'warning'
+  snackbarTitle.value = title
+  snackbarMessage.value = message
+  showSnackbar.value = true
+}
+
 function hideSnackbar() {
   showSnackbar.value = false
 }
 
 /* ------------------------------------------------------------------
+ * Rate limiting helpers
+ * ----------------------------------------------------------------*/
+const ROUTE_LIMIT_KEY = 'route_calculation_limit'
+const MAX_ROUTES_PER_DAY = 20
+
+function getTodayDate() {
+  const today = new Date()
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+}
+
+function getRateLimitData() {
+  try {
+    const data = localStorage.getItem(ROUTE_LIMIT_KEY)
+    if (!data) return { count: 0, date: getTodayDate() }
+    return JSON.parse(data)
+  } catch (error) {
+    console.error('Error reading rate limit data:', error)
+    return { count: 0, date: getTodayDate() }
+  }
+}
+
+function setRateLimitData(count, date) {
+  try {
+    localStorage.setItem(ROUTE_LIMIT_KEY, JSON.stringify({ count, date }))
+  } catch (error) {
+    console.error('Error saving rate limit data:', error)
+  }
+}
+
+function checkAndIncrementRouteLimit() {
+  const today = getTodayDate()
+  const data = getRateLimitData()
+  
+  // Reset count if it's a new day
+  if (data.date !== today) {
+    data.count = 0
+    data.date = today
+  }
+  
+  // Check if limit exceeded
+  if (data.count >= MAX_ROUTES_PER_DAY) {
+    return false
+  }
+  
+  // Increment count
+  data.count++
+  setRateLimitData(data.count, data.date)
+  
+  return true
+}
+
+/* ------------------------------------------------------------------
+ * API Optimization helpers
+ * ----------------------------------------------------------------*/
+function getCacheKey(start, end) {
+  return `${start.trim().toLowerCase()}|${end.trim().toLowerCase()}`
+}
+
+function getCachedRoute(start, end) {
+  const key = getCacheKey(start, end)
+  return routeCache.value.get(key)
+}
+
+function setCachedRoute(start, end, data) {
+  const key = getCacheKey(start, end)
+  routeCache.value.set(key, {
+    data,
+    timestamp: Date.now()
+  })
+  
+  // Limit cache size to 50 entries
+  if (routeCache.value.size > 50) {
+    const firstKey = routeCache.value.keys().next().value
+    routeCache.value.delete(firstKey)
+  }
+}
+
+function isCacheValid(cacheEntry) {
+  if (!cacheEntry) return false
+  // Cache valid for 1 hour
+  const MAX_CACHE_AGE = 60 * 60 * 1000
+  return (Date.now() - cacheEntry.timestamp) < MAX_CACHE_AGE
+}
+
+/* ------------------------------------------------------------------
  * Routing logic
  * ----------------------------------------------------------------*/
+function calculateRouteDebounced() {
+  // Clear any pending calculation
+  if (calculateRouteTimeout) {
+    clearTimeout(calculateRouteTimeout)
+  }
+  
+  // Debounce by 300ms
+  calculateRouteTimeout = setTimeout(() => {
+    calculateRoute()
+  }, 300)
+}
+
 function calculateRoute () {
   if (!canCalculateRoute.value || isCalculating.value) return
+  
+  // Check cache first
+  const cached = getCachedRoute(startLocation.value, endLocation.value)
+  if (cached && isCacheValid(cached)) {
+    console.log('Using cached route')
+    directionsRenderer.value.setDirections(cached.data)
+    return
+  }
+  
+  // Create a unique key for this calculation
+  const calculationKey = getCacheKey(startLocation.value, endLocation.value)
+  
+  // Prevent duplicate in-flight requests
+  if (currentCalculationKey === calculationKey) {
+    console.log('Route calculation already in progress')
+    return
+  }
+  
+  currentCalculationKey = calculationKey
+  
+  // Check rate limit before calculating
+  if (!checkAndIncrementRouteLimit()) {
+    currentCalculationKey = null
+    const data = getRateLimitData()
+    showWarningSnackbar(
+      'Daily limit reached',
+      `You've reached the maximum of ${MAX_ROUTES_PER_DAY} route calculations per day. Please try again tomorrow.`
+    )
+    return
+  }
+  
   isCalculating.value = true
 
   const request = {
@@ -547,7 +693,11 @@ function calculateRoute () {
 
   directionsService.value.route(request, (result, status) => {
     isCalculating.value = false
+    currentCalculationKey = null
+    
     if (status === 'OK') {
+      // Cache the result
+      setCachedRoute(startLocation.value, endLocation.value, result)
       directionsRenderer.value.setDirections(result)
     } else {
       console.error('Directions request failed due to ' + status)
@@ -728,18 +878,19 @@ function handleEnterKey (event) {
   
   // Check if we're in the start input and autocomplete is active
   if (target === startInput.value && startAutocompleteActive.value) {
-    // Get predictions for the current input value using AutocompleteService
-    const autocompleteService = new google.maps.places.AutocompleteService()
+    // Use shared autocomplete service to prevent creating new instances
+    if (!autocompleteService.value) return
+    
     const request = {
       input: startLocation.value,
       componentRestrictions: { country: ['us', 'gb'] }
     }
     
-    autocompleteService.getPlacePredictions(request, (predictions, status) => {
+    autocompleteService.value.getPlacePredictions(request, (predictions, status) => {
       if (status === 'OK' && predictions && predictions.length > 0) {
-        // Use the first prediction
-        const placesService = new google.maps.places.PlacesService(map.value)
-        placesService.getDetails({ placeId: predictions[0].place_id }, (place, detailsStatus) => {
+        // Use the shared places service
+        if (!placesService.value) return
+        placesService.value.getDetails({ placeId: predictions[0].place_id }, (place, detailsStatus) => {
           if (detailsStatus === 'OK' && place.formatted_address) {
             startLocation.value = place.formatted_address
             startAutocompleteActive.value = false
@@ -756,18 +907,19 @@ function handleEnterKey (event) {
   
   // Check if we're in the end input and autocomplete is active
   if (target === endInput.value && endAutocompleteActive.value) {
-    // Get predictions for the current input value using AutocompleteService
-    const autocompleteService = new google.maps.places.AutocompleteService()
+    // Use shared autocomplete service to prevent creating new instances
+    if (!autocompleteService.value) return
+    
     const request = {
       input: endLocation.value,
       componentRestrictions: { country: ['us', 'gb'] }
     }
     
-    autocompleteService.getPlacePredictions(request, (predictions, status) => {
+    autocompleteService.value.getPlacePredictions(request, (predictions, status) => {
       if (status === 'OK' && predictions && predictions.length > 0) {
-        // Use the first prediction
-        const placesService = new google.maps.places.PlacesService(map.value)
-        placesService.getDetails({ placeId: predictions[0].place_id }, (place, detailsStatus) => {
+        // Use the shared places service
+        if (!placesService.value) return
+        placesService.value.getDetails({ placeId: predictions[0].place_id }, (place, detailsStatus) => {
           if (detailsStatus === 'OK' && place.formatted_address) {
             endLocation.value = place.formatted_address
             endAutocompleteActive.value = false
@@ -836,6 +988,11 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  // Clear any pending route calculations
+  if (calculateRouteTimeout) {
+    clearTimeout(calculateRouteTimeout)
+  }
+  
   if (startAutocomplete.value) {
     google.maps.event.clearInstanceListeners(startAutocomplete.value)
   }
@@ -845,6 +1002,9 @@ onBeforeUnmount(() => {
   if (directionsRenderer.value) {
     google.maps.event.clearInstanceListeners(directionsRenderer.value)
   }
+  
+  // Clear cache to free memory
+  routeCache.value.clear()
 })
 </script>
 
