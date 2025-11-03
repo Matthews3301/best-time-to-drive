@@ -54,12 +54,9 @@
           />
         </div>
 
-        <div class="chart-section" style="margin-top: 2rem;" id="results-card">
-          <TrafficShareCard 
-            :route-data="selectedRoute" 
-            :forecast-data="forecastData" 
-          />
-        </div>
+        <!-- <div class="chart-section" style="margin-top: 2rem;" id="results-card">
+          
+        </div> -->
       </div>
       
       <div class="placeholder-message" v-else>
@@ -86,7 +83,6 @@ import { ref, onMounted, nextTick, watch, computed } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 import MapComponent from '../components/MapComponent.vue';
 import ChartComponent from '../components/ChartComponent.vue';
-import TrafficShareCard from '../components/TrafficShareCard.vue';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
