@@ -3,8 +3,10 @@
     <header class="blog-header">
       <div class="blog-header-content">
         <h1 class="blog-title">
-          <img src="/favicon.svg" alt="Rush Hour Planner logo" class="title-logo" />
-          Rush Hour Planner Blog
+          <NuxtLink to="/" class="title-link">
+            <img src="/favicon.svg" alt="Rush Hour Planner logo" class="title-logo" />
+            Rush Hour Planner
+          </NuxtLink> Blog
         </h1>
         <p class="blog-subtitle">Insights, tips, and analysis about traffic patterns, commuting, and optimal travel times</p>
       </div>
@@ -103,9 +105,9 @@ const { data: blogPosts, pending: loading, error } = await useAsyncData('blog-po
 .blog-title {
   font-size: 3.0rem;
   font-weight: 600;
-  background: linear-gradient(135deg, 
-    #1a1d29 0%, 
-    #4f46e5 50%, 
+  background: linear-gradient(135deg,
+    #1a1d29 0%,
+    #4f46e5 50%,
     #7c3aed 100%
   );
   -webkit-background-clip: text;
@@ -118,6 +120,26 @@ const { data: blogPosts, pending: loading, error } = await useAsyncData('blog-po
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+}
+
+.title-link {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg,
+    #1a1d29 0%,
+    #4f46e5 50%,
+    #7c3aed 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  font-family: inherit;
 }
 
 .title-logo {

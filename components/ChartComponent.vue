@@ -134,6 +134,12 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const props = defineProps({
   routeData: {
@@ -148,6 +154,10 @@ const props = defineProps({
     type: [Date, null],
     required: false,
     default: null
+  },
+  timezone: {
+    type: String,
+    default: 'UTC'
   }
 });
 const chartTitle = computed(() => {
@@ -169,10 +179,7 @@ const hoveredBarIndex = ref(null);
 const touchTimeout = ref(null);
 
 const currentTime = computed(() => {
-  return new Date().toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
+  return dayjs().tz(props.timezone).format('HH:mm');
 });
 
 const maxDuration = computed(() => {
@@ -306,11 +313,8 @@ const shouldShowValue = (index) => {
 };
 
 const formatTimeLabel = (timeString) => {
-  const timePart = timeString.includes('T') ? 
-    new Date(timeString).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) :
-    timeString;
-  const [hour, minute] = timePart.split(':');
-  const hourNum = parseInt(hour);
+  const [hourStr] = timeString.split(':');
+  const hourNum = parseInt(hourStr);
   if (hourNum === 0) return '12AM';
   if (hourNum === 12) return '12PM';
   if (hourNum < 12) return `${hourNum}AM`;

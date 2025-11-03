@@ -143,6 +143,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import SnackbarComponent from './SnackbarComponent.vue'
+import tzlookup from 'tz-lookup';
 
 /* ------------------------------------------------------------------
  * Props & Emits
@@ -765,11 +766,14 @@ function updateRouteFromDirections (directions) {
       end:   { lat: leg.end_location.lat(),   lng: leg.end_location.lng()   }
     },
     polyline: route.overview_polyline,
-    steps: leg.steps
-  }
+    steps: leg.steps,
+    timezone: 'UTC' // default
+  };
 
-  currentRoute.value = routeData
-  emit('route-selected', routeData)
+  // Fetch timezone
+  routeData.timezone = tzlookup(routeData.coordinates.start.lat, routeData.coordinates.start.lng) || 'UTC';
+  currentRoute.value = routeData;
+  emit('route-selected', routeData);
 }
 
 function scrollToResults () {

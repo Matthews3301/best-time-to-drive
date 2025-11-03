@@ -2,7 +2,7 @@
   <div class="app">
     <header class="header">
       <div class="header-content">
-        <h1 class="title"><img src="/favicon.svg" alt="Rush Hour Planner logo" class="title-logo" />Rush Hour Planner</h1>
+        <NuxtLink to="/" class="title-link"><h1 class="title"><img src="/favicon.svg" alt="Rush Hour Planner logo" class="title-logo" />Rush Hour Planner</h1></NuxtLink>
         <p class="subtitle">Find the optimal time to travel based on real-time traffic forecasts</p>
         
         <div class="sample-routes">
@@ -50,6 +50,7 @@
             :route-data="selectedRoute"
             :forecast-data="forecastData"
             :depart-date="selectedDepartDate"
+            :timezone="selectedRoute.timezone"
           />
         </div>
 
@@ -86,6 +87,12 @@ import { v4 as uuidv4 } from 'uuid';
 import MapComponent from '../components/MapComponent.vue';
 import ChartComponent from '../components/ChartComponent.vue';
 import TrafficShareCard from '../components/TrafficShareCard.vue';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // Initialize Vercel Analytics
 import { inject } from '@vercel/analytics';
@@ -178,18 +185,18 @@ function handleDepartureDateChanged(date) {
 async function fetchForecastData(routeData) {
   console.log('Fetching forecast for route:', routeData);
   forecastIndex.value += 1;
-  forecastData.value = generateMockForecastData(routeData, selectedDepartDate.value);
+  forecastData.value = generateMockForecastData(routeData, selectedDepartDate.value, routeData.timezone || 'UTC');
   await nextTick();
 }
 
-function generateMockForecastData(routeData = null, departDate = null) {
+function generateMockForecastData(routeData = null, departDate = null, timezone = 'UTC') {
   const data = [];
-  const now = new Date();
+  const now = dayjs().tz(timezone);
   let startTime;
   if (departDate instanceof Date) {
-    startTime = new Date(departDate.getFullYear(), departDate.getMonth(), departDate.getDate(), 0, 0, 0, 0);
+    startTime = dayjs.tz(`${departDate.getFullYear()}-${departDate.getMonth() + 1}-${departDate.getDate()} 00:00:00`, timezone);
   } else {
-    startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), 0, 0, 0);
+    startTime = now.startOf('hour');
   }
   let baseTime = 30;
   if (routeData && routeData.baseTime) {
@@ -213,8 +220,8 @@ function generateMockForecastData(routeData = null, departDate = null) {
     }
   }
   for (let i = 0; i < 24; i++) {
-    const time = new Date(startTime.getTime() + (i * 60 * 60 * 1000));
-    const hour = time.getHours();
+    const time = startTime.add(i, 'hour');
+    const hour = time.hour();
     let trafficMultiplier = 1;
     if (hour >= 7 && hour <= 9) {
       trafficMultiplier = 1.4 + (Math.random() * 0.3);
@@ -230,11 +237,7 @@ function generateMockForecastData(routeData = null, departDate = null) {
     data.push({
       time: time.toISOString(),
       duration: duration,
-      label: time.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false 
-      }),
+      label: time.format('HH:mm'),
       hour: hour,
       isExcluded: isExcluded
     });
@@ -380,9 +383,9 @@ onMounted(() => {
 .title {
   font-size: 2.4rem;
   font-weight: 600;
-  background: linear-gradient(135deg, 
-    #1a1d29 0%, 
-    #4f46e5 50%, 
+  background: linear-gradient(135deg,
+    #1a1d29 0%,
+    #4f46e5 50%,
     #7c3aed 100%
   );
   -webkit-background-clip: text;
@@ -399,6 +402,11 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+}
+
+.title-link {
+  text-decoration: none;
+  color: inherit;
 }
 
 .title-logo {
