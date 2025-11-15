@@ -15,10 +15,10 @@
         <div class="route-inputs">
           <div class="input-group">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <label>From:</label>
+              <label for="start-location-input">From:</label>
               <button 
                 class="current-location-btn"
-                :class="{ 'hidden': currentLocationUsed }"
+                :class="{ 'hidden': currentLocationUsed || startLocation }"
                 @click="useCurrentLocation('start')"
                 type="button"
               >
@@ -27,6 +27,7 @@
             </div>
             <div class="autocomplete-wrapper">
               <input 
+                id="start-location-input"
                 ref="startInput"
                 v-model="startLocation" 
                 type="text" 
@@ -36,6 +37,17 @@
                 @blur="handleStartInputBlur"
                 @focus="handleStartInputFocus"
               />
+              <button
+                v-if="startLocation"
+                type="button"
+                class="clear-input-btn"
+                @click="clearStartLocation"
+                title="Clear input"
+              >
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
               <div v-if="showStartPredictions && startPredictions.length > 0" class="autocomplete-dropdown">
                 <div 
                   v-for="prediction in startPredictions" 
@@ -65,7 +77,7 @@
           </div>
           <div class="input-group">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <label>To:</label>
+              <label for="end-location-input">To:</label>
               <button 
                 class="current-location-btn"
                 :class="{ 'hidden': true }"
@@ -77,6 +89,7 @@
             </div>
             <div class="autocomplete-wrapper">
               <input 
+                id="end-location-input"
                 ref="endInput"
                 v-model="endLocation" 
                 type="text" 
@@ -86,6 +99,17 @@
                 @blur="handleEndInputBlur"
                 @focus="handleEndInputFocus"
               />
+              <button
+                v-if="endLocation"
+                type="button"
+                class="clear-input-btn"
+                @click="clearEndLocation"
+                title="Clear input"
+              >
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
               <div v-if="showEndPredictions && endPredictions.length > 0" class="autocomplete-dropdown">
                 <div 
                   v-for="prediction in endPredictions" 
@@ -104,8 +128,9 @@
         <div style="text-align: center;">
           <div class="filter-controls">
             <div class="departure-select-group">
-              <label class="departure-label">Depart on:</label>
+              <label for="departure-time-select" class="departure-label">Depart on:</label>
               <select 
+                id="departure-time-select"
                 v-model="selectedDepartureTime"
                 class="departure-select"
               >
@@ -1080,6 +1105,23 @@ function swapLocations () {
   }
 }
 
+function clearStartLocation() {
+  startLocation.value = ''
+  startPredictions.value = []
+  showStartPredictions.value = false
+  currentLocationUsed.value = false
+  updateURLWithLocations()
+  nextTick(() => startInput.value?.focus())
+}
+
+function clearEndLocation() {
+  endLocation.value = ''
+  endPredictions.value = []
+  showEndPredictions.value = false
+  updateURLWithLocations()
+  nextTick(() => endInput.value?.focus())
+}
+
 /* ------------------------------------------------------------------
  * Public methods for external use
  * ----------------------------------------------------------------*/
@@ -1209,7 +1251,7 @@ onBeforeUnmount(() => {
 }
 
 .input-group input {
-  padding: 1.25rem 1rem;
+  padding: 1.25rem 3rem 1.25rem 1rem;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 10px;
   font-size: 1rem; /* 16px */
@@ -1237,6 +1279,39 @@ onBeforeUnmount(() => {
 .autocomplete-wrapper {
   position: relative;
   width: 100%;
+}
+
+.clear-input-btn {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.clear-input-btn svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.clear-input-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #6b7280;
+}
+
+.clear-input-btn:active {
+  background: rgba(0, 0, 0, 0.1);
+  color: #374151;
 }
 
 .current-location-btn {
@@ -1758,7 +1833,7 @@ onBeforeUnmount(() => {
   }
   
   .input-group input {
-    padding: 1rem 0.75rem;
+    padding: 1rem 2.75rem 1rem 0.75rem;
     font-size: 0.9rem;
   }
   
@@ -1839,7 +1914,7 @@ onBeforeUnmount(() => {
   }
   
   .input-group input {
-    padding: 0.875rem 0.625rem;
+    padding: 0.875rem 2.5rem 0.875rem 0.625rem;
     font-size: 0.85rem;
   }
   
@@ -1907,7 +1982,7 @@ onBeforeUnmount(() => {
 /* Very small screens - portrait phones */
 @media (max-width: 320px) {
   .input-group input {
-    padding: 0.75rem 0.5rem;
+    padding: 0.75rem 2.25rem 0.75rem 0.5rem;
     font-size: 0.8rem;
   }
   
