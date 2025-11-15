@@ -105,16 +105,17 @@
                     :style="getBarStyle(dataPoint)"
                     :title="`${dataPoint.label}: ${formatDurationLong(dataPoint.duration)} total journey time`"
                   >
-                    <div 
-                      class="bar-value" 
-                      :class="{ 
-                        'hover-value': hoveredBarIndex === index,
-                        'always-show': shouldShowValue(index)
-                      }"
-                      v-if="shouldShowValue(index) || hoveredBarIndex === index"
-                    >
-                      {{ formatDuration(dataPoint.duration) }}
-                    </div>
+                  </div>
+                  <div 
+                    class="bar-value" 
+                    :class="{ 
+                      'hover-value': hoveredBarIndex === index,
+                      'always-show': shouldShowValue(index)
+                    }"
+                    :style="getBarValueStyle(dataPoint, index)"
+                    v-if="shouldShowValue(index) || hoveredBarIndex === index"
+                  >
+                    {{ formatDuration(dataPoint.duration) }}
                   </div>
                 </div>
                 <div class="time-label" :class="{ 'invisible': !shouldShowTimeLabel(index) }">
@@ -274,6 +275,23 @@ const getBarStyle = (dataPoint) => {
   return {
     height: `${Math.max(heightPercent, 1)}%`
   };
+};
+
+const getBarValueStyle = (dataPoint, index) => {
+  const heightPercent = (dataPoint.duration / yAxisMax.value) * 100;
+  const isHovered = hoveredBarIndex.value === index;
+  
+  if (isHovered) {
+    // Center the hover value on the bar
+    return {
+      bottom: `calc(${Math.max(heightPercent, 1)}% / 2)`,
+    };
+  } else {
+    // Position always-show value at the top of the bar
+    return {
+      bottom: `${Math.max(heightPercent, 1)}%`,
+    };
+  }
 };
 
 const getBarClass = (dataPoint) => {
@@ -574,6 +592,7 @@ onBeforeUnmount(() => {
   width: 70px;
   position: relative;
   border-right: 2px solid #e5e7eb;
+  z-index: 1;
 }
 
 .y-axis-label {
@@ -587,10 +606,11 @@ onBeforeUnmount(() => {
 
 .chart-bars-container {
   flex: 1;
-  padding-top: 20px;
+  padding-top: 30px;
   position: relative;
   overflow-x: auto;
   overflow-y: visible;
+  z-index: 10;
 }
 
 .chart-bars {
@@ -612,6 +632,7 @@ onBeforeUnmount(() => {
   position: relative;
   min-width: 24px;
   width: calc(100% / 24);
+  overflow: visible;
 }
 
 .bar-container {
@@ -621,6 +642,7 @@ onBeforeUnmount(() => {
   padding: 0 2px;
   height: 100%;
   overflow: visible;
+  position: relative;
 }
 
 .bar {
@@ -674,7 +696,7 @@ onBeforeUnmount(() => {
   color: white;
   font-size: 0.6rem;
   font-weight: 600;
-  z-index: 100;
+  z-index: 1000;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   padding: 1px 3px;
   position: absolute;
@@ -683,21 +705,22 @@ onBeforeUnmount(() => {
   white-space: nowrap;
   pointer-events: none;
   transition: all 0.2s ease;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .bar-value.always-show {
-  top: -18px;
+  margin-bottom: 2px;
 }
 
 .bar-value.hover-value {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, 50%);
   background: rgba(0, 0, 0, 0.85);
   font-size: 0.65rem;
   padding: 2px 4px;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  margin-bottom: 0;
 }
 
 .time-label {
@@ -873,7 +896,7 @@ onBeforeUnmount(() => {
   .chart-bars-container {
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
-    padding-top: 20px;
+    padding-top: 30px;
     overflow-x: auto;
     overflow-y: visible;
   }
@@ -990,7 +1013,7 @@ onBeforeUnmount(() => {
   
   .chart-bars {
     gap: 1px;
-    padding: 0 4px;
+    padding: 0 10px;
     width: 480px;
     min-width: 400px;
   }
