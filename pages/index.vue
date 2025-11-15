@@ -2,7 +2,7 @@
   <div class="app">
     <header class="header">
       <div class="header-content">
-        <NuxtLink to="/" class="title-link"><h1 class="title"><img src="/favicon.svg" alt="Rush Hour Planner logo" class="title-logo" />Rush Hour Planner</h1></NuxtLink>
+        <a href="/" class="title-link"><h1 class="title"><img src="/favicon.svg" alt="Rush Hour Planner logo" class="title-logo" />Rush Hour Planner</h1></a>
         <p class="subtitle">Find the optimal time to travel based on real-time traffic forecasts</p>
         
         <div class="sample-routes">

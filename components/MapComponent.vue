@@ -15,14 +15,29 @@
         <div class="route-inputs">
           <div class="input-group">
             <label>From:</label>
-            <input 
-              ref="startInput"
-              v-model="startLocation" 
-              type="text" 
-              placeholder="Enter starting location"
-              @input="onStartLocationChange"
-              @keydown.enter="handleEnterKey"
-            />
+            <div class="autocomplete-wrapper">
+              <input 
+                ref="startInput"
+                v-model="startLocation" 
+                type="text" 
+                placeholder="Enter starting location"
+                @input="onStartLocationChange"
+                @keydown.enter="handleEnterKey"
+                @blur="handleStartInputBlur"
+                @focus="handleStartInputFocus"
+              />
+              <div v-if="showStartPredictions && startPredictions.length > 0" class="autocomplete-dropdown">
+                <div 
+                  v-for="prediction in startPredictions" 
+                  :key="prediction.place_id"
+                  class="autocomplete-item"
+                  @click="selectStartPrediction(prediction)"
+                >
+                  <div class="prediction-main">{{ prediction.structured_formatting.main_text }}</div>
+                  <div class="prediction-secondary">{{ prediction.structured_formatting.secondary_text }}</div>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="swap-button-container">
             <button 
@@ -40,14 +55,29 @@
           </div>
           <div class="input-group">
             <label>To:</label>
-            <input 
-              ref="endInput"
-              v-model="endLocation" 
-              type="text" 
-              placeholder="Enter destination"
-              @input="onEndLocationChange"
-              @keydown.enter="handleEnterKey"
-            />
+            <div class="autocomplete-wrapper">
+              <input 
+                ref="endInput"
+                v-model="endLocation" 
+                type="text" 
+                placeholder="Enter destination"
+                @input="onEndLocationChange"
+                @keydown.enter="handleEnterKey"
+                @blur="handleEndInputBlur"
+                @focus="handleEndInputFocus"
+              />
+              <div v-if="showEndPredictions && endPredictions.length > 0" class="autocomplete-dropdown">
+                <div 
+                  v-for="prediction in endPredictions" 
+                  :key="prediction.place_id"
+                  class="autocomplete-item"
+                  @click="selectEndPrediction(prediction)"
+                >
+                  <div class="prediction-main">{{ prediction.structured_formatting.main_text }}</div>
+                  <div class="prediction-secondary">{{ prediction.structured_formatting.secondary_text }}</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -196,6 +226,15 @@ const autocompleteService = ref(null)
 const placesService = ref(null)
 let calculateRouteTimeout = null
 let currentCalculationKey = null
+
+// Autocomplete debouncing state
+let startAutocompleteTimeout = null
+let endAutocompleteTimeout = null
+const startPredictions = ref([])
+const endPredictions = ref([])
+const showStartPredictions = ref(false)
+const showEndPredictions = ref(false)
+const AUTOCOMPLETE_DEBOUNCE_MS = 400
 
 // Snackbar state
 const showSnackbar = ref(false)
@@ -450,56 +489,121 @@ function setupAutocomplete () {
   if (!window.google || !window.google.maps) return
 
   try {
-    // Start location autocomplete
-    startAutocomplete.value = new google.maps.places.Autocomplete(startInput.value, { componentRestrictions: { country: ['us', 'gb'] } })
-    startAutocomplete.value.addListener('place_changed', () => {
-      const place = startAutocomplete.value.getPlace()
-      if (place.formatted_address) {
-        startLocation.value = place.formatted_address
-        startAutocompleteActive.value = false
-        updateURLWithLocations()
-        if (canCalculateRoute.value) calculateRoute()
-        // Autofocus on the "to" field after selecting a "from" location
-        nextTick(() => {
-          endInput.value?.focus()
-        })
-      }
-    })
-    
-    // Track when autocomplete suggestions are shown/hidden for start input
-    startAutocomplete.value.addListener('place_changed', () => {
-      startAutocompleteActive.value = false
-    })
-    
-    // Listen for when user types to show suggestions
-    startInput.value.addEventListener('input', () => {
-      startAutocompleteActive.value = true
-    })
-
-    // End location autocomplete
-    endAutocomplete.value = new google.maps.places.Autocomplete(endInput.value, { componentRestrictions: { country: ['us', 'gb'] } })
-    endAutocomplete.value.addListener('place_changed', () => {
-      const place = endAutocomplete.value.getPlace()
-      if (place.formatted_address) {
-        endLocation.value = place.formatted_address
-        endAutocompleteActive.value = false
-        updateURLWithLocations()
-        if (canCalculateRoute.value) calculateRoute()
-      }
-    })
-    
-    // Track when autocomplete suggestions are shown/hidden for end input
-    endAutocomplete.value.addListener('place_changed', () => {
-      endAutocompleteActive.value = false
-    })
-    
-    // Listen for when user types to show suggestions
-    endInput.value.addEventListener('input', () => {
-      endAutocompleteActive.value = true
-    })
+    // Note: Using custom debounced autocomplete instead of built-in Autocomplete widget
+    // The input handlers will trigger the debounced autocomplete
   } catch (error) {
     console.error('Error setting up autocomplete:', error)
   }
+}
+
+/* ------------------------------------------------------------------
+| * Debounced Autocomplete helpers
+| * ----------------------------------------------------------------*/
+function debouncedStartAutocomplete() {
+  if (startAutocompleteTimeout) {
+    clearTimeout(startAutocompleteTimeout)
+  }
+  
+  const inputValue = startLocation.value.trim()
+  
+  if (!inputValue) {
+    startPredictions.value = []
+    showStartPredictions.value = false
+    return
+  }
+  
+  startAutocompleteTimeout = setTimeout(() => {
+    fetchStartPredictions(inputValue)
+  }, AUTOCOMPLETE_DEBOUNCE_MS)
+}
+
+function fetchStartPredictions(input) {
+  if (!autocompleteService.value) return
+  
+  const request = {
+    input,
+    componentRestrictions: { country: ['us', 'gb'] }
+  }
+  
+  autocompleteService.value.getPlacePredictions(request, (predictions, status) => {
+    if (status === 'OK' && predictions) {
+      startPredictions.value = predictions
+      showStartPredictions.value = true
+      startAutocompleteActive.value = true
+    } else {
+      startPredictions.value = []
+      showStartPredictions.value = false
+    }
+  })
+}
+
+function debouncedEndAutocomplete() {
+  if (endAutocompleteTimeout) {
+    clearTimeout(endAutocompleteTimeout)
+  }
+  
+  const inputValue = endLocation.value.trim()
+  
+  if (!inputValue) {
+    endPredictions.value = []
+    showEndPredictions.value = false
+    return
+  }
+  
+  endAutocompleteTimeout = setTimeout(() => {
+    fetchEndPredictions(inputValue)
+  }, AUTOCOMPLETE_DEBOUNCE_MS)
+}
+
+function fetchEndPredictions(input) {
+  if (!autocompleteService.value) return
+  
+  const request = {
+    input,
+    componentRestrictions: { country: ['us', 'gb'] }
+  }
+  
+  autocompleteService.value.getPlacePredictions(request, (predictions, status) => {
+    if (status === 'OK' && predictions) {
+      endPredictions.value = predictions
+      showEndPredictions.value = true
+      endAutocompleteActive.value = true
+    } else {
+      endPredictions.value = []
+      showEndPredictions.value = false
+    }
+  })
+}
+
+function selectStartPrediction(prediction) {
+  if (!placesService.value) return
+  
+  placesService.value.getDetails({ placeId: prediction.place_id }, (place, status) => {
+    if (status === 'OK' && place.formatted_address) {
+      startLocation.value = place.formatted_address
+      startPredictions.value = []
+      showStartPredictions.value = false
+      startAutocompleteActive.value = false
+      updateURLWithLocations()
+      if (canCalculateRoute.value) calculateRoute()
+      nextTick(() => endInput.value?.focus())
+    }
+  })
+}
+
+function selectEndPrediction(prediction) {
+  if (!placesService.value) return
+  
+  placesService.value.getDetails({ placeId: prediction.place_id }, (place, status) => {
+    if (status === 'OK' && place.formatted_address) {
+      endLocation.value = place.formatted_address
+      endPredictions.value = []
+      showEndPredictions.value = false
+      endAutocompleteActive.value = false
+      updateURLWithLocations()
+      if (canCalculateRoute.value) calculateRoute()
+    }
+  })
 }
 
 function getCurrentLocation () {
@@ -864,11 +968,41 @@ function loadLocationsFromURL () {
 /* ------------------------------------------------------------------
  * Template event handlers
  * ----------------------------------------------------------------*/
-function onStartLocationChange () { updateURLWithLocations() }
-function onEndLocationChange   () { updateURLWithLocations() }
+function onStartLocationChange () { 
+  updateURLWithLocations()
+  debouncedStartAutocomplete()
+}
+function onEndLocationChange () { 
+  updateURLWithLocations()
+  debouncedEndAutocomplete()
+}
 function onExcludeNightHoursChange () {
   emit('exclude-night-hours-changed', excludeNightHours.value)
   updateURLWithLocations()
+}
+
+function handleStartInputBlur() {
+  setTimeout(() => {
+    showStartPredictions.value = false
+  }, 200)
+}
+
+function handleStartInputFocus() {
+  if (startLocation.value.trim()) {
+    debouncedStartAutocomplete()
+  }
+}
+
+function handleEndInputBlur() {
+  setTimeout(() => {
+    showEndPredictions.value = false
+  }, 200)
+}
+
+function handleEndInputFocus() {
+  if (endLocation.value.trim()) {
+    debouncedEndAutocomplete()
+  }
 }
 
 // React to departure selection changes
@@ -880,65 +1014,24 @@ watch(selectedDepartureTime, () => {
 function handleEnterKey (event) {
   const target = event.target
   
-  // Check if we're in the start input and autocomplete is active
-  if (target === startInput.value && startAutocompleteActive.value) {
-    // Use shared autocomplete service to prevent creating new instances
-    if (!autocompleteService.value) return
-    
-    const request = {
-      input: startLocation.value,
-      componentRestrictions: { country: ['us', 'gb'] }
-    }
-    
-    autocompleteService.value.getPlacePredictions(request, (predictions, status) => {
-      if (status === 'OK' && predictions && predictions.length > 0) {
-        // Use the shared places service
-        if (!placesService.value) return
-        placesService.value.getDetails({ placeId: predictions[0].place_id }, (place, detailsStatus) => {
-          if (detailsStatus === 'OK' && place.formatted_address) {
-            startLocation.value = place.formatted_address
-            startAutocompleteActive.value = false
-            updateURLWithLocations()
-            if (canCalculateRoute.value) calculateRoute()
-            nextTick(() => endInput.value?.focus())
-          }
-        })
-        return
-      }
-    })
+  // Check if we're in the start input and have predictions
+  if (target === startInput.value && startPredictions.value.length > 0) {
+    event.preventDefault()
+    selectStartPrediction(startPredictions.value[0])
     return
   }
   
-  // Check if we're in the end input and autocomplete is active
-  if (target === endInput.value && endAutocompleteActive.value) {
-    // Use shared autocomplete service to prevent creating new instances
-    if (!autocompleteService.value) return
-    
-    const request = {
-      input: endLocation.value,
-      componentRestrictions: { country: ['us', 'gb'] }
-    }
-    
-    autocompleteService.value.getPlacePredictions(request, (predictions, status) => {
-      if (status === 'OK' && predictions && predictions.length > 0) {
-        // Use the shared places service
-        if (!placesService.value) return
-        placesService.value.getDetails({ placeId: predictions[0].place_id }, (place, detailsStatus) => {
-          if (detailsStatus === 'OK' && place.formatted_address) {
-            endLocation.value = place.formatted_address
-            endAutocompleteActive.value = false
-            updateURLWithLocations()
-            if (canCalculateRoute.value) calculateRoute()
-          }
-        })
-        return
-      }
-    })
+  // Check if we're in the end input and have predictions
+  if (target === endInput.value && endPredictions.value.length > 0) {
+    event.preventDefault()
+    selectEndPrediction(endPredictions.value[0])
     return
   }
   
-  // If no autocomplete suggestions are active, proceed with normal route calculation
-  nextTick(() => calculateRoute())
+  // If no autocomplete suggestions are available, proceed with normal route calculation
+  if (canCalculateRoute.value) {
+    nextTick(() => calculateRoute())
+  }
 }
 
 function swapLocations () {
@@ -997,12 +1090,14 @@ onBeforeUnmount(() => {
     clearTimeout(calculateRouteTimeout)
   }
   
-  if (startAutocomplete.value) {
-    google.maps.event.clearInstanceListeners(startAutocomplete.value)
+  // Clear autocomplete debounce timeouts
+  if (startAutocompleteTimeout) {
+    clearTimeout(startAutocompleteTimeout)
   }
-  if (endAutocomplete.value) {
-    google.maps.event.clearInstanceListeners(endAutocomplete.value)
+  if (endAutocompleteTimeout) {
+    clearTimeout(endAutocompleteTimeout)
   }
+  
   if (directionsRenderer.value) {
     google.maps.event.clearInstanceListeners(directionsRenderer.value)
   }
@@ -1105,6 +1200,55 @@ onBeforeUnmount(() => {
 
 .input-group input::placeholder {
   color: #9ca3af;
+}
+
+.autocomplete-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  margin-top: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.05),
+    0 10px 15px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.autocomplete-item {
+  padding: 0.875rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-item:hover {
+  background-color: rgba(99, 102, 241, 0.05);
+}
+
+.prediction-main {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1a1d29;
+  margin-bottom: 0.25rem;
+}
+
+.prediction-secondary {
+  font-size: 0.8rem;
+  color: #6b7280;
 }
 
 .swap-button-container {
