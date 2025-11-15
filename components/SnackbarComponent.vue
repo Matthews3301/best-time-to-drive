@@ -91,13 +91,13 @@ function dismiss() {
   z-index: 1000;
   max-width: 400px;
   min-width: 300px;
-  background: #f9fafb;
+  background: #111827;
   border-radius: 8px;
   box-shadow: 
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06),
-    0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 2px 4px -1px rgba(0, 0, 0, 0.2),
+    0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   animation: slideInUp 0.3s ease-out;
   overflow: hidden;
 }
@@ -162,14 +162,14 @@ function dismiss() {
   margin: 0 0 4px 0;
   font-size: 14px;
   font-weight: 600;
-  color: #111827;
+  color: #ffffff;
   line-height: 1.4;
 }
 
 .snackbar-text {
   margin: 0;
   font-size: 14px;
-  color: #6b7280;
+  color: #d1d5db;
   line-height: 1.4;
 }
 
@@ -190,8 +190,8 @@ function dismiss() {
 }
 
 .snackbar-close:hover {
-  background: rgba(0, 0, 0, 0.05);
-  color: #6b7280;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 
 .snackbar-close svg {
@@ -210,6 +210,17 @@ function dismiss() {
   }
 }
 
+@keyframes slideInUpMobile {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .snackbar {
@@ -219,6 +230,7 @@ function dismiss() {
     transform: none;
     max-width: none;
     min-width: auto;
+    animation: slideInUpMobile 0.3s ease-out;
   }
   
   .snackbar-content {

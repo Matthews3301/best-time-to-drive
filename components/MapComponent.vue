@@ -14,7 +14,17 @@
       <div class="map-controls">
         <div class="route-inputs">
           <div class="input-group">
-            <label>From:</label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label>From:</label>
+              <button 
+                class="current-location-btn"
+                :class="{ 'hidden': currentLocationUsed }"
+                @click="useCurrentLocation('start')"
+                type="button"
+              >
+                Current Location
+              </button>
+            </div>
             <div class="autocomplete-wrapper">
               <input 
                 ref="startInput"
@@ -54,7 +64,17 @@
             </button>
           </div>
           <div class="input-group">
-            <label>To:</label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label>To:</label>
+              <button 
+                class="current-location-btn"
+                :class="{ 'hidden': true }"
+                @click="useCurrentLocation('end')"
+                type="button"
+              >
+                Current Location
+              </button>
+            </div>
             <div class="autocomplete-wrapper">
               <input 
                 ref="endInput"
@@ -219,6 +239,7 @@ const currentRoute        = ref(null)
 const googleMapsLoaded    = ref(false)
 const excludeNightHours   = ref(true)
 const selectedDepartureTime = ref('Now')
+const currentLocationUsed = ref(false)
 
 // API optimization state
 const routeCache = ref(new Map())
@@ -475,7 +496,6 @@ function setupMap () {
     loadingError.value = null
 
     nextTick(() => startInput.value?.focus())
-    getCurrentLocation()
     
     // Set initial traffic layer state
     toggleTrafficLayer()
@@ -606,8 +626,11 @@ function selectEndPrediction(prediction) {
   })
 }
 
-function getCurrentLocation () {
-  if (!navigator.geolocation) return
+function useCurrentLocation(target) {
+  if (!navigator.geolocation) {
+    showErrorSnackbar('Geolocation not supported', 'Your browser does not support geolocation.')
+    return
+  }
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
@@ -617,13 +640,22 @@ function getCurrentLocation () {
 
       const geocoder = new google.maps.Geocoder()
       geocoder.geocode({ location: pos }, (results, status) => {
-        if (status === 'OK' && results[0] && !startLocation.value.trim()) {
-          startLocation.value = results[0].formatted_address
+        if (status === 'OK' && results[0]) {
+          if (target === 'start') {
+            startLocation.value = results[0].formatted_address
+          } else {
+            endLocation.value = results[0].formatted_address
+          }
+          currentLocationUsed.value = true
           updateURLWithLocations()
+          if (canCalculateRoute.value) calculateRoute()
         }
       })
     },
-    () => console.log('Geolocation permission denied or unavailable')
+    (error) => {
+      console.log('Geolocation permission denied or unavailable', error)
+      showErrorSnackbar('Location access denied', 'Please allow location access to use this feature.')
+    }
   )
 }
 
@@ -1166,13 +1198,13 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  position: relative;
 }
 
 .input-group label {
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
-  margin-bottom: 0.5rem;
   letter-spacing: -0.01em;
 }
 
@@ -1205,6 +1237,34 @@ onBeforeUnmount(() => {
 .autocomplete-wrapper {
   position: relative;
   width: 100%;
+}
+
+.current-location-btn {
+  background: none;
+  border: none;
+  color: #6366f1;
+  font-size: 0.775rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: right;
+  transition: color 0.2s ease, opacity 0.2s ease;
+  opacity: 1;
+  visibility: visible;
+  display: block;
+}
+
+.current-location-btn:hover {
+  color: #4f46e5;
+}
+
+.current-location-btn:active {
+  color: #4338ca;
+}
+
+.current-location-btn.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .autocomplete-dropdown {
@@ -1757,7 +1817,7 @@ onBeforeUnmount(() => {
 /* Extra small screens */
 @media (max-width: 480px) {
   .map-controls {
-    padding: 0.75rem;
+    padding: 1.4rem 0.75rem 0.75rem 0.75rem;
     gap: 1rem;
   }
   

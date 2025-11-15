@@ -82,7 +82,7 @@
         <div class="chart-area">
           <div class="y-axis">
             <div class="y-axis-label" v-for="tick in yAxisTicks" :key="tick" :style="getYAxisLabelStyle(tick)">
-              {{ formatDuration(tick) }}
+              {{ formatDurationYAxis(tick) }}
             </div>
           </div>
           
@@ -331,6 +331,15 @@ const formatDuration = (minutes) => {
     return `${hours}h ${remainingMinutes}m`;
   }
   return `${minutes}m`;
+};
+
+const formatDurationYAxis = (minutes) => {
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return `${hours}:${remainingMinutes.toString().padStart(2, '0')}`;
+  }
+  return `0:${minutes.toString().padStart(2, '0')}`;
 };
 
 const formatDurationLong = (minutes) => {
