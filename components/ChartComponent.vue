@@ -198,20 +198,20 @@ const yAxisMax = computed(() => {
 const yAxisTicks = computed(() => {
   const maxDuration = yAxisMax.value;
   const preferredIntervals = [10, 15, 20, 30, 45, 60, 90, 120, 150, 180, 240, 300, 360];
-  let interval = 10;
+  let interval = 15;
   if (maxDuration <= 60) {
-    interval = 10;
-  } else if (maxDuration <= 120) {
     interval = 15;
-  } else if (maxDuration <= 180) {
+  } else if (maxDuration <= 120) {
     interval = 30;
+  } else if (maxDuration <= 180) {
+    interval = 45;
   } else {
-    interval = 60;
+    interval = 90;
   }
   // Calculate the number of ticks based on the interval
   let numberOfTicks = Math.ceil(maxDuration / interval);
-  // Adjust the interval if the number of ticks exceeds 20
-  while (numberOfTicks > 12) {
+  // Adjust the interval if the number of ticks exceeds 8
+  while (numberOfTicks > 8) {
     interval *= 2;
     numberOfTicks = Math.ceil(maxDuration / interval);
   }
@@ -288,10 +288,10 @@ const getBarClass = (dataPoint) => {
 };
 
 const getYAxisLabelStyle = (tick) => {
-  const chartHeight = 100 - (28 / 3);
+  const chartHeight = 100;
   const position = (tick / yAxisMax.value) * chartHeight;
   return {
-    bottom: `${position + 10}%`
+    bottom: `${position}%`
   };
 };
 
@@ -309,7 +309,20 @@ const shouldShowTimeLabel = (index) => {
 
 const shouldShowValue = (index) => {
   const dataPoint = props.forecastData[index];
-  return dataPoint.duration === minDuration.value || dataPoint.duration === maxDuration.value;
+  const isMinOrMax = dataPoint.duration === minDuration.value || dataPoint.duration === maxDuration.value;
+  
+  if (!isMinOrMax) return false;
+  
+  // Hide if previous bar has the same value (keep first occurrence only)
+  if (index > 0) {
+    const prevDuration = props.forecastData[index - 1].duration;
+    const prevIsMinOrMax = prevDuration === minDuration.value || prevDuration === maxDuration.value;
+    if (prevIsMinOrMax && prevDuration === dataPoint.duration) {
+      return false;
+    }
+  }
+  
+  return true;
 };
 
 const formatTimeLabel = (timeString) => {
@@ -547,7 +560,9 @@ onBeforeUnmount(() => {
 }
 
 .y-axis {
-  top: 20px;
+  top: 0px;
+  margin-bottom: 44px;
+  margin-top: 20px;
   width: 70px;
   position: relative;
   border-right: 2px solid #e5e7eb;
@@ -611,11 +626,13 @@ onBeforeUnmount(() => {
   justify-content: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: visible;
+  z-index: 1;
 }
 
 .bar:hover {
   transform: scaleY(1.05);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  z-index: 2;
 }
 
 .bar.optimal {
@@ -649,6 +666,7 @@ onBeforeUnmount(() => {
   color: white;
   font-size: 0.6rem;
   font-weight: 600;
+  z-index: 100;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   padding: 1px 3px;
   position: absolute;
@@ -835,8 +853,8 @@ onBeforeUnmount(() => {
   }
   
   .y-axis {
-    top: 20px;
     width: 35px;
+    margin-top: 0px;
   }
   
   .y-axis-label {
