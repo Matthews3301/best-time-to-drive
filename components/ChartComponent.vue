@@ -222,6 +222,14 @@ const yAxisTicks = computed(() => {
   if (ticks[ticks.length - 1] < maxDuration) {
     ticks.push(maxDuration);
   }
+  // Remove second-to-last tick if it's too close to the last tick (within 10%)
+  if (ticks.length >= 2) {
+    const lastTick = ticks[ticks.length - 1];
+    const secondLastTick = ticks[ticks.length - 2];
+    if (lastTick - secondLastTick < lastTick * 0.1) {
+      ticks.splice(ticks.length - 2, 1);
+    }
+  }
   return ticks;
 });
 
