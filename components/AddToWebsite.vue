@@ -56,6 +56,10 @@
         <pre class="code-snippet"><code>{{ currentSnippet }}</code></pre>
       </div>
     </div>
+
+    <div class="footer-note">
+      <p>No signup required. Just copy and paste the code above into your website.</p>
+    </div>
   </div>
 </template>
 
