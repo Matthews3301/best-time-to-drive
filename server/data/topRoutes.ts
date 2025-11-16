@@ -56,7 +56,7 @@ export const popularRoutes: RouteData[] = [
   },
   {
     from: 'Eugene, OR, USA',
-    to: 'Vancouver, WA, USA',
+    to: 'Vancouver, BC, Canada',
     priority: 0.6,
     changefreq: 'weekly'
   },

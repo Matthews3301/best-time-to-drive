@@ -567,7 +567,7 @@ function fetchStartPredictions(input) {
   
   const request = {
     input,
-    componentRestrictions: { country: ['us', 'gb'] }
+    componentRestrictions: { country: ['us', 'gb', 'ca'] }
   }
   
   autocompleteService.value.getPlacePredictions(request, (predictions, status) => {
@@ -605,7 +605,7 @@ function fetchEndPredictions(input) {
   
   const request = {
     input,
-    componentRestrictions: { country: ['us', 'gb'] }
+    componentRestrictions: { country: ['us', 'gb', 'ca'] }
   }
   
   autocompleteService.value.getPlacePredictions(request, (predictions, status) => {

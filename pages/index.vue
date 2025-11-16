@@ -15,9 +15,9 @@
             </button>
             <button 
               class="sample-route-btn" 
-              @click="selectSampleRoute('Eugene, OR', 'Vancouver, WA')"
+              @click="selectSampleRoute('Eugene, OR', 'Vancouver, BC, Canada')"
             >
-              Eugene, OR → Vancouver, WA
+              Eugene, OR → Vancouver, BC
             </button>
             <button 
               class="sample-route-btn" 
