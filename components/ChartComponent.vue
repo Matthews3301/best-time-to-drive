@@ -581,14 +581,14 @@ onBeforeUnmount(() => {
   display: flex;
   height: 300px;
   position: relative;
-  max-width: calc(100vw - 6.5rem);
+  max-width: calc(100vw - 12rem);
   overflow: hidden;
 }
 
 .y-axis {
   top: 0px;
-  margin-bottom: 44px;
-  margin-top: 20px;
+  margin-bottom: 30px;
+  margin-top: 22px;
   width: 70px;
   position: relative;
   border-right: 2px solid #e5e7eb;
@@ -631,7 +631,7 @@ onBeforeUnmount(() => {
   cursor: pointer;
   position: relative;
   min-width: 24px;
-  width: calc(100% / 24);
+  width: calc((100% - 23px) / 24);
   overflow: visible;
 }
 
@@ -880,12 +880,14 @@ onBeforeUnmount(() => {
   
   .chart-area {
     height: 220px;
+    max-width: calc(100vw - 6.5rem);
     overflow: hidden;
   }
   
   .y-axis {
     width: 35px;
-    margin-top: 0px;
+    margin-bottom: 24px;
+    margin-top: 20px;
   }
   
   .y-axis-label {
@@ -910,8 +912,8 @@ onBeforeUnmount(() => {
   
   .bar-wrapper {
     min-width: 22px;
-    width: 22px;
-    flex: 0 0 22px;
+    width: calc((100% - 46px) / 24);
+    flex: 0 0 auto;
   }
   
   .bar-container {
@@ -1004,6 +1006,8 @@ onBeforeUnmount(() => {
   .y-axis {
     top: 20px;
     width: 30px;
+    margin-bottom: 44px;
+    margin-top: 20px;
   }
   
   .y-axis-label {
@@ -1020,8 +1024,8 @@ onBeforeUnmount(() => {
   
   .bar-wrapper {
     min-width: 18px;
-    width: 18px;
-    flex: 0 0 18px;
+    width: calc((100% - 23px) / 24);
+    flex: 0 0 auto;
   }
   
   .time-label {
