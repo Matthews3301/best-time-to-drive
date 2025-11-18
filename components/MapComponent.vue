@@ -631,7 +631,9 @@ function selectStartPrediction(prediction) {
       startAutocompleteActive.value = false
       updateURLWithLocations()
       if (canCalculateRoute.value) calculateRoute()
-      nextTick(() => endInput.value?.focus())
+      if (!endLocation.value) {
+        nextTick(() => endInput.value?.focus())
+      }
     }
   })
 }
