@@ -273,11 +273,17 @@ function selectSampleRoute(from, to) {
   }
 }
 
-watch(analyticsData, (newData) => {
-  console.log('Saving data to analytics:', newData);
+watch(forecastIndex, () => {
+  // Only send analytics when we have both start and end locations
+  if (!selectedRoute.value?.start || !selectedRoute.value?.end) {
+    return;
+  }
+  
+  const data = analyticsData.value;
+  console.log('Saving data to analytics:', data);
   const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   if (!isLocalhost) {
-    saveDataToAnalytics(newData);
+    saveDataToAnalytics(data);
   }
 });
 
