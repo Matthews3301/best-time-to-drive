@@ -55,7 +55,7 @@
         </div>
 
         <div class="chart-section" style="margin-top: 2rem;" id="results-card">
-          <AddToWebsite :target="selectedRoute.end" />
+          <AddToWebsite :target="selectedRoute.end" :forecast-data="forecastData" />
         </div>
       </div>
       

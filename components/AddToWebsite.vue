@@ -70,6 +70,10 @@ const props = defineProps({
   target: {
     type: String,
     required: true
+  },
+  forecastData: {
+    type: Array,
+    required: true
   }
 });
 
@@ -80,8 +84,77 @@ const copied = ref(false);
 const styles = [
   { id: 'minimal', name: 'Minimal' },
   { id: 'detailed', name: 'Detailed' },
-  { id: 'badge', name: 'Badge' }
+  { id: 'graph', name: 'Graph' }
 ];
+
+// Calculate min and max durations from forecast data
+const minDuration = computed(() => {
+  const availableTimes = props.forecastData.filter(d => !d.isExcluded);
+  return availableTimes.length > 0 ? Math.min(...availableTimes.map(d => d.duration)) : Math.min(...props.forecastData.map(d => d.duration));
+});
+
+const maxDuration = computed(() => {
+  return Math.max(...props.forecastData.map(d => d.duration));
+});
+
+// Generate bar HTML for a data point
+const getBarColor = (dataPoint) => {
+  if (dataPoint.isExcluded) {
+    return 'linear-gradient(135deg, #d1d5db, #9ca3af)';
+  }
+  const isOptimal = dataPoint.duration === minDuration.value;
+  const isHighTraffic = dataPoint.duration > (minDuration.value * 1.3);
+  
+  if (isOptimal) {
+    return 'linear-gradient(135deg, #3b82f6, #2563eb)';
+  } else if (isHighTraffic) {
+    return 'linear-gradient(135deg, #f87171, #ef4444)';
+  } else {
+    return 'linear-gradient(135deg, #6b7280, #4b5563)';
+  }
+};
+
+const getBarHeight = (dataPoint) => {
+  return Math.round((dataPoint.duration / maxDuration.value) * 100);
+};
+
+const formatTimeLabel = (timeString) => {
+  const [hourStr] = timeString.split(':');
+  const hourNum = parseInt(hourStr);
+  if (hourNum === 0) return '12AM';
+  if (hourNum === 12) return '12PM';
+  if (hourNum < 12) return `${hourNum}AM`;
+  return `${hourNum - 12}PM`;
+};
+
+// Normalize data to always start at 12AM (midnight)
+const normalizedForecastData = computed(() => {
+  if (!props.forecastData || props.forecastData.length === 0) return [];
+  
+  // Find the index where hour is 0 (12AM/midnight)
+  const midnightIndex = props.forecastData.findIndex(d => d.hour === 0);
+  
+  // If midnight is not found or already at the start, return as-is
+  if (midnightIndex === -1 || midnightIndex === 0) {
+    return props.forecastData;
+  }
+  
+  // Rearrange: take everything from midnight onwards, then everything before midnight
+  return [
+    ...props.forecastData.slice(midnightIndex),
+    ...props.forecastData.slice(0, midnightIndex)
+  ];
+});
+
+// Generate all 24 bars HTML
+const generateBarsHtml = () => {
+  return normalizedForecastData.value.map(dataPoint => {
+    const height = getBarHeight(dataPoint);
+    const color = getBarColor(dataPoint);
+    const label = formatTimeLabel(dataPoint.label);
+    return `<div title="${label}" style="flex: 1; background: ${color}; border-radius: 4px 4px 0 0; height: ${height}%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='scaleY(1.05)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='scaleY(1)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';"></div>`;
+  }).join('\n      ');
+};
 
 const snippets = computed(() => ({
   minimal: `<p>Plan your drive: <a href="${url.value}" target="_blank" rel="noopener">rush hour calculator for ${props.target}</a></p>`,
@@ -93,10 +166,29 @@ const snippets = computed(() => ({
   </p>
 </div>`,
   
-  badge: `<a href="${url.value}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: linear-gradient(135deg, #6366f1, #7c3aed); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); transition: transform 0.2s;">
-  <span>🚗</span>
-  <span>Rush Hour Calculator for ${props.target}</span>
-</a>`
+  graph: `<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin: 20px 0; width: 100%; box-sizing: border-box;">
+  <h4 style="margin: 0 0 16px 0; color: #1e293b; font-size: 18px; font-weight: 600;">Daily Traffic Levels</h4>
+  <div style="display: flex; gap: 12px; height: 180px; margin-bottom: 16px; align-items: flex-end;">
+    <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding-right: 10px; border-right: 2px solid #e5e7eb; min-width: 50px;">
+      <span style="font-size: 12px; color: #6b7280; font-weight: 500;">High</span>
+      <span style="font-size: 12px; color: #6b7280; font-weight: 500;">Medium</span>
+      <span style="font-size: 12px; color: #6b7280; font-weight: 500;">Low</span>
+    </div>
+    <div style="flex: 1; display: flex; gap: 3px; align-items: flex-end; height: 100%;">
+      ${generateBarsHtml()}
+    </div>
+  </div>
+  <div style="display: flex; justify-content: space-between; font-size: 11px; color: #6b7280; margin-bottom: 16px; padding-left: 62px; font-weight: 500;">
+    <span>12AM</span>
+    <span>6AM</span>
+    <span>12PM</span>
+    <span>6PM</span>
+    <span>11PM</span>
+  </div>
+  <div style="text-align: right; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+    <a href="${url.value}" target="_blank" rel="noopener" style="color: #9ca3af; text-decoration: none; font-size: 12px;">Source: Rush Hour Planner</a>
+  </div>
+</div>`
 }));
 
 const previews = computed(() => ({
@@ -109,10 +201,29 @@ const previews = computed(() => ({
   </p>
 </div>`,
   
-  badge: `<a href="${url.value}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: linear-gradient(135deg, #6366f1, #7c3aed); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);">
-  <span>🚗</span>
-  <span>Rush Hour Calculator for ${props.target}</span>
-</a>`
+  graph: `<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box;">
+  <h4 style="margin: 0 0 16px 0; color: #1e293b; font-size: 18px; font-weight: 600;">Daily Traffic Levels</h4>
+  <div style="display: flex; gap: 12px; height: 180px; margin-bottom: 16px; align-items: flex-end;">
+    <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding-right: 10px; border-right: 2px solid #e5e7eb; min-width: 50px;">
+      <span style="font-size: 12px; color: #6b7280; font-weight: 500;">High</span>
+      <span style="font-size: 12px; color: #6b7280; font-weight: 500;">Medium</span>
+      <span style="font-size: 12px; color: #6b7280; font-weight: 500;">Low</span>
+    </div>
+    <div style="flex: 1; display: flex; gap: 3px; align-items: flex-end; height: 100%;">
+      ${generateBarsHtml()}
+    </div>
+  </div>
+  <div style="display: flex; justify-content: space-between; font-size: 11px; color: #6b7280; margin-bottom: 16px; padding-left: 62px; font-weight: 500;">
+    <span>12AM</span>
+    <span>6AM</span>
+    <span>12PM</span>
+    <span>6PM</span>
+    <span>11PM</span>
+  </div>
+  <div style="text-align: right; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+    <a href="${url.value}" target="_blank" rel="noopener" style="color: #9ca3af; text-decoration: none; font-size: 12px;">Source: Rush Hour Planner</a>
+  </div>
+</div>`
 }));
 
 const currentSnippet = computed(() => snippets.value[selectedStyle.value]);
