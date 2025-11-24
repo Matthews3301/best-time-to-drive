@@ -82,8 +82,8 @@ const selectedStyle = ref('detailed');
 const copied = ref(false);
 
 const styles = [
-  { id: 'minimal', name: 'Minimal' },
   { id: 'detailed', name: 'Detailed' },
+  { id: 'minimal', name: 'Minimal' },
   { id: 'graph', name: 'Graph' }
 ];
 
@@ -152,8 +152,8 @@ const generateBarsHtml = () => {
     const height = getBarHeight(dataPoint);
     const color = getBarColor(dataPoint);
     const label = formatTimeLabel(dataPoint.label);
-    return `<div title="${label}" style="flex: 1; background: ${color}; border-radius: 4px 4px 0 0; height: ${height}%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='scaleY(1.05)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='scaleY(1)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';"></div>`;
-  }).join('\n      ');
+    return `<div class="bar" title="${label}" style="background:${color};height:${height}%"></div>`;
+  }).join('');
 };
 
 const snippets = computed(() => ({
@@ -166,27 +166,46 @@ const snippets = computed(() => ({
   </p>
 </div>`,
   
-  graph: `<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin: 20px 0; width: 100%; box-sizing: border-box;">
-  <h4 style="margin: 0 0 16px 0; color: #1e293b; font-size: 18px; font-weight: 600;">Daily Traffic Levels</h4>
-  <div style="display: flex; gap: 12px; height: 180px; margin-bottom: 16px; align-items: flex-end;">
-    <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding-right: 10px; border-right: 2px solid #e5e7eb; min-width: 50px;">
-      <span style="font-size: 12px; color: #6b7280; font-weight: 500;">High</span>
-      <span style="font-size: 12px; color: #6b7280; font-weight: 500;">Medium</span>
-      <span style="font-size: 12px; color: #6b7280; font-weight: 500;">Low</span>
+  graph: `<style>
+  .bar{flex:1;border-radius:4px 4px 0 0;box-shadow:0 2px 4px rgba(0,0,0,.1);cursor:pointer;transition:transform .2s,box-shadow .2s}
+  .bar:hover{transform:scaleY(1.05);box-shadow:0 4px 8px rgba(0,0,0,.2)}
+  @media (max-width:640px){
+    .traffic-y-axis{display:none!important}
+    .traffic-chart-container{gap:0!important}
+    .traffic-time-labels{padding-left:0!important}
+  }
+</style>
+<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.05);margin:20px 0;width:100%;box-sizing:border-box">
+  <h4 style="margin:0 0 16px 0;color:#1e293b;font-size:18px;font-weight:600">Daily Traffic Levels</h4>
+  <div class="traffic-chart-container" style="display:flex;gap:12px;height:180px;margin-bottom:16px;align-items:flex-end">
+    <div class="traffic-y-axis" style="display:flex;flex-direction:column;justify-content:space-between;height:100%;padding-right:10px;border-right:2px solid #e5e7eb;min-width:50px">
+      <span style="font-size:12px;color:#6b7280;font-weight:500">High</span>
+      <span style="font-size:12px;color:#6b7280;font-weight:500">Medium</span>
+      <span style="font-size:12px;color:#6b7280;font-weight:500">Low</span>
     </div>
-    <div style="flex: 1; display: flex; gap: 3px; align-items: flex-end; height: 100%;">
+    <div style="flex:1;display:flex;gap:3px;align-items:flex-end;height:100%">
       ${generateBarsHtml()}
     </div>
   </div>
-  <div style="display: flex; justify-content: space-between; font-size: 11px; color: #6b7280; margin-bottom: 16px; padding-left: 62px; font-weight: 500;">
+  <div class="traffic-time-labels" style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280;margin-bottom:16px;padding-left:62px;font-weight:500">
     <span>12AM</span>
     <span>6AM</span>
     <span>12PM</span>
     <span>6PM</span>
     <span>11PM</span>
   </div>
-  <div style="text-align: right; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-    <a href="${url.value}" target="_blank" rel="noopener" style="color: #9ca3af; text-decoration: none; font-size: 12px;">Source: Rush Hour Planner</a>
+  <div class="traffic-legend" style="display:flex;justify-content:center;gap:20px;margin-bottom:12px;font-size:11px;color:#6b7280">
+    <span style="display:flex;align-items:center;gap:6px">
+      <span style="width:10px;height:10px;border-radius:2px;background:linear-gradient(135deg,#f87171,#ef4444)"></span>
+      <span>High Traffic</span>
+    </span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <span style="width:10px;height:10px;border-radius:2px;background:linear-gradient(135deg,#3b82f6,#2563eb)"></span>
+      <span>Low Traffic</span>
+    </span>
+  </div>
+  <div style="text-align:right;padding-top:12px;border-top:1px solid #e5e7eb">
+    <a href="${url.value}" target="_blank" rel="noopener" style="color:#9ca3af;text-decoration:none;font-size:12px">Source: Rush Hour Planner</a>
   </div>
 </div>`
 }));
@@ -201,27 +220,46 @@ const previews = computed(() => ({
   </p>
 </div>`,
   
-  graph: `<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box;">
-  <h4 style="margin: 0 0 16px 0; color: #1e293b; font-size: 18px; font-weight: 600;">Daily Traffic Levels</h4>
-  <div style="display: flex; gap: 12px; height: 180px; margin-bottom: 16px; align-items: flex-end;">
-    <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding-right: 10px; border-right: 2px solid #e5e7eb; min-width: 50px;">
-      <span style="font-size: 12px; color: #6b7280; font-weight: 500;">High</span>
-      <span style="font-size: 12px; color: #6b7280; font-weight: 500;">Medium</span>
-      <span style="font-size: 12px; color: #6b7280; font-weight: 500;">Low</span>
+  graph: `<style>
+  .bar{flex:1;border-radius:4px 4px 0 0;box-shadow:0 2px 4px rgba(0,0,0,.1);cursor:pointer;transition:transform .2s,box-shadow .2s}
+  .bar:hover{transform:scaleY(1.05);box-shadow:0 4px 8px rgba(0,0,0,.2)}
+  @media (max-width:640px){
+    .traffic-y-axis{display:none!important}
+    .traffic-chart-container{gap:0!important}
+    .traffic-time-labels{padding-left:0!important}
+  }
+</style>
+<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.05);width:100%;box-sizing:border-box">
+  <h4 style="margin:0 0 16px 0;color:#1e293b;font-size:18px;font-weight:600">Daily Traffic Levels</h4>
+  <div class="traffic-chart-container" style="display:flex;gap:12px;height:180px;margin-bottom:16px;align-items:flex-end">
+    <div class="traffic-y-axis" style="display:flex;flex-direction:column;justify-content:space-between;height:100%;padding-right:10px;border-right:2px solid #e5e7eb;min-width:50px">
+      <span style="font-size:12px;color:#6b7280;font-weight:500">High</span>
+      <span style="font-size:12px;color:#6b7280;font-weight:500">Medium</span>
+      <span style="font-size:12px;color:#6b7280;font-weight:500">Low</span>
     </div>
-    <div style="flex: 1; display: flex; gap: 3px; align-items: flex-end; height: 100%;">
+    <div style="flex:1;display:flex;gap:3px;align-items:flex-end;height:100%">
       ${generateBarsHtml()}
     </div>
   </div>
-  <div style="display: flex; justify-content: space-between; font-size: 11px; color: #6b7280; margin-bottom: 16px; padding-left: 62px; font-weight: 500;">
+  <div class="traffic-time-labels" style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280;margin-bottom:16px;padding-left:62px;font-weight:500">
     <span>12AM</span>
     <span>6AM</span>
     <span>12PM</span>
     <span>6PM</span>
     <span>11PM</span>
   </div>
-  <div style="text-align: right; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-    <a href="${url.value}" target="_blank" rel="noopener" style="color: #9ca3af; text-decoration: none; font-size: 12px;">Source: Rush Hour Planner</a>
+  <div class="traffic-legend" style="display:flex;justify-content:center;gap:20px;margin-bottom:12px;font-size:11px;color:#6b7280">
+    <span style="display:flex;align-items:center;gap:6px">
+      <span style="width:10px;height:10px;border-radius:2px;background:linear-gradient(135deg,#f87171,#ef4444)"></span>
+      <span>High Traffic</span>
+    </span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <span style="width:10px;height:10px;border-radius:2px;background:linear-gradient(135deg,#3b82f6,#2563eb)"></span>
+      <span>Low Traffic</span>
+    </span>
+  </div>
+  <div style="text-align:right;padding-top:12px;border-top:1px solid #e5e7eb">
+    <a href="${url.value}" target="_blank" rel="noopener" style="color:#9ca3af;text-decoration:none;font-size:12px">Source: Rush Hour Planner</a>
   </div>
 </div>`
 }));
