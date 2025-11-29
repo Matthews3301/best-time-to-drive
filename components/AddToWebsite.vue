@@ -41,20 +41,16 @@
       </div>
 
       <div class="preview-section">
-        <div class="preview-label">Preview</div>
-        <div class="preview" v-html="currentPreview"></div>
-      </div>
-
-      <div class="code-section">
-        <div class="code-header">
-          <span class="code-label">HTML Code</span>
+        <div class="preview-container">
+          <div class="preview-label">Preview</div>
           <button class="copy-btn" @click="copyHtml" :disabled="copied">
             <span v-if="copied">Copied!</span>
-            <span v-else>Copy Code</span>
+            <span v-else>Copy HTML Code</span>
           </button>
-        </div>
-        <pre class="code-snippet"><code>{{ currentSnippet }}</code></pre>
+          </div>
+          <div class="preview" v-html="currentPreview"></div>
       </div>
+
     </div>
 
     <div class="footer-note">
@@ -197,7 +193,7 @@ const snippets = computed(() => ({
   <div class="traffic-legend" style="display:flex;justify-content:center;gap:20px;margin-bottom:12px;font-size:11px;color:#6b7280">
     <span style="display:flex;align-items:center;gap:6px">
       <span style="width:10px;height:10px;border-radius:2px;background:linear-gradient(135deg,#f87171,#ef4444)"></span>
-      <span>High Traffic</span>
+      <span>Heavy Traffic</span>
     </span>
     <span style="display:flex;align-items:center;gap:6px">
       <span style="width:10px;height:10px;border-radius:2px;background:linear-gradient(135deg,#3b82f6,#2563eb)"></span>
@@ -251,7 +247,7 @@ const previews = computed(() => ({
   <div class="traffic-legend" style="display:flex;justify-content:center;gap:20px;margin-bottom:12px;font-size:11px;color:#6b7280">
     <span style="display:flex;align-items:center;gap:6px">
       <span style="width:10px;height:10px;border-radius:2px;background:linear-gradient(135deg,#f87171,#ef4444)"></span>
-      <span>High Traffic</span>
+      <span>Heavy Traffic</span>
     </span>
     <span style="display:flex;align-items:center;gap:6px">
       <span style="width:10px;height:10px;border-radius:2px;background:linear-gradient(135deg,#3b82f6,#2563eb)"></span>
@@ -416,13 +412,19 @@ async function copyHtml() {
   margin-bottom: 1.5rem;
 }
 
+.preview-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
 .preview-label {
   font-size: 0.75rem;
   font-weight: 600;
   color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 0.5rem;
 }
 
 .preview {
@@ -474,7 +476,7 @@ async function copyHtml() {
   align-items: center;
   justify-content: center;
   gap: 0.25rem;
-  min-width: 120px;
+  min-width: 150px;
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
