@@ -69,10 +69,6 @@
             Blog
           </a>
           <span class="footer-separator">•</span>
-          <a href="/team" class="contact-link">
-            Team
-          </a>
-          <span class="footer-separator">•</span>
           <a href="https://x.com/matthews8000" target="_blank" rel="noopener noreferrer" class="contact-link">
             Contact / Feedback
           </a>
