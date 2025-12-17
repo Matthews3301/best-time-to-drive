@@ -79,7 +79,7 @@ const copied = ref(false);
 
 const styles = [
   { id: 'detailed', name: 'Detailed' },
-  { id: 'minimal', name: 'Minimal' },
+  { id: 'icon', name: 'Icon' },
   { id: 'graph', name: 'Graph' }
 ];
 
@@ -153,7 +153,15 @@ const generateBarsHtml = () => {
 };
 
 const snippets = computed(() => ({
-  minimal: `<p>Plan your drive: <a href="${url.value}" target="_blank" rel="noopener">rush hour calculator for ${props.target}</a></p>`,
+  icon: `<a href="${url.value}" target="_blank" rel="noopener" title="Check traffic times for ${props.target}" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; transition: transform 0.2s;">
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="32" height="32" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+    <circle cx="16" cy="10" r="3" fill="#EF4444"/>
+    <circle cx="16" cy="16" r="3" fill="#FCD34D"/>
+    <circle cx="16" cy="22" r="3" fill="#10B981"/>
+  </svg>
+  <span style="color: #1e293b; font-size: 14px; font-weight: 600;">Traffic</span>
+</a>`,
   
   detailed: `<div style="padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
   <h4 style="margin: 0 0 8px 0; color: #1e293b; font-size: 18px;">🚗 Planning Your Visit?</h4>
@@ -207,7 +215,15 @@ const snippets = computed(() => ({
 }));
 
 const previews = computed(() => ({
-  minimal: `<p>Plan your drive: <a href="${url.value}" target="_blank" rel="noopener">rush hour calculator for ${props.target}</a></p>`,
+  icon: `<a href="${url.value}" target="_blank" rel="noopener" title="Check traffic times for ${props.target}" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; transition: transform 0.2s;">
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="32" height="32" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+    <circle cx="16" cy="10" r="3" fill="#EF4444"/>
+    <circle cx="16" cy="16" r="3" fill="#FCD34D"/>
+    <circle cx="16" cy="22" r="3" fill="#10B981"/>
+  </svg>
+  <span style="color: #1e293b; font-size: 14px; font-weight: 600;">Traffic</span>
+</a>`,
   
   detailed: `<div style="padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
   <h4 style="margin: 0 0 8px 0; color: #1e293b; font-size: 18px;">🚗 Planning Your Visit?</h4>
