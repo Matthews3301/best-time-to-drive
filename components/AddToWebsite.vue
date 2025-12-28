@@ -308,12 +308,10 @@ async function copyHtml() {
 .add-website {
   display: grid;
   gap: 2rem;
-  max-width: 900px;
-  margin: 0 auto;
 }
 
 .header-section {
-  text-align: center;
+  text-align: left;
 }
 
 .add-title {
@@ -333,7 +331,6 @@ async function copyHtml() {
   font-size: 1.1rem;
   line-height: 1.6;
   max-width: 600px;
-  margin: 0 auto;
 }
 
 .benefits-grid {

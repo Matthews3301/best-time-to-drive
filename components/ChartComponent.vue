@@ -483,9 +483,14 @@ onBeforeUnmount(() => {
 
 .chart-header h3 {
   margin: 0 0 0.5rem 0;
-  color: #333;
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1f2937;
+  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: left;
 }
 
 .chart-header p {

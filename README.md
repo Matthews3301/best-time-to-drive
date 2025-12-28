@@ -20,6 +20,16 @@ yarn install
 bun install
 ```
 
+### Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```
+OPENAI_API_KEY=your_openai_api_key_here
+```
+
+Get your OpenAI API key from: https://platform.openai.com/api-keys
+
 ## Development Server
 
 Start the development server on `http://localhost:3000`:
@@ -77,5 +87,4 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
 
 TODO:
 
-* Find / pre-book parking
 * EV charging

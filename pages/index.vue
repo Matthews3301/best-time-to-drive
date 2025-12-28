@@ -54,6 +54,10 @@
           />
         </div>
 
+        <div class="chart-section" style="margin-top: 2rem;" id="parking-card">
+          <ParkingComponent :destination="selectedRoute.end" />
+        </div>
+
         <div class="chart-section" style="margin-top: 2rem;" id="results-card">
           <AddToWebsite :target="selectedRoute.end" :forecast-data="forecastData" />
         </div>
@@ -83,6 +87,7 @@ import { ref, onMounted, nextTick, watch, computed } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 import MapComponent from '../components/MapComponent.vue';
 import ChartComponent from '../components/ChartComponent.vue';
+import ParkingComponent from '../components/ParkingComponent.vue';
 import AddToWebsite from '../components/AddToWebsite.vue';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
