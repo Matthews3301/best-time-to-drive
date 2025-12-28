@@ -1,6 +1,5 @@
 import { popularRoutes } from '../data/topRoutes';
-import { readFile } from 'fs/promises';
-import { join } from 'path';
+import blogPostsData from '../../public/blog-posts.json';
 
 export default defineEventHandler(async (event) => {
   const baseUrl = 'https://rushhourplanner.com';
@@ -28,12 +27,8 @@ export default defineEventHandler(async (event) => {
   
   // Add blog posts
   try {
-    const blogPostsPath = join(process.cwd(), 'public', 'blog-posts.json');
-    const blogPostsData = await readFile(blogPostsPath, 'utf-8');
-    const blogPosts = JSON.parse(blogPostsData);
-    
-    if (blogPosts.posts && Array.isArray(blogPosts.posts)) {
-      for (const post of blogPosts.posts) {
+    if (blogPostsData.posts && Array.isArray(blogPostsData.posts)) {
+      for (const post of blogPostsData.posts) {
         xml += '  <url>\n';
         xml += `    <loc>${baseUrl}/blog/${post.slug}</loc>\n`;
         xml += `    <lastmod>${currentDate}</lastmod>\n`;
