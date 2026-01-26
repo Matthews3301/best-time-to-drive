@@ -69,10 +69,10 @@
 
       <footer class="footer">
         <div class="footer-content">
-          <a href="/blog" class="contact-link">
+          <!-- <a href="/blog" class="contact-link">
             Blog
           </a>
-          <span class="footer-separator">•</span>
+          <span class="footer-separator">•</span> -->
           <a href="https://x.com/matthews8000" target="_blank" rel="noopener noreferrer" class="contact-link">
             Contact / Feedback
           </a>
@@ -299,26 +299,19 @@ onMounted(() => {
 <style>
 .app {
   min-height: 100vh;
-  background: #f3f4f6;
+  background: #f8fafc;
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  color: #1a1d29;
+  color: #0f172a;
 }
 
 .header {
   text-align: center;
   padding: 3rem 2rem 3rem;
-  background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 0.12) 0%, 
-    rgba(139, 92, 246, 0.10) 25%,
-    rgba(124, 58, 237, 0.08) 50%,
-    rgba(99, 102, 241, 0.10) 75%,
-    rgba(139, 92, 246, 0.06) 100%
-  );
-  backdrop-filter: blur(24px) saturate(150%);
-  border-bottom: 1px solid rgba(99, 102, 241, 0.12);
+  background: linear-gradient(180deg, #ffffff 0%, #f5f6ff 100%);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.08);
   position: relative;
   overflow: hidden;
 }
@@ -331,33 +324,14 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(800px circle at 30% 0%, rgba(99, 102, 241, 0.08), transparent 50%),
-    radial-gradient(600px circle at 70% 0%, rgba(139, 92, 246, 0.06), transparent 50%),
-    linear-gradient(180deg, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.88) 100%);
+    radial-gradient(700px circle at 30% 0%, rgba(99, 102, 241, 0.06), transparent 55%),
+    radial-gradient(500px circle at 70% 0%, rgba(139, 92, 246, 0.05), transparent 55%),
+    linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.94) 100%);
   pointer-events: none;
 }
 
 .header::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, 
-    transparent 0%, 
-    rgba(99, 102, 241, 0.04) 25%, 
-    transparent 50%, 
-    rgba(139, 92, 246, 0.04) 75%, 
-    transparent 100%
-  );
-  animation: shimmer 8s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes shimmer {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.7; }
+  display: none;
 }
 
 .header-content {
@@ -392,8 +366,8 @@ onMounted(() => {
   font-size: 2.4rem;
   font-weight: 600;
   background: linear-gradient(135deg,
-    #1a1d29 0%,
-    #4f46e5 50%,
+    #0f172a 0%,
+    #4f46e5 60%,
     #7c3aed 100%
   );
   -webkit-background-clip: text;
@@ -461,16 +435,16 @@ onMounted(() => {
 }
 
 .sample-route-btn {
-  background: rgba(255, 255, 255, 0.8);
+  background: #ffffff;
   border: 1px solid rgba(99, 102, 241, 0.2);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 0.75rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 500;
   color: #6366f1;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(8px);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   white-space: nowrap;
   position: relative;
   overflow: hidden;
@@ -495,13 +469,13 @@ onMounted(() => {
 }
 
 .sample-route-btn:hover {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(99, 102, 241, 0.4);
+  background: #ffffff;
+  border-color: rgba(99, 102, 241, 0.35);
   color: #4f46e5;
   transform: translateY(-1px);
   box-shadow: 
-    0 4px 12px rgba(99, 102, 241, 0.15),
-    0 2px 4px rgba(0, 0, 0, 0.05);
+    0 6px 16px rgba(99, 102, 241, 0.12),
+    0 2px 6px rgba(15, 23, 42, 0.06);
 }
 
 .sample-route-btn:hover::before {
@@ -572,33 +546,36 @@ onMounted(() => {
   gap: 2rem;
 }
 
+@media (min-width: 1280px) {
+  .main-content {
+    max-width: 1040px;
+  }
+}
+
 .map-section {
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 
-    0 1px 3px rgba(0, 0, 0, 0.05),
-    0 4px 12px rgba(0, 0, 0, 0.04),
-    0 12px 40px rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+    0 8px 24px rgba(15, 23, 42, 0.06),
+    0 2px 6px rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .map-section:hover {
   box-shadow: 
-    0 2px 6px rgba(0, 0, 0, 0.06),
-    0 8px 24px rgba(0, 0, 0, 0.05),
-    0 20px 60px rgba(0, 0, 0, 0.03);
+    0 10px 28px rgba(15, 23, 42, 0.08),
+    0 4px 10px rgba(15, 23, 42, 0.05);
 }
 
 .chart-section {
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 
-    0 1px 3px rgba(0, 0, 0, 0.05),
-    0 4px 12px rgba(0, 0, 0, 0.04),
-    0 12px 40px rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+    0 8px 24px rgba(15, 23, 42, 0.06),
+    0 2px 6px rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   padding: 2rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
@@ -606,9 +583,8 @@ onMounted(() => {
 
 .chart-section:hover {
   box-shadow: 
-    0 2px 6px rgba(0, 0, 0, 0.06),
-    0 8px 24px rgba(0, 0, 0, 0.05),
-    0 20px 60px rgba(0, 0, 0, 0.03);
+    0 10px 28px rgba(15, 23, 42, 0.08),
+    0 4px 10px rgba(15, 23, 42, 0.05);
 }
 
 .placeholder-message {
@@ -620,9 +596,9 @@ onMounted(() => {
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 
-    0 1px 3px rgba(0, 0, 0, 0.05),
-    0 4px 12px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+    0 8px 24px rgba(15, 23, 42, 0.06),
+    0 2px 6px rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   position: relative;
 }
 
@@ -656,7 +632,7 @@ onMounted(() => {
 }
 
 .contact-link:hover {
-  color: #6366f1;
+  color: #4f46e5;
   text-decoration: underline;
 }
 

@@ -538,7 +538,7 @@ onUnmounted(() => {
   font-size: 1.6rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
-  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -638,10 +638,11 @@ onUnmounted(() => {
 }
 
 .parking-card {
-  background: #f8fafc;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 0.625rem;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
 }
 
 .parking-card-header {
@@ -695,7 +696,7 @@ onUnmounted(() => {
 
 .location-icon-link:hover {
   color: #4f46e5;
-  background: #f0f4ff;
+  background: #eef2ff;
 }
 
 .location-icon {

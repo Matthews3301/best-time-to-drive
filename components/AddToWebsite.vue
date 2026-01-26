@@ -319,7 +319,7 @@ async function copyHtml() {
   font-size: 1.6rem;
   font-weight: 700;
   color: #1f2937;
-  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -341,17 +341,18 @@ async function copyHtml() {
 }
 
 .benefit-card {
-  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
-  padding: 1.0rem;
+  background: #ffffff;
+  padding: 1rem;
   border-radius: 12px;
   text-align: center;
   border: 1px solid #e2e8f0;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .benefit-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.12);
 }
 
 .benefit-icon {
@@ -379,7 +380,7 @@ async function copyHtml() {
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   padding: 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
 }
 
 .section-title {
@@ -397,7 +398,7 @@ async function copyHtml() {
 }
 
 .style-btn {
-  background: #f8fafc;
+  background: #ffffff;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
   padding: 0.625rem 1.25rem;
@@ -410,7 +411,7 @@ async function copyHtml() {
 
 .style-btn:hover {
   border-color: #a5b4fc;
-  background: #eef2ff;
+  background: #f5f6ff;
   color: #4f46e5;
 }
 
@@ -441,7 +442,7 @@ async function copyHtml() {
 }
 
 .preview {
-  background: #ffffff;
+  background: #f8fafc;
   border: 2px dashed #cbd5e1;
   border-radius: 12px;
   padding: 1.5rem;

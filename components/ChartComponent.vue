@@ -486,7 +486,7 @@ onBeforeUnmount(() => {
   font-size: 1.6rem;
   font-weight: 700;
   color: #1f2937;
-  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -495,7 +495,7 @@ onBeforeUnmount(() => {
 
 .chart-header p {
   margin: 0 0 0.6rem 0;
-  color: #666;
+  color: #64748b;
   font-size: 0.9rem;
 }
 
@@ -516,7 +516,7 @@ onBeforeUnmount(() => {
 
 .current-time {
   font-size: 0.9rem;
-  color: #666;
+  color: #64748b;
   font-weight: 500;
 }
 
@@ -528,11 +528,11 @@ onBeforeUnmount(() => {
 }
 
 .chart-wrapper {
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   padding: 1.5rem;
   background: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
   height: 100%;
   max-width: 100%;
   overflow: hidden;
@@ -596,7 +596,7 @@ onBeforeUnmount(() => {
   margin-top: 22px;
   width: 70px;
   position: relative;
-  border-right: 2px solid #e5e7eb;
+  border-right: 2px solid #e2e8f0;
   z-index: 1;
 }
 
@@ -604,7 +604,7 @@ onBeforeUnmount(() => {
   position: absolute;
   right: 8px;
   font-size: 0.75rem;
-  color: #6b7280;
+  color: #64748b;
   transform: translateY(50%);
   padding: 0 4px;
 }

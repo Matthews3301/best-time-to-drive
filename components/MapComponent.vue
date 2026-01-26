@@ -1215,14 +1215,14 @@ onBeforeUnmount(() => {
 
 .map-header h3 {
   margin: 0 0 0.5rem 0;
-  color: #333;
+  color: #0f172a;
   font-size: 1.5rem;
   font-weight: 600;
 }
 
 .map-header p {
   margin: 0;
-  color: #666;
+  color: #64748b;
   font-size: 0.9rem;
 }
 
@@ -1237,7 +1237,7 @@ onBeforeUnmount(() => {
 .map-controls {
   padding: 2rem;
   background: #ffffff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
   display: grid;
   width: 100%;
   box-sizing: border-box;
@@ -1269,12 +1269,12 @@ onBeforeUnmount(() => {
 
 .input-group input {
   padding: 1.25rem 3rem 1.25rem 1rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   font-size: 1rem; /* 16px */
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: #f3f4f6;
-  color: #1a1d29;
+  background: #ffffff;
+  color: #0f172a;
   width: 100%;
   box-sizing: border-box;
   min-width: 0;
@@ -1284,8 +1284,8 @@ onBeforeUnmount(() => {
   outline: none;
   border-color: #6366f1;
   box-shadow: 
-    0 0 0 3px rgba(99, 102, 241, 0.1),
-    0 1px 3px rgba(0, 0, 0, 0.1);
+    0 0 0 3px rgba(99, 102, 241, 0.12),
+    0 1px 2px rgba(15, 23, 42, 0.08);
   background: #ffffff;
 }
 
@@ -1365,14 +1365,14 @@ onBeforeUnmount(() => {
   left: 0;
   right: 0;
   background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   margin-top: 0;
   max-height: 300px;
   overflow-y: auto;
   box-shadow: 
-    0 4px 6px rgba(0, 0, 0, 0.05),
-    0 10px 15px rgba(0, 0, 0, 0.1);
+    0 10px 24px rgba(15, 23, 42, 0.08),
+    0 2px 6px rgba(15, 23, 42, 0.05);
   z-index: 1000;
 }
 
@@ -1388,13 +1388,13 @@ onBeforeUnmount(() => {
 }
 
 .autocomplete-item:hover {
-  background-color: rgba(99, 102, 241, 0.05);
+  background-color: rgba(99, 102, 241, 0.06);
 }
 
 .prediction-main {
   font-size: 0.95rem;
   font-weight: 500;
-  color: #1a1d29;
+  color: #0f172a;
   margin-bottom: 0.25rem;
 }
 
@@ -1412,7 +1412,7 @@ onBeforeUnmount(() => {
 
 .swap-button {
   background: transparent;
-  border: 2px solid rgba(0, 0, 0, 0.1);
+  border: 2px solid #e2e8f0;
   border-radius: 50%;
   width: 3rem;
   height: 3rem;
@@ -1421,17 +1421,17 @@ onBeforeUnmount(() => {
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #6b7280;
+  color: #64748b;
   position: relative;
   overflow: hidden;
 }
 
 .swap-button:hover {
-  background: rgba(99, 102, 241, 0.05);
-  border-color: rgba(99, 102, 241, 0.3);
+  background: #eef2ff;
+  border-color: rgba(99, 102, 241, 0.35);
   color: #6366f1;
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.16);
 }
 
 .swap-button:active {
@@ -1451,7 +1451,7 @@ onBeforeUnmount(() => {
 
 .calculate-btn {
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #5b21b6 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -1460,9 +1460,9 @@ onBeforeUnmount(() => {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 
-    0 1px 3px rgba(0, 0, 0, 0.1),
-    0 4px 12px rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+    0 6px 16px rgba(99, 102, 241, 0.22),
+    0 2px 6px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   position: relative;
   overflow: hidden;
   text-transform: none;
@@ -1483,11 +1483,10 @@ onBeforeUnmount(() => {
 }
 
 .calculate-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #5b21b6 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   box-shadow: 
-    0 2px 6px rgba(0, 0, 0, 0.15),
-    0 8px 24px rgba(99, 102, 241, 0.25),
-    0 12px 40px rgba(99, 102, 241, 0.15);
+    0 10px 24px rgba(99, 102, 241, 0.28),
+    0 4px 10px rgba(15, 23, 42, 0.12);
 }
 
 .calculate-btn:hover:not(:disabled)::before {
@@ -1496,8 +1495,8 @@ onBeforeUnmount(() => {
 
 .calculate-btn:active:not(:disabled) {
   box-shadow: 
-    0 1px 3px rgba(0, 0, 0, 0.1),
-    0 4px 12px rgba(99, 102, 241, 0.2);
+    0 6px 16px rgba(99, 102, 241, 0.2),
+    0 2px 6px rgba(15, 23, 42, 0.1);
 }
 
 .calculate-btn:disabled {
@@ -1505,7 +1504,7 @@ onBeforeUnmount(() => {
   color: #9ca3af;
   cursor: not-allowed;
   box-shadow: 
-    0 1px 3px rgba(0, 0, 0, 0.05);
+    0 1px 2px rgba(15, 23, 42, 0.06);
   transform: none;
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
@@ -1540,7 +1539,7 @@ onBeforeUnmount(() => {
 .checkbox-custom {
   width: 1.125rem;
   height: 1.125rem;
-  border: 2px solid #d1d5db;
+  border: 2px solid #cbd5e1;
   border-radius: 4px;
   margin-right: 0.75rem;
   background: #ffffff;
