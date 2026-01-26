@@ -164,7 +164,7 @@ export default defineNuxtConfig({
                   "name": "When is the best time to drive to avoid traffic?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "The best time to drive varies by route and day, but generally early morning (before 6 AM), mid-morning (9:30-11 AM), early afternoon (1-3 PM), and late evening (after 7 PM) have lighter traffic. Use our traffic estimator to find the optimal time for your specific route."
+                    "text": "The best time to drive varies by route and day, but generally early morning (before 6 AM), mid-morning (9:30-11 AM), early afternoon (1-3 PM), and late evening (after 7 PM) have lighter traffic. Use traffic estimator to find the optimal time for your specific route."
                   }
                 },
                 {

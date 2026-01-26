@@ -166,7 +166,7 @@ const snippets = computed(() => ({
   detailed: `<div style="padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
   <h4 style="margin: 0 0 8px 0; color: #1e293b; font-size: 18px;">🚗 Planning Your Visit?</h4>
   <p style="margin: 0; color: #475569; font-size: 14px;">
-    Use our <a href="${url.value}" target="_blank" rel="noopener" style="color: #6366f1; text-decoration: none; font-weight: 600;">rush hour calculator for ${props.target}</a> to avoid traffic delays.
+    Use <a href="${url.value}" target="_blank" rel="noopener" style="color: #6366f1; text-decoration: none; font-weight: 600;">rush hour calculator for ${props.target}</a> to avoid traffic delays.
   </p>
 </div>`,
   
@@ -228,7 +228,7 @@ const previews = computed(() => ({
   detailed: `<div style="padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
   <h4 style="margin: 0 0 8px 0; color: #1e293b; font-size: 18px;">🚗 Planning Your Visit?</h4>
   <p style="margin: 0; color: #475569; font-size: 14px;">
-    Use our <a href="${url.value}" target="_blank" rel="noopener" style="color: #6366f1; text-decoration: none; font-weight: 600;">rush hour calculator for ${props.target}</a> to avoid traffic delays.
+    Use <a href="${url.value}" target="_blank" rel="noopener" style="color: #6366f1; text-decoration: none; font-weight: 600;">rush hour calculator for ${props.target}</a> to avoid traffic delays.
   </p>
 </div>`,
   
