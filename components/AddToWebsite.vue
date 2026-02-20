@@ -3,7 +3,7 @@
     <div class="header-section">
       <h2 class="add-title"> Add to Your Website</h2>
       <p class="add-desc">
-        Help your visitors plan their trip better. Perfect for restaurants, retail stores, offices, event venues, and any business where timing matters.
+        Help visitors arrive on time with a lightweight traffic planning widget. Built for local businesses, event venues, and teams with appointment-based traffic.
       </p>
     </div>
 
@@ -26,7 +26,7 @@
     </div>
 
     <div class="snippet-section">
-      <h3 class="section-title">Choose Your Style</h3>
+      <h3 class="section-title">Set Up Your Embed in Under 1 Minute</h3>
       
       <div class="style-options">
         <button 
@@ -40,21 +40,47 @@
         </button>
       </div>
 
+      <div class="platform-options">
+        <button
+          v-for="platform in platforms"
+          :key="platform.id"
+          class="platform-btn"
+          :class="{ active: selectedPlatform === platform.id }"
+          @click="selectedPlatform = platform.id"
+        >
+          {{ platform.name }}
+        </button>
+      </div>
+      <p class="platform-hint">{{ platformHint }}</p>
+
       <div class="preview-section">
         <div class="preview-container">
           <div class="preview-label">Preview</div>
+        </div>
+          <div class="preview" v-html="currentPreview"></div>
+      </div>
+
+      <div class="code-section">
+        <div class="code-header">
+          <span class="code-label">Embed Code</span>
           <button class="copy-btn" @click="copyHtml" :disabled="copied">
             <span v-if="copied">Copied!</span>
-            <span v-else>Copy HTML Code</span>
+            <span v-else>Copy Code</span>
           </button>
-          </div>
-          <div class="preview" v-html="currentPreview"></div>
+        </div>
+        <pre class="code-snippet"><code>{{ currentSnippet }}</code></pre>
+      </div>
+
+      <div class="install-steps">
+        <div class="install-step"><strong>1.</strong> Copy the embed code above.</div>
+        <div class="install-step"><strong>2.</strong> Paste it into the page where visitors plan their trip.</div>
+        <div class="install-step"><strong>3.</strong> Publish your page and keep the source link for free usage.</div>
       </div>
 
     </div>
 
     <div class="footer-note">
-      <p>No signup required. Just copy and paste the code above into your website.</p>
+      <p>No signup required. Pick a style, copy code, and publish.</p>
     </div>
   </div>
 </template>
@@ -75,6 +101,7 @@ const props = defineProps({
 
 const url = computed(() => `https://rushhourplanner.com/?to=${encodeURIComponent(props.target)}`);
 const selectedStyle = ref('detailed');
+const selectedPlatform = ref('html');
 const copied = ref(false);
 
 const styles = [
@@ -82,6 +109,26 @@ const styles = [
   { id: 'icon', name: 'Icon' },
   { id: 'graph', name: 'Graph' }
 ];
+
+const platforms = [
+  { id: 'html', name: 'HTML' },
+  { id: 'wordpress', name: 'WordPress' },
+  { id: 'webflow', name: 'Webflow' },
+  { id: 'squarespace', name: 'Squarespace' }
+];
+
+const platformHint = computed(() => {
+  if (selectedPlatform.value === 'wordpress') {
+    return 'WordPress: use a Custom HTML block in the page editor before publishing.';
+  }
+  if (selectedPlatform.value === 'webflow') {
+    return 'Webflow: paste this in an Embed element where visitors see trip-planning details.';
+  }
+  if (selectedPlatform.value === 'squarespace') {
+    return 'Squarespace: add a Code Block and paste the snippet, then save and publish.';
+  }
+  return 'HTML: paste directly into your page template where you want the widget to appear.';
+});
 
 // Calculate min and max durations from forecast data
 const minDuration = computed(() => {
@@ -393,7 +440,7 @@ async function copyHtml() {
 .style-options {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   flex-wrap: wrap;
 }
 
@@ -420,6 +467,42 @@ async function copyHtml() {
   border-color: #6366f1;
   color: #ffffff;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.platform-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.platform-btn {
+  background: #f8fafc;
+  border: 1px solid #dbeafe;
+  color: #334155;
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.platform-btn:hover {
+  border-color: #a5b4fc;
+  color: #4f46e5;
+}
+
+.platform-btn.active {
+  background: #eef2ff;
+  border-color: #6366f1;
+  color: #4338ca;
+}
+
+.platform-hint {
+  margin: 0 0 1.25rem 0;
+  font-size: 0.9rem;
+  color: #475569;
 }
 
 .preview-section {
@@ -529,6 +612,21 @@ async function copyHtml() {
   word-break: break-word;
 }
 
+.install-steps {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.install-step {
+  font-size: 0.9rem;
+  color: #334155;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.625rem 0.75rem;
+}
+
 .footer-note {
   background: linear-gradient(135deg, #fef3c7, #fde68a);
   border: 1px solid #fbbf24;
@@ -570,6 +668,14 @@ async function copyHtml() {
   }
   
   .style-btn {
+    width: 100%;
+  }
+
+  .platform-options {
+    flex-direction: column;
+  }
+
+  .platform-btn {
     width: 100%;
   }
 }
