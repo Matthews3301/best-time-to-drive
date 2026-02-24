@@ -163,22 +163,20 @@ const formatTimeLabel = (timeString) => {
   return `${hourNum - 12}PM`;
 };
 
-// Normalize data to always start at 12AM (midnight)
+// Normalize data to always start at 4AM
 const normalizedForecastData = computed(() => {
   if (!props.forecastData || props.forecastData.length === 0) return [];
   
-  // Find the index where hour is 0 (12AM/midnight)
-  const midnightIndex = props.forecastData.findIndex(d => d.hour === 0);
+  const chartStartHour = 4;
+  const startHourIndex = props.forecastData.findIndex(d => d.hour === chartStartHour);
   
-  // If midnight is not found or already at the start, return as-is
-  if (midnightIndex === -1 || midnightIndex === 0) {
+  if (startHourIndex === -1 || startHourIndex === 0) {
     return props.forecastData;
   }
   
-  // Rearrange: take everything from midnight onwards, then everything before midnight
   return [
-    ...props.forecastData.slice(midnightIndex),
-    ...props.forecastData.slice(0, midnightIndex)
+    ...props.forecastData.slice(startHourIndex),
+    ...props.forecastData.slice(0, startHourIndex)
   ];
 });
 
@@ -232,11 +230,11 @@ const snippets = computed(() => ({
     </div>
   </div>
   <div class="traffic-time-labels" style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280;margin-bottom:16px;padding-left:62px;font-weight:500">
-    <span>12AM</span>
-    <span>6AM</span>
-    <span>12PM</span>
-    <span>6PM</span>
-    <span>11PM</span>
+    <span>4AM</span>
+    <span>10AM</span>
+    <span>4PM</span>
+    <span>10PM</span>
+    <span>3AM</span>
   </div>
   <div class="traffic-legend" style="display:flex;justify-content:center;gap:20px;margin-bottom:12px;font-size:11px;color:#6b7280">
     <span style="display:flex;align-items:center;gap:6px">
@@ -294,11 +292,11 @@ const previews = computed(() => ({
     </div>
   </div>
   <div class="traffic-time-labels" style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280;margin-bottom:16px;padding-left:62px;font-weight:500">
-    <span>12AM</span>
-    <span>6AM</span>
-    <span>12PM</span>
-    <span>6PM</span>
-    <span>11PM</span>
+    <span>4AM</span>
+    <span>10AM</span>
+    <span>4PM</span>
+    <span>10PM</span>
+    <span>3AM</span>
   </div>
   <div class="traffic-legend" style="display:flex;justify-content:center;gap:20px;margin-bottom:12px;font-size:11px;color:#6b7280">
     <span style="display:flex;align-items:center;gap:6px">
