@@ -56,23 +56,16 @@
       <div class="preview-section">
         <div class="preview-container">
           <div class="preview-label">Preview</div>
-        </div>
-          <div class="preview" v-html="currentPreview"></div>
-      </div>
-
-      <div class="code-section">
-        <div class="code-header">
-          <span class="code-label">Embed Code</span>
           <button class="copy-btn" @click="copyHtml" :disabled="copied">
             <span v-if="copied">Copied!</span>
             <span v-else>Copy Code</span>
           </button>
         </div>
-        <pre class="code-snippet"><code>{{ currentSnippet }}</code></pre>
+          <div class="preview" v-html="currentPreview"></div>
       </div>
 
       <div class="install-steps">
-        <div class="install-step"><strong>1.</strong> Copy the embed code above.</div>
+        <div class="install-step"><strong>1.</strong> Copy the code with the button above.</div>
         <div class="install-step"><strong>2.</strong> Paste it into the page where visitors plan their trip.</div>
         <div class="install-step"><strong>3.</strong> Publish your page and keep the source link for free usage.</div>
       </div>
@@ -535,29 +528,6 @@ async function copyHtml() {
   justify-content: center;
 }
 
-.code-section {
-  background: #0f172a;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.code-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  background: #1e293b;
-  border-bottom: 1px solid #334155;
-}
-
-.code-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
 .copy-btn {
   background: linear-gradient(135deg, #6366f1, #7c3aed);
   color: #ffffff;
@@ -595,21 +565,6 @@ async function copyHtml() {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: default;
-}
-
-.code-snippet {
-  margin: 0;
-  padding: 1rem;
-  overflow-x: auto;
-}
-
-.code-snippet code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 0.875rem;
-  line-height: 1.6;
-  color: #e2e8f0;
-  white-space: pre-wrap;
-  word-break: break-word;
 }
 
 .install-steps {
