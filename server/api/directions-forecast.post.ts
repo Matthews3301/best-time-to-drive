@@ -23,7 +23,10 @@ type ForecastRequestBody = {
 
 const forecastCache = new Map<string, { expiresAt: number; data: ForecastPoint[] }>();
 const forecastInFlight = new Map<string, Promise<ForecastPoint[]>>();
+const requestRateLimits = new Map<string, { count: number; resetAt: number }>();
 const ALLOWED_PRODUCTION_ORIGIN = 'https://rushhourplanner.com';
+const RATE_LIMIT_MAX_REQUESTS = 40;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -45,6 +48,32 @@ function getCacheTtlMs(departDate: string | null | undefined) {
     return 24 * 60 * 60 * 1000;
   }
   return 10 * 60 * 1000;
+}
+
+function getClientIdentifier(event: any) {
+  const forwardedFor = getHeader(event, 'x-forwarded-for');
+  const realIp = getHeader(event, 'x-real-ip');
+  const cfConnectingIp = getHeader(event, 'cf-connecting-ip');
+  const socketIp = event.node.req.socket?.remoteAddress;
+
+  const forwardedIp = forwardedFor?.split(',')[0]?.trim();
+  return forwardedIp || realIp || cfConnectingIp || socketIp || 'unknown';
+}
+
+function consumeRateLimit(clientId: string, now: number) {
+  const existing = requestRateLimits.get(clientId);
+
+  if (!existing || existing.resetAt <= now) {
+    requestRateLimits.set(clientId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+
+  if (existing.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false;
+  }
+
+  existing.count += 1;
+  return true;
 }
 
 async function fetchDurationMinutes(
@@ -197,6 +226,15 @@ export default defineEventHandler(async (event) => {
       throw createError({
         statusCode: 403,
         statusMessage: 'Forbidden origin'
+      });
+    }
+
+    const clientId = getClientIdentifier(event);
+    const allowed = consumeRateLimit(clientId, Date.now());
+    if (!allowed) {
+      throw createError({
+        statusCode: 429,
+        statusMessage: 'Too many requests'
       });
     }
   }
