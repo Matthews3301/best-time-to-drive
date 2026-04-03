@@ -296,6 +296,7 @@ const endPredictions = ref([])
 const showStartPredictions = ref(false)
 const showEndPredictions = ref(false)
 const AUTOCOMPLETE_DEBOUNCE_MS = 400
+const PLACE_DETAILS_FIELDS = ['formatted_address']
 
 // Snackbar state
 const showSnackbar = ref(false)
@@ -638,34 +639,40 @@ function fetchEndPredictions(input) {
 function selectStartPrediction(prediction) {
   if (!placesService.value) return
   
-  placesService.value.getDetails({ placeId: prediction.place_id }, (place, status) => {
-    if (status === 'OK' && place.formatted_address) {
-      startLocation.value = place.formatted_address
-      startPredictions.value = []
-      showStartPredictions.value = false
-      startAutocompleteActive.value = false
-      updateURLWithLocations()
-      if (canCalculateRoute.value) calculateRoute()
-      if (!endLocation.value) {
-        nextTick(() => endInput.value?.focus())
+  placesService.value.getDetails(
+    { placeId: prediction.place_id, fields: PLACE_DETAILS_FIELDS },
+    (place, status) => {
+      if (status === 'OK' && place.formatted_address) {
+        startLocation.value = place.formatted_address
+        startPredictions.value = []
+        showStartPredictions.value = false
+        startAutocompleteActive.value = false
+        updateURLWithLocations()
+        if (canCalculateRoute.value) calculateRoute()
+        if (!endLocation.value) {
+          nextTick(() => endInput.value?.focus())
+        }
       }
     }
-  })
+  )
 }
 
 function selectEndPrediction(prediction) {
   if (!placesService.value) return
   
-  placesService.value.getDetails({ placeId: prediction.place_id }, (place, status) => {
-    if (status === 'OK' && place.formatted_address) {
-      endLocation.value = place.formatted_address
-      endPredictions.value = []
-      showEndPredictions.value = false
-      endAutocompleteActive.value = false
-      updateURLWithLocations()
-      if (canCalculateRoute.value) calculateRoute()
+  placesService.value.getDetails(
+    { placeId: prediction.place_id, fields: PLACE_DETAILS_FIELDS },
+    (place, status) => {
+      if (status === 'OK' && place.formatted_address) {
+        endLocation.value = place.formatted_address
+        endPredictions.value = []
+        showEndPredictions.value = false
+        endAutocompleteActive.value = false
+        updateURLWithLocations()
+        if (canCalculateRoute.value) calculateRoute()
+      }
     }
-  })
+  )
 }
 
 function useCurrentLocation(target) {
