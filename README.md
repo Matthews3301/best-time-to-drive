@@ -26,6 +26,8 @@ Create a `.env` file in the root directory with the following variables:
 
 ```
 OPENAI_API_KEY=your_openai_api_key_here
+VITE_GOOGLE_MAPS_API_KEY=your_frontend_google_maps_api_key_here
+GOOGLE_DIRECTIONS_API_KEY=your_backend_google_directions_api_key_here
 ```
 
 Get your OpenAI API key from: https://platform.openai.com/api-keys

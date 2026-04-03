@@ -217,7 +217,11 @@ export default defineEventHandler(async (event) => {
   const excludeNightHours = Boolean(body?.excludeNightHours);
 
   const config = useRuntimeConfig();
-  const apiKey = config.viteGoogleMapsApiKey || process.env.VITE_GOOGLE_MAPS_API_KEY;
+  const apiKey =
+    config.googleDirectionsApiKey ||
+    process.env.GOOGLE_DIRECTIONS_API_KEY ||
+    config.viteGoogleMapsApiKey ||
+    process.env.VITE_GOOGLE_MAPS_API_KEY;
 
   if (!apiKey) {
     throw createError({

@@ -20,6 +20,7 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    googleDirectionsApiKey: process.env.GOOGLE_DIRECTIONS_API_KEY,
     viteGoogleMapsApiKey: process.env.VITE_GOOGLE_MAPS_API_KEY,
     public: {
       posthogPublicKey: 'phc_FmUMk4eqO4o2qhDhzzp2nhXZmmQE9mA1CGwrxpyxuhd',
