@@ -1,5 +1,9 @@
 <template>
   <div class="chart-container">
+    <div v-if="forecastData.length === 0" class="chart-loading">
+      Calculating traffic forecast...
+    </div>
+    <div v-else>
     <div class="chart-header">
       <h3>{{ chartTitle }}</h3>
       <p class="route-subtitle">{{ routeData.start }} → {{ routeData.end }} ({{ routeData.distance }})</p>
@@ -131,6 +135,7 @@
     </div>
     
   </div>
+</div>
 </template>
 
 <script setup>
@@ -184,10 +189,12 @@ const currentTime = computed(() => {
 });
 
 const maxDuration = computed(() => {
+  if (props.forecastData.length === 0) return 0;
   return Math.max(...props.forecastData.map(d => d.duration));
 });
 
 const minDuration = computed(() => {
+  if (props.forecastData.length === 0) return 0;
   const availableTimes = props.forecastData.filter(dataPoint => !dataPoint.isExcluded);
   return availableTimes.length > 0 ? Math.min(...availableTimes.map(d => d.duration)) : Math.min(...props.forecastData.map(d => d.duration));
 });
@@ -235,7 +242,13 @@ const yAxisTicks = computed(() => {
 });
 
 const optimalTimeData = computed(() => {
+  if (props.forecastData.length === 0) {
+    return { time: '', duration: 0, label: '00:00', hour: 0, isExcluded: false };
+  }
   const availableTimes = props.forecastData.filter(dataPoint => !dataPoint.isExcluded);
+  if (availableTimes.length === 0) {
+    return props.forecastData[0];
+  }
   return availableTimes.reduce((min, current) => 
     current.duration < min.duration ? current : min
   );

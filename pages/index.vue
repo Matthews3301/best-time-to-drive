@@ -172,6 +172,10 @@ function handleRouteSelected(routeData) {
 
 function handleExcludeNightHoursChanged(exclude) {
   excludeNightHours.value = exclude;
+  if (forecastData.value.length > 0) {
+    forecastData.value = applyExcludeNightHours(forecastData.value, excludeNightHours.value);
+    return;
+  }
   if (selectedRoute.value) {
     fetchForecastData(selectedRoute.value);
   }
@@ -187,11 +191,44 @@ function handleDepartureDateChanged(date) {
 async function fetchForecastData(routeData) {
   console.log('Fetching forecast for route:', routeData);
   forecastIndex.value += 1;
-  forecastData.value = generateMockForecastData(routeData, selectedDepartDate.value, routeData.timezone || 'UTC');
+  const timezoneValue = routeData.timezone || 'UTC';
+  const originCoordinates = routeData?.coordinates?.start;
+  const destinationCoordinates = routeData?.coordinates?.end;
+  const origin = originCoordinates ? `${originCoordinates.lat},${originCoordinates.lng}` : routeData.start;
+  const destination = destinationCoordinates ? `${destinationCoordinates.lat},${destinationCoordinates.lng}` : routeData.end;
+
+  try {
+    const response = await $fetch('/api/directions-forecast', {
+      method: 'POST',
+      body: {
+        origin,
+        destination,
+        timezone: timezoneValue,
+        departDate: selectedDepartDate.value ? dayjs(selectedDepartDate.value).format('YYYY-MM-DD') : null,
+        excludeNightHours: excludeNightHours.value
+      }
+    });
+
+    if (response?.success && Array.isArray(response.data)) {
+      forecastData.value = applyExcludeNightHours(response.data, excludeNightHours.value);
+    } else {
+      forecastData.value = generateFallbackForecastData(routeData, selectedDepartDate.value, timezoneValue);
+    }
+  } catch (error) {
+    console.error('Error fetching forecast data:', error);
+    forecastData.value = generateFallbackForecastData(routeData, selectedDepartDate.value, timezoneValue);
+  }
   await nextTick();
 }
 
-function generateMockForecastData(routeData = null, departDate = null, timezone = 'UTC') {
+function applyExcludeNightHours(data, excludeEnabled) {
+  return data.map((point) => ({
+    ...point,
+    isExcluded: excludeEnabled && (point.hour >= 23 || point.hour <= 5)
+  }));
+}
+
+function generateFallbackForecastData(routeData = null, departDate = null, timezone = 'UTC') {
   const data = [];
   const now = dayjs().tz(timezone);
   let startTime;
