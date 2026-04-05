@@ -10,7 +10,7 @@
       @dismiss="hideSnackbar"
     />
     
-    <div class="map-section">
+    <div class="map-section" :class="{ 'map-section--no-route': !shouldShowMap }">
       <div class="map-controls">
         <div class="route-inputs">
           <div class="input-group">
@@ -187,7 +187,7 @@
         </div>
       </div>
       
-      <div class="map-container-inner">
+      <div v-if="shouldShowMap" class="map-container-inner">
         <div 
           ref="mapElement" 
           class="google-map"
@@ -222,7 +222,7 @@
                 <path d="M12 17V9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </div>
-            <p>{{ mapsRequested ? 'Loading Google Maps...' : 'Focus an address field to load the map' }}</p>
+            <p>Loading Google Maps...</p>
           </div>
         </div>
       </div>
@@ -316,6 +316,10 @@ const selectedDepartureDate = computed(() => {
  * ----------------------------------------------------------------*/
 const canCalculateRoute = computed(() =>
   startLocation.value.trim() && endLocation.value.trim() && mapLoaded.value
+)
+
+const shouldShowMap = computed(() =>
+  Boolean(startLocation.value.trim() && endLocation.value.trim())
 )
 
 const departureTimeOptions = computed(() => {
@@ -1374,6 +1378,10 @@ onBeforeUnmount(() => {
   flex-direction: column;
   min-height: 500px;
   width: 100%;
+}
+
+.map-section.map-section--no-route {
+  min-height: unset;
 }
 
 .map-controls {
