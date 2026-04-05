@@ -156,13 +156,27 @@ const sessionUuid = ref(uuidv4());
 const forecastIndex = ref(0);
 const mapComponent = ref(null);
 const selectedDepartDate = ref(null);
+const forecastDebug = ref(null);
 
 const analyticsData = computed(() => ({
   sessionUuid: sessionUuid.value,
   startLocation: selectedRoute.value?.start,
   endLocation: selectedRoute.value?.end,
   excludeNightHours: excludeNightHours.value,
-  forecastIndex: forecastIndex.value
+  forecastIndex: forecastIndex.value,
+  forecastCacheStatus: forecastDebug.value?.cacheStatus || null,
+  forecastRequestGoogleCalls: forecastDebug.value?.requestGoogleCallCount !== undefined
+    ? Number(forecastDebug.value.requestGoogleCallCount)
+    : null,
+  forecastModelGoogleCalls: forecastDebug.value?.googleCallCount !== undefined
+    ? Number(forecastDebug.value.googleCallCount)
+    : null,
+  forecastRefinementLevel: forecastDebug.value?.refinementLevel !== undefined
+    ? Number(forecastDebug.value.refinementLevel)
+    : null,
+  forecastConfidenceScore: forecastDebug.value?.confidenceScore !== undefined
+    ? Number(forecastDebug.value.confidenceScore)
+    : null
 }));
 
 function handleRouteSelected(routeData) {
@@ -190,7 +204,6 @@ function handleDepartureDateChanged(date) {
 
 async function fetchForecastData(routeData) {
   console.log('Fetching forecast for route:', routeData);
-  forecastIndex.value += 1;
   const timezoneValue = routeData.timezone || 'UTC';
   const originCoordinates = routeData?.coordinates?.start;
   const destinationCoordinates = routeData?.coordinates?.end;
@@ -198,7 +211,7 @@ async function fetchForecastData(routeData) {
   const destination = destinationCoordinates ? `${destinationCoordinates.lat},${destinationCoordinates.lng}` : routeData.end;
 
   try {
-    const response = await $fetch('/api/directions-forecast', {
+    const response = await $fetch.raw('/api/directions-forecast', {
       method: 'POST',
       body: {
         origin,
@@ -208,16 +221,40 @@ async function fetchForecastData(routeData) {
         excludeNightHours: excludeNightHours.value
       }
     });
+    const responseData = response?._data;
 
-    if (response?.success && Array.isArray(response.data)) {
-      forecastData.value = applyExcludeNightHours(response.data, excludeNightHours.value);
+    if (responseData?.success && Array.isArray(responseData.data)) {
+      forecastData.value = applyExcludeNightHours(responseData.data, excludeNightHours.value);
+      forecastDebug.value = {
+        ...responseData.metadata,
+        cacheStatus: response.headers.get('x-forecast-cache-status') || responseData.metadata?.cacheStatus || 'unknown',
+        googleCallCount: response.headers.get('x-forecast-google-calls') || responseData.metadata?.googleCallCount || null,
+        requestGoogleCallCount: response.headers.get('x-forecast-request-google-calls') || responseData.metadata?.requestGoogleCallCount || null,
+        confidenceScore: response.headers.get('x-forecast-confidence') || responseData.metadata?.confidenceScore || null
+      };
     } else {
       forecastData.value = generateFallbackForecastData(routeData, selectedDepartDate.value, timezoneValue);
+      forecastDebug.value = {
+        cacheStatus: 'fallback_response_shape',
+        requestGoogleCallCount: 0,
+        googleCallCount: 0,
+        refinementLevel: 0,
+        confidenceScore: 0
+      };
     }
   } catch (error) {
     console.error('Error fetching forecast data:', error);
     forecastData.value = generateFallbackForecastData(routeData, selectedDepartDate.value, timezoneValue);
+    forecastDebug.value = {
+      cacheStatus: 'fallback_error',
+      requestGoogleCallCount: 0,
+      googleCallCount: 0,
+      refinementLevel: 0,
+      confidenceScore: 0
+    };
   }
+
+  forecastIndex.value += 1;
   await nextTick();
 }
 

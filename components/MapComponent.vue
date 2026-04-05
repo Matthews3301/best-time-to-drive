@@ -222,7 +222,7 @@
                 <path d="M12 17V9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </div>
-            <p>Loading Google Maps...</p>
+            <p>{{ mapsRequested ? 'Loading Google Maps...' : 'Focus an address field to load the map' }}</p>
           </div>
         </div>
       </div>
@@ -284,7 +284,8 @@ const currentLocationUsed = ref(false)
 // API optimization state
 const routeCache = ref(new Map())
 const autocompleteService = ref(null)
-const placesService = ref(null)
+const mapsRequested = ref(false)
+const autocompletePredictionCache = ref(new Map())
 let calculateRouteTimeout = null
 let currentCalculationKey = null
 
@@ -296,7 +297,8 @@ const endPredictions = ref([])
 const showStartPredictions = ref(false)
 const showEndPredictions = ref(false)
 const AUTOCOMPLETE_DEBOUNCE_MS = 400
-const PLACE_DETAILS_FIELDS = ['formatted_address']
+const AUTOCOMPLETE_CACHE_KEY = 'rush-hour-autocomplete-cache'
+const AUTOCOMPLETE_CACHE_MAX_AGE = 12 * 60 * 60 * 1000
 
 // Snackbar state
 const showSnackbar = ref(false)
@@ -470,10 +472,113 @@ function getDateForParam(token) {
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
+function getPredictionDescription(prediction) {
+  return prediction.description
+    || [prediction.structured_formatting?.main_text, prediction.structured_formatting?.secondary_text]
+      .filter(Boolean)
+      .join(', ')
+}
+
+function getAutocompleteCacheKey(input) {
+  return input.trim().toLowerCase()
+}
+
+function readStoredAutocompleteCache() {
+  try {
+    const raw = sessionStorage.getItem(AUTOCOMPLETE_CACHE_KEY)
+    if (!raw) return {}
+
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+function writeStoredAutocompleteCache(cacheObject) {
+  try {
+    sessionStorage.setItem(AUTOCOMPLETE_CACHE_KEY, JSON.stringify(cacheObject))
+  } catch {
+    // Ignore storage failures and keep in-memory cache only.
+  }
+}
+
+function getCachedAutocompletePredictions(input) {
+  const key = getAutocompleteCacheKey(input)
+  const inMemory = autocompletePredictionCache.value.get(key)
+  if (inMemory && (Date.now() - inMemory.timestamp) < AUTOCOMPLETE_CACHE_MAX_AGE) {
+    return inMemory.predictions
+  }
+
+  const stored = readStoredAutocompleteCache()[key]
+  if (stored && (Date.now() - stored.timestamp) < AUTOCOMPLETE_CACHE_MAX_AGE) {
+    autocompletePredictionCache.value.set(key, stored)
+    return stored.predictions
+  }
+
+  return null
+}
+
+function setCachedAutocompletePredictions(input, predictions) {
+  const key = getAutocompleteCacheKey(input)
+  const entry = {
+    timestamp: Date.now(),
+    predictions
+  }
+
+  autocompletePredictionCache.value.set(key, entry)
+  const stored = readStoredAutocompleteCache()
+  stored[key] = entry
+  writeStoredAutocompleteCache(stored)
+}
+
+function waitForMapReady(maxAttempts = 50) {
+  return new Promise((resolve) => {
+    let attempts = 0
+
+    const check = () => {
+      if (mapLoaded.value) {
+        resolve(true)
+        return
+      }
+
+      attempts += 1
+      if (attempts >= maxAttempts) {
+        resolve(false)
+        return
+      }
+
+      setTimeout(check, 100)
+    }
+
+    check()
+  })
+}
+
+function ensureGoogleMapsLoaded() {
+  if (!mapsRequested.value) {
+    mapsRequested.value = true
+  }
+
+  if (!googleMapsLoaded.value && !mapLoaded.value) {
+    initializeGoogleMaps()
+  }
+}
+
+async function waitForMapReadyAndCalculate() {
+  ensureGoogleMapsLoaded()
+  const ready = await waitForMapReady()
+  if (ready && startLocation.value.trim() && endLocation.value.trim()) {
+    calculateRoute()
+  }
+}
+
 /* ------------------------------------------------------------------
  * Google Maps initialisation
  * ----------------------------------------------------------------*/
 function initializeGoogleMaps () {
+  mapsRequested.value = true
+
   if (!apiKey || apiKey === 'PASTE_YOUR_GOOGLE_MAPS_API_KEY_HERE' || apiKey === 'your_google_maps_api_key_here') {
     loadingError.value = 'Google Maps API key not configured. Please check your .env file.'
     return
@@ -488,10 +593,15 @@ function initializeGoogleMaps () {
 }
 
 function loadGoogleMapsScript () {
+  if (document.querySelector('script[data-google-maps-loader="true"]')) {
+    return
+  }
+
   const script = document.createElement('script')
   script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&callback=initGoogleMaps`
   script.async = true
   script.defer = true
+  script.dataset.googleMapsLoader = 'true'
 
   window.initGoogleMaps = () => {
     googleMapsLoaded.value = true
@@ -524,7 +634,6 @@ function setupMap () {
     
     // Initialize shared API service instances
     autocompleteService.value = new google.maps.places.AutocompleteService()
-    placesService.value = new google.maps.places.PlacesService(map.value)
     
     setupAutocomplete()
 
@@ -579,6 +688,14 @@ function debouncedStartAutocomplete() {
 }
 
 function fetchStartPredictions(input) {
+  const cachedPredictions = getCachedAutocompletePredictions(input)
+  if (cachedPredictions) {
+    startPredictions.value = cachedPredictions
+    showStartPredictions.value = cachedPredictions.length > 0
+    startAutocompleteActive.value = cachedPredictions.length > 0
+    return
+  }
+
   if (!autocompleteService.value) return
   
   const request = {
@@ -589,6 +706,7 @@ function fetchStartPredictions(input) {
   autocompleteService.value.getPlacePredictions(request, (predictions, status) => {
     if (status === 'OK' && predictions) {
       startPredictions.value = predictions
+      setCachedAutocompletePredictions(input, predictions)
       showStartPredictions.value = true
       startAutocompleteActive.value = true
     } else {
@@ -617,6 +735,14 @@ function debouncedEndAutocomplete() {
 }
 
 function fetchEndPredictions(input) {
+  const cachedPredictions = getCachedAutocompletePredictions(input)
+  if (cachedPredictions) {
+    endPredictions.value = cachedPredictions
+    showEndPredictions.value = cachedPredictions.length > 0
+    endAutocompleteActive.value = cachedPredictions.length > 0
+    return
+  }
+
   if (!autocompleteService.value) return
   
   const request = {
@@ -627,6 +753,7 @@ function fetchEndPredictions(input) {
   autocompleteService.value.getPlacePredictions(request, (predictions, status) => {
     if (status === 'OK' && predictions) {
       endPredictions.value = predictions
+      setCachedAutocompletePredictions(input, predictions)
       showEndPredictions.value = true
       endAutocompleteActive.value = true
     } else {
@@ -637,47 +764,46 @@ function fetchEndPredictions(input) {
 }
 
 function selectStartPrediction(prediction) {
-  if (!placesService.value) return
-  
-  placesService.value.getDetails(
-    { placeId: prediction.place_id, fields: PLACE_DETAILS_FIELDS },
-    (place, status) => {
-      if (status === 'OK' && place.formatted_address) {
-        startLocation.value = place.formatted_address
-        startPredictions.value = []
-        showStartPredictions.value = false
-        startAutocompleteActive.value = false
-        updateURLWithLocations()
-        if (canCalculateRoute.value) calculateRoute()
-        if (!endLocation.value) {
-          nextTick(() => endInput.value?.focus())
-        }
-      }
-    }
-  )
+  const address = getPredictionDescription(prediction)
+  if (!address) return
+
+  startLocation.value = address
+  startPredictions.value = []
+  showStartPredictions.value = false
+  startAutocompleteActive.value = false
+  updateURLWithLocations()
+  if (startLocation.value && endLocation.value) {
+    void waitForMapReadyAndCalculate()
+  }
+  if (!endLocation.value) {
+    nextTick(() => endInput.value?.focus())
+  }
 }
 
 function selectEndPrediction(prediction) {
-  if (!placesService.value) return
-  
-  placesService.value.getDetails(
-    { placeId: prediction.place_id, fields: PLACE_DETAILS_FIELDS },
-    (place, status) => {
-      if (status === 'OK' && place.formatted_address) {
-        endLocation.value = place.formatted_address
-        endPredictions.value = []
-        showEndPredictions.value = false
-        endAutocompleteActive.value = false
-        updateURLWithLocations()
-        if (canCalculateRoute.value) calculateRoute()
-      }
-    }
-  )
+  const address = getPredictionDescription(prediction)
+  if (!address) return
+
+  endLocation.value = address
+  endPredictions.value = []
+  showEndPredictions.value = false
+  endAutocompleteActive.value = false
+  updateURLWithLocations()
+  if (startLocation.value && endLocation.value) {
+    void waitForMapReadyAndCalculate()
+  }
 }
 
-function useCurrentLocation(target) {
+async function useCurrentLocation(target) {
   if (!navigator.geolocation) {
     showErrorSnackbar('Geolocation not supported', 'Your browser does not support geolocation.')
+    return
+  }
+
+  ensureGoogleMapsLoaded()
+  const ready = await waitForMapReady()
+  if (!ready || !map.value) {
+    showErrorSnackbar('Map unavailable', 'Google Maps did not finish loading. Please try again.')
     return
   }
 
@@ -870,7 +996,7 @@ function calculateRoute () {
     travelMode: google.maps.TravelMode.DRIVING,
     avoidHighways: false,
     avoidTolls: false,
-    provideRouteAlternatives: true,
+    provideRouteAlternatives: false,
     drivingOptions: {
       departureTime: new Date(),
       trafficModel: google.maps.TrafficModel.BEST_GUESS
@@ -1033,6 +1159,7 @@ function loadLocationsFromURL () {
   }
 
   if (startLocation.value.trim() && endLocation.value.trim()) {
+    ensureGoogleMapsLoaded()
     nextTick(() => {
       const checkMapReady = () => {
         if (mapLoaded.value) {
@@ -1069,6 +1196,7 @@ function handleStartInputBlur() {
 }
 
 function handleStartInputFocus() {
+  ensureGoogleMapsLoaded()
   if (startLocation.value.trim()) {
     debouncedStartAutocomplete()
   }
@@ -1081,6 +1209,7 @@ function handleEndInputBlur() {
 }
 
 function handleEndInputFocus() {
+  ensureGoogleMapsLoaded()
   if (endLocation.value.trim()) {
     debouncedEndAutocomplete()
   }
@@ -1126,6 +1255,8 @@ function swapLocations () {
   // Recalculate route if both locations are filled
   if (canCalculateRoute.value) {
     nextTick(() => calculateRoute())
+  } else if (startLocation.value.trim() && endLocation.value.trim()) {
+    void waitForMapReadyAndCalculate()
   }
 }
 
@@ -1154,11 +1285,15 @@ function setRouteLocations(from, to) {
   startLocation.value = from
   endLocation.value = to
   updateURLWithLocations()
+  ensureGoogleMapsLoaded()
   
   if (canCalculateRoute.value) {
     console.log('canCalculateRoute is true, calling calculateRoute');
     nextTick(() => calculateRoute())
   } else {
+    if (startLocation.value.trim() && endLocation.value.trim()) {
+      void waitForMapReadyAndCalculate()
+    }
     console.log('canCalculateRoute is false:', {
       startLocation: startLocation.value,
       endLocation: endLocation.value,
@@ -1176,7 +1311,6 @@ defineExpose({
  * Lifecycle hooks
  * ----------------------------------------------------------------*/
 onMounted(() => {
-  initializeGoogleMaps()
   loadLocationsFromURL()
   emit('exclude-night-hours-changed', excludeNightHours.value)
   emit('departure-date-changed', selectedDepartureDate.value)
@@ -1202,6 +1336,7 @@ onBeforeUnmount(() => {
   
   // Clear cache to free memory
   routeCache.value.clear()
+  autocompletePredictionCache.value.clear()
 })
 </script>
 
