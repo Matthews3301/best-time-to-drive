@@ -58,7 +58,19 @@
           <ParkingComponent :destination="selectedRoute.end" />
         </div>
 
-        <div class="chart-section" style="margin-top: 2rem;" id="results-card">
+        <div class="bmc-cta">
+          <p class="bmc-cta-text">
+            If Rush Hour Planner saves you time, support the project and help cover the hosting costs.
+          </p>
+          <a
+            href="https://buymeacoffee.com/rush.hour.planner"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="bmc-link"
+          >Buy me a coffee</a>
+        </div>
+
+        <div class="chart-section" style="margin-top: 1.5rem;" id="results-card">
           <AddToWebsite :target="selectedRoute.end" :forecast-data="forecastData" />
         </div>
       </div>
@@ -373,7 +385,7 @@ onMounted(() => {
 <style>
 .app {
   min-height: 100vh;
-  background: #f8fafc;
+  background: #f1f5f9;
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -659,6 +671,42 @@ onMounted(() => {
   box-shadow: 
     0 10px 28px rgba(15, 23, 42, 0.08),
     0 4px 10px rgba(15, 23, 42, 0.05);
+}
+
+.bmc-cta {
+  margin: 1rem 0 0.5rem;
+  padding: 1rem 1.25rem;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.04), rgba(139, 92, 246, 0.08));
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  border-radius: 14px;
+}
+
+.bmc-cta-text {
+  margin: 0 0 0.75rem;
+  color: #64748b;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.bmc-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.25rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.18);
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.bmc-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.24);
 }
 
 .placeholder-message {

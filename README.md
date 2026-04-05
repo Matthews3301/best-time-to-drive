@@ -24,20 +24,6 @@ yarn install
 bun install
 ```
 
-### Environment Variables
-
-Create a `.env` file in the root directory with the following variables:
-
-```
-OPENAI_API_KEY=your_openai_api_key_here
-VITE_GOOGLE_MAPS_API_KEY=your_frontend_google_maps_api_key_here
-GOOGLE_DIRECTIONS_API_KEY=your_backend_google_directions_api_key_here
-UPSTASH_REDIS_REST_URL=your_upstash_rest_url_here
-UPSTASH_REDIS_REST_TOKEN=your_upstash_rest_token_here
-FORECAST_SHADOW_SAMPLE_RATE=0
-FORECAST_CACHE_VERSION=v1
-```
-
 Get your OpenAI API key from: https://platform.openai.com/api-keys
 
 ## Development Server
