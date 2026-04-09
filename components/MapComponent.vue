@@ -25,7 +25,7 @@
                 Current Location
               </button>
             </div>
-            <div class="autocomplete-wrapper">
+            <div class="autocomplete-wrapper" ref="startReference">
               <input 
                 id="start-location-input"
                 ref="startInput"
@@ -48,17 +48,24 @@
                   <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </button>
-              <div v-if="showStartPredictions && startPredictions.length > 0" class="autocomplete-dropdown">
-                <div 
-                  v-for="prediction in startPredictions" 
-                  :key="prediction.place_id"
-                  class="autocomplete-item"
-                  @click="selectStartPrediction(prediction)"
+              <Teleport to="body">
+                <div
+                  v-if="showStartPredictions && startPredictions.length > 0"
+                  ref="startFloating"
+                  class="autocomplete-dropdown"
+                  :style="startFloatingStyles"
                 >
-                  <div class="prediction-main">{{ prediction.structured_formatting.main_text }}</div>
-                  <div class="prediction-secondary">{{ prediction.structured_formatting.secondary_text }}</div>
+                  <div 
+                    v-for="prediction in startPredictions" 
+                    :key="prediction.place_id"
+                    class="autocomplete-item"
+                    @mousedown.prevent="selectStartPrediction(prediction)"
+                  >
+                    <div class="prediction-main">{{ prediction.structured_formatting.main_text }}</div>
+                    <div class="prediction-secondary">{{ prediction.structured_formatting.secondary_text }}</div>
+                  </div>
                 </div>
-              </div>
+              </Teleport>
             </div>
           </div>
           <div class="swap-button-container">
@@ -87,7 +94,7 @@
                 Current Location
               </button>
             </div>
-            <div class="autocomplete-wrapper">
+            <div class="autocomplete-wrapper" ref="endReference">
               <input 
                 id="end-location-input"
                 ref="endInput"
@@ -110,17 +117,24 @@
                   <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </button>
-              <div v-if="showEndPredictions && endPredictions.length > 0" class="autocomplete-dropdown">
-                <div 
-                  v-for="prediction in endPredictions" 
-                  :key="prediction.place_id"
-                  class="autocomplete-item"
-                  @click="selectEndPrediction(prediction)"
+              <Teleport to="body">
+                <div
+                  v-if="showEndPredictions && endPredictions.length > 0"
+                  ref="endFloating"
+                  class="autocomplete-dropdown"
+                  :style="endFloatingStyles"
                 >
-                  <div class="prediction-main">{{ prediction.structured_formatting.main_text }}</div>
-                  <div class="prediction-secondary">{{ prediction.structured_formatting.secondary_text }}</div>
+                  <div 
+                    v-for="prediction in endPredictions" 
+                    :key="prediction.place_id"
+                    class="autocomplete-item"
+                    @mousedown.prevent="selectEndPrediction(prediction)"
+                  >
+                    <div class="prediction-main">{{ prediction.structured_formatting.main_text }}</div>
+                    <div class="prediction-secondary">{{ prediction.structured_formatting.secondary_text }}</div>
+                  </div>
                 </div>
-              </div>
+              </Teleport>
             </div>
           </div>
         </div>
@@ -232,6 +246,7 @@
 
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useFloating, offset, flip, shift, size, autoUpdate } from '@floating-ui/vue'
 import SnackbarComponent from './SnackbarComponent.vue'
 import tzlookup from 'tz-lookup';
 
@@ -258,6 +273,37 @@ const emit = defineEmits([
 const startInput = ref(null)
 const endInput = ref(null)
 const mapElement = ref(null)
+
+const startReference = ref(null)
+const startFloating = ref(null)
+const endReference = ref(null)
+const endFloating = ref(null)
+
+const floatingMiddleware = [
+  offset(4),
+  flip({ padding: 8 }),
+  shift({ padding: 8 }),
+  size({
+    apply({ rects, elements }) {
+      Object.assign(elements.floating.style, {
+        width: `${rects.reference.width}px`
+      })
+    },
+    padding: 8
+  })
+]
+
+const { floatingStyles: startFloatingStyles } = useFloating(startReference, startFloating, {
+  placement: 'bottom-start',
+  middleware: floatingMiddleware,
+  whileElementsMounted: autoUpdate
+})
+
+const { floatingStyles: endFloatingStyles } = useFloating(endReference, endFloating, {
+  placement: 'bottom-start',
+  middleware: floatingMiddleware,
+  whileElementsMounted: autoUpdate
+})
 
 /* ------------------------------------------------------------------
  * Reactive state
@@ -687,7 +733,16 @@ function setupMap () {
     mapSetupPending.value = false
     loadingError.value = null
 
-    nextTick(() => startInput.value?.focus())
+    nextTick(() => {
+      const hasStartLocation = Boolean(startLocation.value.trim())
+      const hasEndLocation = Boolean(endLocation.value.trim())
+
+      if (!hasStartLocation) {
+        startInput.value?.focus()
+      } else if (!hasEndLocation) {
+        endInput.value?.focus()
+      }
+    })
     
     // Set initial traffic layer state
     toggleTrafficLayer()
@@ -1568,50 +1623,6 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-.autocomplete-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.96), rgba(236, 248, 255, 0.82));
-  border: 1px solid var(--app-border);
-  border-radius: 10px;
-  margin-top: 0;
-  max-height: 300px;
-  overflow-y: auto;
-  box-shadow: 0 16px 34px rgba(70, 89, 170, 0.16), 0 3px 10px rgba(15, 23, 42, 0.08);
-  z-index: 1000;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.autocomplete-item {
-  padding: 0.875rem 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.autocomplete-item:last-child {
-  border-bottom: none;
-}
-
-.autocomplete-item:hover {
-  background-color: rgba(109, 77, 255, 0.1);
-}
-
-.prediction-main {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #0f172a;
-  margin-bottom: 0.25rem;
-}
-
-.prediction-secondary {
-  font-size: 0.8rem;
-  color: #6b7280;
-}
-
 .swap-button-container {
   display: flex;
   align-items: center;
@@ -2238,4 +2249,43 @@ onBeforeUnmount(() => {
     min-width: 100px;
   }
 }
-</style> 
+</style>
+
+<style>
+.autocomplete-dropdown {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.96), rgba(236, 248, 255, 0.82));
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  box-shadow: 0 16px 34px rgba(70, 89, 170, 0.16), 0 3px 10px rgba(15, 23, 42, 0.08);
+  z-index: 9999;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.autocomplete-item {
+  padding: 0.875rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-item:hover {
+  background-color: rgba(109, 77, 255, 0.1);
+}
+
+.prediction-main {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #0f172a;
+  margin-bottom: 0.25rem;
+}
+
+.prediction-secondary {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+</style>
