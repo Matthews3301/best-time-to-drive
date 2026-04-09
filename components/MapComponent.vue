@@ -187,7 +187,7 @@
         </div>
       </div>
       
-      <div v-if="shouldShowMap" class="map-container-inner">
+      <div v-if="shouldMountMap" v-show="shouldShowMap" class="map-container-inner">
         <div 
           ref="mapElement" 
           class="google-map"
@@ -285,6 +285,7 @@ const currentLocationUsed = ref(false)
 const routeCache = ref(new Map())
 const autocompleteService = ref(null)
 const mapsRequested = ref(false)
+const mapSetupPending = ref(false)
 const autocompletePredictionCache = ref(new Map())
 let calculateRouteTimeout = null
 let currentCalculationKey = null
@@ -318,8 +319,14 @@ const canCalculateRoute = computed(() =>
   startLocation.value.trim() && endLocation.value.trim() && mapLoaded.value
 )
 
-const shouldShowMap = computed(() =>
+const shouldMountMap = computed(() =>
   Boolean(startLocation.value.trim() && endLocation.value.trim())
+)
+
+const mapWasVisible = ref(false)
+
+const shouldShowMap = computed(() =>
+  Boolean(currentRoute.value || (mapWasVisible.value && shouldMountMap.value))
 )
 
 const departureTimeOptions = computed(() => {
@@ -571,6 +578,7 @@ function ensureGoogleMapsLoaded() {
 
 async function waitForMapReadyAndCalculate() {
   ensureGoogleMapsLoaded()
+  requestMapSetup()
   const ready = await waitForMapReady()
   if (ready && startLocation.value.trim() && endLocation.value.trim()) {
     calculateRoute()
@@ -589,7 +597,9 @@ function initializeGoogleMaps () {
   }
 
   if (window.google && window.google.maps) {
-    setupMap()
+    googleMapsLoaded.value = true
+    initializeAutocompleteService()
+    maybeSetupMap()
     return
   }
 
@@ -609,7 +619,8 @@ function loadGoogleMapsScript () {
 
   window.initGoogleMaps = () => {
     googleMapsLoaded.value = true
-    setupMap()
+    initializeAutocompleteService()
+    maybeSetupMap()
   }
 
   script.onerror = () => {
@@ -619,8 +630,34 @@ function loadGoogleMapsScript () {
   document.head.appendChild(script)
 }
 
+function initializeAutocompleteService() {
+  if (!window.google || !window.google.maps || !window.google.maps.places) return
+  if (!autocompleteService.value) {
+    autocompleteService.value = new google.maps.places.AutocompleteService()
+  }
+}
+
+function requestMapSetup() {
+  mapSetupPending.value = true
+  nextTick(() => {
+    maybeSetupMap()
+  })
+}
+
+function maybeSetupMap() {
+  if (mapLoaded.value || !mapSetupPending.value) return
+  if (!googleMapsLoaded.value || !mapElement.value) return
+  setupMap()
+}
+
 function setupMap () {
   try {
+    if (mapLoaded.value || map.value) return
+    if (!mapElement.value) {
+      mapSetupPending.value = true
+      return
+    }
+
     map.value = new google.maps.Map(mapElement.value, {
       zoom: 10,
       center: { lat: 37.7749, lng: -122.4194 }, // San Francisco default
@@ -637,7 +674,7 @@ function setupMap () {
     trafficLayer.value = new google.maps.TrafficLayer()
     
     // Initialize shared API service instances
-    autocompleteService.value = new google.maps.places.AutocompleteService()
+    initializeAutocompleteService()
     
     setupAutocomplete()
 
@@ -647,6 +684,7 @@ function setupMap () {
     })
 
     mapLoaded.value  = true
+    mapSetupPending.value = false
     loadingError.value = null
 
     nextTick(() => startInput.value?.focus())
@@ -1163,17 +1201,7 @@ function loadLocationsFromURL () {
   }
 
   if (startLocation.value.trim() && endLocation.value.trim()) {
-    ensureGoogleMapsLoaded()
-    nextTick(() => {
-      const checkMapReady = () => {
-        if (mapLoaded.value) {
-          calculateRoute()
-        } else {
-          setTimeout(checkMapReady, 100)
-        }
-      }
-      checkMapReady()
-    })
+    void waitForMapReadyAndCalculate()
   }
 }
 
@@ -1181,10 +1209,12 @@ function loadLocationsFromURL () {
  * Template event handlers
  * ----------------------------------------------------------------*/
 function onStartLocationChange () { 
+  currentRoute.value = null
   updateURLWithLocations()
   debouncedStartAutocomplete()
 }
 function onEndLocationChange () { 
+  currentRoute.value = null
   updateURLWithLocations()
   debouncedEndAutocomplete()
 }
@@ -1225,6 +1255,24 @@ watch(selectedDepartureTime, () => {
   updateURLWithLocations()
   toggleTrafficLayer()
 })
+
+watch(currentRoute, (route) => {
+  if (route) {
+    mapWasVisible.value = true
+  }
+
+  if (!route || !map.value || !window.google || !window.google.maps) return
+  nextTick(() => {
+    google.maps.event.trigger(map.value, 'resize')
+  })
+})
+
+watch(shouldMountMap, (isMounted) => {
+  if (!isMounted) {
+    mapWasVisible.value = false
+  }
+})
+
 function handleEnterKey (event) {
   const target = event.target
   
@@ -1245,6 +1293,8 @@ function handleEnterKey (event) {
   // If no autocomplete suggestions are available, proceed with normal route calculation
   if (canCalculateRoute.value) {
     nextTick(() => calculateRoute())
+  } else if (startLocation.value.trim() && endLocation.value.trim()) {
+    void waitForMapReadyAndCalculate()
   }
 }
 
@@ -1252,6 +1302,7 @@ function swapLocations () {
   const temp = startLocation.value
   startLocation.value = endLocation.value
   endLocation.value = temp
+  currentRoute.value = null
   
   // Update URL with swapped locations
   updateURLWithLocations()
@@ -1266,6 +1317,7 @@ function swapLocations () {
 
 function clearStartLocation() {
   startLocation.value = ''
+  currentRoute.value = null
   startPredictions.value = []
   showStartPredictions.value = false
   currentLocationUsed.value = false
@@ -1275,6 +1327,7 @@ function clearStartLocation() {
 
 function clearEndLocation() {
   endLocation.value = ''
+  currentRoute.value = null
   endPredictions.value = []
   showEndPredictions.value = false
   updateURLWithLocations()
@@ -1288,6 +1341,7 @@ function setRouteLocations(from, to) {
   console.log('setRouteLocations called with:', from, to);
   startLocation.value = from
   endLocation.value = to
+  currentRoute.value = null
   updateURLWithLocations()
   ensureGoogleMapsLoaded()
   
@@ -1351,7 +1405,8 @@ onBeforeUnmount(() => {
   height: 100%;
   width: 100%;
   max-width: 100vw;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .map-header {
