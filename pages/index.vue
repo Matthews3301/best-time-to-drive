@@ -75,10 +75,6 @@
         </div>
       </div>
       
-      <div class="placeholder-message" v-else>
-        <p>Use rush hour traffic estimator to select a route and see the traffic forecast timeline</p>
-      </div>
-
       <footer class="footer">
         <div class="footer-content">
           <!-- <a href="/blog" class="contact-link">
