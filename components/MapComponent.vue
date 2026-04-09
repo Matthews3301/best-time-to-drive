@@ -1386,11 +1386,15 @@ onBeforeUnmount(() => {
 
 .map-controls {
   padding: 2rem;
-  background: #ffffff;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.78), rgba(235, 248, 255, 0.62));
+  border-bottom: 1px solid var(--app-border);
   display: grid;
   width: 100%;
   box-sizing: border-box;
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  position: relative;
+  z-index: 2;
 }
 
 .route-inputs {
@@ -1419,11 +1423,11 @@ onBeforeUnmount(() => {
 
 .input-group input {
   padding: 1.25rem 3rem 1.25rem 1rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--app-border);
   border-radius: 10px;
   font-size: 1rem; /* 16px */
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: #ffffff;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.95), rgba(236, 248, 255, 0.68));
   color: #0f172a;
   width: 100%;
   box-sizing: border-box;
@@ -1432,11 +1436,11 @@ onBeforeUnmount(() => {
 
 .input-group input:focus {
   outline: none;
-  border-color: #6366f1;
+  border-color: #6d4dff;
   box-shadow: 
-    0 0 0 3px rgba(99, 102, 241, 0.12),
-    0 1px 2px rgba(15, 23, 42, 0.08);
-  background: #ffffff;
+    0 0 0 3px rgba(109, 77, 255, 0.16),
+    0 8px 18px rgba(109, 77, 255, 0.12);
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(240, 250, 255, 0.72));
 }
 
 .input-group input::placeholder {
@@ -1472,8 +1476,8 @@ onBeforeUnmount(() => {
 }
 
 .clear-input-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
-  color: #6b7280;
+  background: rgba(109, 77, 255, 0.1);
+  color: #5a39eb;
 }
 
 .clear-input-btn:active {
@@ -1484,7 +1488,7 @@ onBeforeUnmount(() => {
 .current-location-btn {
   background: none;
   border: none;
-  color: #6366f1;
+  color: var(--app-primary-strong);
   font-size: 0.775rem;
   font-weight: 500;
   cursor: pointer;
@@ -1514,16 +1518,16 @@ onBeforeUnmount(() => {
   top: 100%;
   left: 0;
   right: 0;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.96), rgba(236, 248, 255, 0.82));
+  border: 1px solid var(--app-border);
   border-radius: 10px;
   margin-top: 0;
   max-height: 300px;
   overflow-y: auto;
-  box-shadow: 
-    0 10px 24px rgba(15, 23, 42, 0.08),
-    0 2px 6px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 16px 34px rgba(70, 89, 170, 0.16), 0 3px 10px rgba(15, 23, 42, 0.08);
   z-index: 1000;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .autocomplete-item {
@@ -1538,7 +1542,7 @@ onBeforeUnmount(() => {
 }
 
 .autocomplete-item:hover {
-  background-color: rgba(99, 102, 241, 0.06);
+  background-color: rgba(109, 77, 255, 0.1);
 }
 
 .prediction-main {
@@ -1561,8 +1565,8 @@ onBeforeUnmount(() => {
 }
 
 .swap-button {
-  background: transparent;
-  border: 2px solid #e2e8f0;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.84), rgba(232, 246, 255, 0.76));
+  border: 1px solid var(--app-border);
   border-radius: 50%;
   width: 3rem;
   height: 3rem;
@@ -1571,17 +1575,17 @@ onBeforeUnmount(() => {
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #64748b;
+  color: #5f6f95;
   position: relative;
   overflow: hidden;
 }
 
 .swap-button:hover {
-  background: #eef2ff;
-  border-color: rgba(99, 102, 241, 0.35);
-  color: #6366f1;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(228, 245, 255, 0.84));
+  border-color: rgba(109, 77, 255, 0.4);
+  color: #5a39eb;
   transform: scale(1.05);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.16);
+  box-shadow: 0 10px 22px rgba(109, 77, 255, 0.2);
 }
 
 .swap-button:active {
@@ -1689,10 +1693,10 @@ onBeforeUnmount(() => {
 .checkbox-custom {
   width: 1.125rem;
   height: 1.125rem;
-  border: 2px solid #cbd5e1;
+  border: 1px solid rgba(109, 77, 255, 0.36);
   border-radius: 4px;
   margin-right: 0.75rem;
-  background: #ffffff;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(232, 246, 255, 0.74));
   transition: all 0.2s ease;
   position: relative;
   display: flex;
@@ -1713,8 +1717,8 @@ onBeforeUnmount(() => {
 }
 
 .checkbox-input:checked + .checkbox-custom {
-  background-color: #6366f1;
-  border-color: #6366f1;
+  background: linear-gradient(145deg, #6d4dff, #5a39eb);
+  border-color: #6d4dff;
 }
 
 .checkbox-input:checked + .checkbox-custom::after {
@@ -1753,10 +1757,10 @@ onBeforeUnmount(() => {
 
 .departure-select {
   padding: 0.75rem 1rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--app-border);
   border-radius: 8px;
   font-size: 0.9rem;
-  background: #f3f4f6;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.9), rgba(235, 248, 255, 0.7));
   color: #1a1d29;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
@@ -1765,11 +1769,11 @@ onBeforeUnmount(() => {
 
 .departure-select:focus {
   outline: none;
-  border-color: #6366f1;
+  border-color: #6d4dff;
   box-shadow: 
-    0 0 0 3px rgba(99, 102, 241, 0.1),
-    0 1px 3px rgba(0, 0, 0, 0.1);
-  background: #ffffff;
+    0 0 0 3px rgba(109, 77, 255, 0.14),
+    0 8px 18px rgba(109, 77, 255, 0.12);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.96), rgba(238, 251, 255, 0.76));
 }
 
 .departure-select:hover {
@@ -1785,6 +1789,7 @@ onBeforeUnmount(() => {
   min-height: 400px;
   width: 100%;
   overflow: hidden;
+  z-index: 1;
 }
 
 .google-map {
@@ -1799,7 +1804,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  background: #e5e7eb;
+  background: linear-gradient(160deg, rgba(239, 246, 255, 0.88), rgba(224, 239, 255, 0.9));
   color: #6b7280;
   padding: 2rem;
   width: 100%;
@@ -2125,7 +2130,7 @@ onBeforeUnmount(() => {
 
 .show-results-btn {
   padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #6d4dff 0%, #8b5cf6 62%, #2dd4bf 100%);
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -2133,7 +2138,7 @@ onBeforeUnmount(() => {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.18);
+  box-shadow: 0 8px 20px rgba(86, 63, 214, 0.24);
 }
 
 .show-results-btn:hover {

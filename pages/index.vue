@@ -385,7 +385,7 @@ onMounted(() => {
 <style>
 .app {
   min-height: 100vh;
-  background: #f1f5f9;
+  background: transparent;
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -396,8 +396,10 @@ onMounted(() => {
 .header {
   text-align: center;
   padding: 3rem 2rem 3rem;
-  background: linear-gradient(180deg, #ffffff 0%, #f5f6ff 100%);
-  border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(244, 250, 255, 0.72) 100%);
+  border-bottom: 1px solid var(--app-border);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
   position: relative;
   overflow: hidden;
 }
@@ -410,14 +412,25 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(700px circle at 30% 0%, rgba(99, 102, 241, 0.06), transparent 55%),
-    radial-gradient(500px circle at 70% 0%, rgba(139, 92, 246, 0.05), transparent 55%),
-    linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.94) 100%);
+    radial-gradient(700px circle at 30% 0%, rgba(109, 77, 255, 0.14), transparent 55%),
+    radial-gradient(500px circle at 70% 0%, rgba(45, 212, 191, 0.1), transparent 55%),
+    linear-gradient(180deg, rgba(255,255,255,0.86) 0%, rgba(255,255,255,0.64) 100%);
   pointer-events: none;
 }
 
 .header::after {
-  display: none;
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 15%, rgba(255, 255, 255, 0.46) 36%, transparent 52%);
+  transform: translateX(-110%);
+  animation: headerShimmer 9s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes headerShimmer {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(110%); }
 }
 
 .header-content {
@@ -521,16 +534,16 @@ onMounted(() => {
 }
 
 .sample-route-btn {
-  background: #ffffff;
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.86), rgba(234, 249, 252, 0.7));
+  border: 1px solid var(--app-border);
   border-radius: 12px;
   padding: 0.75rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #6366f1;
+  color: var(--app-primary-strong);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 8px 20px rgba(109, 77, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.75);
   white-space: nowrap;
   position: relative;
   overflow: hidden;
@@ -555,13 +568,13 @@ onMounted(() => {
 }
 
 .sample-route-btn:hover {
-  background: #ffffff;
-  border-color: rgba(99, 102, 241, 0.35);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(230, 246, 255, 0.8));
+  border-color: rgba(109, 77, 255, 0.4);
   color: #4f46e5;
   transform: translateY(-1px);
   box-shadow: 
-    0 6px 16px rgba(99, 102, 241, 0.12),
-    0 2px 6px rgba(15, 23, 42, 0.06);
+    0 12px 26px rgba(109, 77, 255, 0.16),
+    0 4px 12px rgba(15, 23, 42, 0.08);
 }
 
 .sample-route-btn:hover::before {
@@ -639,14 +652,14 @@ onMounted(() => {
 }
 
 .map-section {
-  background: #ffffff;
+  background: var(--app-glass);
   border-radius: 16px;
-  box-shadow: 
-    0 8px 24px rgba(15, 23, 42, 0.06),
-    0 2px 6px rgba(15, 23, 42, 0.04);
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: var(--app-shadow);
+  border: 1px solid var(--app-border);
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
 }
 
 .map-section:hover {
@@ -656,30 +669,32 @@ onMounted(() => {
 }
 
 .chart-section {
-  background: #ffffff;
+  background: var(--app-glass);
   border-radius: 16px;
-  box-shadow: 
-    0 8px 24px rgba(15, 23, 42, 0.06),
-    0 2px 6px rgba(15, 23, 42, 0.04);
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: var(--app-shadow);
+  border: 1px solid var(--app-border);
   padding: 2rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
 }
 
 .chart-section:hover {
   box-shadow: 
-    0 10px 28px rgba(15, 23, 42, 0.08),
-    0 4px 10px rgba(15, 23, 42, 0.05);
+    0 18px 34px rgba(82, 84, 170, 0.18),
+    0 8px 16px rgba(15, 23, 42, 0.08);
 }
 
 .bmc-cta {
   margin: 1rem 0 0.5rem;
   padding: 1rem 1.25rem;
   text-align: center;
-  background: linear-gradient(180deg, rgba(99, 102, 241, 0.04), rgba(139, 92, 246, 0.08));
-  border: 1px solid rgba(99, 102, 241, 0.12);
+  background: linear-gradient(180deg, rgba(109, 77, 255, 0.1), rgba(45, 212, 191, 0.12));
+  border: 1px solid rgba(109, 77, 255, 0.22);
   border-radius: 14px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .bmc-cta-text {
@@ -695,12 +710,12 @@ onMounted(() => {
   justify-content: center;
   padding: 0.75rem 1.25rem;
   border-radius: 999px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #6d4dff 0%, #8b5cf6 60%, #2dd4bf 100%);
   color: #ffffff;
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.18);
+  box-shadow: 0 10px 24px rgba(86, 63, 214, 0.24);
   transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
 }
 
@@ -715,13 +730,13 @@ onMounted(() => {
   color: #64748b;
   font-size: 1.125rem;
   line-height: 1.6;
-  background: #ffffff;
+  background: var(--app-glass-strong);
   border-radius: 16px;
-  box-shadow: 
-    0 8px 24px rgba(15, 23, 42, 0.06),
-    0 2px 6px rgba(15, 23, 42, 0.04);
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: var(--app-shadow);
+  border: 1px solid var(--app-border);
   position: relative;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .placeholder-message::before {

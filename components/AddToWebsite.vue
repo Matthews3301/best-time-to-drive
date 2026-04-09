@@ -357,7 +357,7 @@ async function copyHtml() {
   font-size: 1.6rem;
   font-weight: 700;
   color: #1f2937;
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  background: linear-gradient(135deg, #5a39eb, #8b5cf6, #14b8a6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -379,13 +379,15 @@ async function copyHtml() {
 }
 
 .benefit-card {
-  background: #ffffff;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.9), rgba(236, 250, 255, 0.76));
   padding: 1rem;
   border-radius: 12px;
   text-align: center;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+  border: 1px solid var(--app-border);
+  box-shadow: 0 10px 24px rgba(84, 101, 178, 0.12), 0 2px 8px rgba(15, 23, 42, 0.05);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .benefit-card:hover {
@@ -414,11 +416,13 @@ async function copyHtml() {
 }
 
 .snippet-section {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.8), rgba(235, 249, 255, 0.68));
+  border: 1px solid var(--app-border);
   border-radius: 16px;
   padding: 2rem;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 14px 30px rgba(84, 101, 178, 0.14), 0 3px 10px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(12px) saturate(125%);
+  -webkit-backdrop-filter: blur(12px) saturate(125%);
 }
 
 .section-title {
@@ -436,8 +440,8 @@ async function copyHtml() {
 }
 
 .style-btn {
-  background: #ffffff;
-  border: 2px solid #e2e8f0;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.92), rgba(236, 248, 255, 0.68));
+  border: 1px solid var(--app-border);
   border-radius: 8px;
   padding: 0.625rem 1.25rem;
   font-size: 0.9rem;
@@ -454,8 +458,8 @@ async function copyHtml() {
 }
 
 .style-btn.active {
-  background: linear-gradient(135deg, #6366f1, #7c3aed);
-  border-color: #6366f1;
+  background: linear-gradient(135deg, #6d4dff, #8b5cf6, #2dd4bf);
+  border-color: #6d4dff;
   color: #ffffff;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
@@ -468,8 +472,8 @@ async function copyHtml() {
 }
 
 .platform-btn {
-  background: #f8fafc;
-  border: 1px solid #dbeafe;
+  background: linear-gradient(150deg, rgba(249, 252, 255, 0.94), rgba(229, 247, 255, 0.76));
+  border: 1px solid var(--app-border);
   color: #334155;
   border-radius: 999px;
   padding: 0.4rem 0.85rem;
@@ -485,9 +489,9 @@ async function copyHtml() {
 }
 
 .platform-btn.active {
-  background: #eef2ff;
-  border-color: #6366f1;
-  color: #4338ca;
+  background: linear-gradient(145deg, rgba(109, 77, 255, 0.14), rgba(45, 212, 191, 0.14));
+  border-color: #6d4dff;
+  color: #4f46e5;
 }
 
 .platform-hint {
@@ -516,8 +520,8 @@ async function copyHtml() {
 }
 
 .preview {
-  background: #f8fafc;
-  border: 2px dashed #cbd5e1;
+  background: linear-gradient(160deg, rgba(249, 252, 255, 0.88), rgba(232, 247, 255, 0.78));
+  border: 1px dashed rgba(109, 77, 255, 0.34);
   border-radius: 12px;
   padding: 1.5rem;
   min-height: 80px;
@@ -527,7 +531,7 @@ async function copyHtml() {
 }
 
 .copy-btn {
-  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  background: linear-gradient(135deg, #6d4dff, #8b5cf6, #2dd4bf);
   color: #ffffff;
   border: none;
   border-radius: 6px;
@@ -536,7 +540,7 @@ async function copyHtml() {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 8px 20px rgba(86, 63, 214, 0.24);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -550,7 +554,7 @@ async function copyHtml() {
 
 .copy-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 12px 26px rgba(86, 63, 214, 0.28);
 }
 
 .copy-btn:active {

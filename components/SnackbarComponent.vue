@@ -91,15 +91,16 @@ function dismiss() {
   z-index: 1000;
   max-width: 400px;
   min-width: 300px;
-  background: #111827;
+  background: linear-gradient(160deg, rgba(35, 49, 92, 0.86), rgba(55, 44, 112, 0.84));
   border-radius: 8px;
   box-shadow: 
-    0 4px 6px -1px rgba(0, 0, 0, 0.3),
-    0 2px 4px -1px rgba(0, 0, 0, 0.2),
-    0 10px 15px -3px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+    0 8px 20px rgba(38, 44, 94, 0.34),
+    0 16px 28px rgba(42, 28, 94, 0.24);
+  border: 1px solid rgba(156, 163, 255, 0.36);
   animation: slideInUp 0.3s ease-out;
   overflow: hidden;
+  backdrop-filter: blur(10px) saturate(130%);
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
 }
 
 .snackbar--error {

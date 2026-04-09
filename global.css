@@ -4,12 +4,28 @@
   box-sizing: border-box;
 }
 
+:root {
+  --app-primary: #6d4dff;
+  --app-primary-strong: #5a39eb;
+  --app-iris: rgba(109, 77, 255, 0.2);
+  --app-cyan: rgba(20, 184, 166, 0.2);
+  --app-glass: rgba(255, 255, 255, 0.66);
+  --app-glass-strong: rgba(255, 255, 255, 0.82);
+  --app-border: rgba(116, 132, 255, 0.24);
+  --app-shadow: 0 18px 44px rgba(69, 78, 149, 0.14), 0 4px 14px rgba(20, 184, 166, 0.08);
+}
+
 body {
   margin: 0;
   padding: 0;
-  background: #f1f5f9;
+  background:
+    radial-gradient(80rem circle at 0% -12%, rgba(109, 77, 255, 0.18), transparent 48%),
+    radial-gradient(65rem circle at 100% -20%, rgba(56, 189, 248, 0.18), transparent 54%),
+    radial-gradient(54rem circle at 82% 100%, rgba(45, 212, 191, 0.12), transparent 50%),
+    linear-gradient(180deg, #f4f9ff 0%, #edf6ff 52%, #f6f8ff 100%);
   color: #0f172a;
   font-family: 'Inter', -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-attachment: fixed;
 }

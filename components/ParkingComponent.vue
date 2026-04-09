@@ -538,7 +538,7 @@ onUnmounted(() => {
   font-size: 1.6rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  background: linear-gradient(135deg, #5a39eb, #8b5cf6, #14b8a6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -638,11 +638,13 @@ onUnmounted(() => {
 }
 
 .parking-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.88), rgba(234, 248, 255, 0.74));
+  border: 1px solid var(--app-border);
   border-radius: 12px;
   padding: 0.625rem;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 10px 24px rgba(84, 101, 178, 0.12), 0 2px 8px rgba(15, 23, 42, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .parking-card-header {
@@ -696,7 +698,7 @@ onUnmounted(() => {
 
 .location-icon-link:hover {
   color: #4f46e5;
-  background: #eef2ff;
+  background: rgba(109, 77, 255, 0.1);
 }
 
 .location-icon {
@@ -826,7 +828,7 @@ onUnmounted(() => {
 }
 
 .load-button {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #6d4dff 0%, #8b5cf6 62%, #2dd4bf 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -835,12 +837,12 @@ onUnmounted(() => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 8px 22px rgba(88, 67, 219, 0.24);
 }
 
 .load-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 12px 26px rgba(88, 67, 219, 0.3);
 }
 
 .load-button:active {
@@ -1024,7 +1026,7 @@ onUnmounted(() => {
   justify-content: center;
   gap: 0.5rem;
   width: 100%;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #6d4dff 0%, #8b5cf6 62%, #2dd4bf 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -1033,13 +1035,13 @@ onUnmounted(() => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 8px 22px rgba(88, 67, 219, 0.24);
   margin-top: 1.5rem;
 }
 
 .copy-html-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 12px 26px rgba(88, 67, 219, 0.3);
 }
 
 .copy-html-button:active {
