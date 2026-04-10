@@ -51,6 +51,7 @@
             :forecast-data="forecastData"
             :depart-date="selectedDepartDate"
             :timezone="selectedRoute.timezone"
+            :route-summary="routeSummary"
           />
         </div>
 
@@ -165,6 +166,7 @@ const forecastIndex = ref(0);
 const mapComponent = ref(null);
 const selectedDepartDate = ref(null);
 const forecastDebug = ref(null);
+const routeSummary = ref('');
 
 const analyticsData = computed(() => ({
   sessionUuid: sessionUuid.value,
@@ -217,6 +219,7 @@ async function fetchForecastData(routeData) {
   const destinationCoordinates = routeData?.coordinates?.end;
   const origin = originCoordinates ? `${originCoordinates.lat},${originCoordinates.lng}` : routeData.start;
   const destination = destinationCoordinates ? `${destinationCoordinates.lat},${destinationCoordinates.lng}` : routeData.end;
+  routeSummary.value = '';
 
   try {
     const response = await $fetch.raw('/api/directions-forecast', {
@@ -262,6 +265,7 @@ async function fetchForecastData(routeData) {
     };
   }
 
+  routeSummary.value = buildFallbackRouteSummary(forecastData.value);
   forecastIndex.value += 1;
   await nextTick();
 }
@@ -271,6 +275,93 @@ function applyExcludeNightHours(data, excludeEnabled) {
     ...point,
     isExcluded: excludeEnabled && (point.hour >= 23 || point.hour <= 5)
   }));
+}
+
+function formatSummaryTimeLabel(timeString) {
+  const [hourValue = '0', minuteValue = '00'] = String(timeString || '').split(':');
+  const hour = Number(hourValue);
+  const minutes = Number(minuteValue);
+
+  if (Number.isNaN(hour) || Number.isNaN(minutes)) {
+    return 'later';
+  }
+
+  const suffix = hour >= 12 ? 'PM' : 'AM';
+  const normalizedHour = hour % 12 || 12;
+  return minutes === 0 ? `${normalizedHour}${suffix}` : `${normalizedHour}:${minuteValue}${suffix}`;
+}
+
+function getSummaryPoints(data) {
+  const comparablePoints = data.filter(
+    (point) => typeof point?.duration === 'number' && point?.label
+  );
+  const availablePoints = comparablePoints.filter((point) => !point.isExcluded);
+  return availablePoints.length > 0 ? availablePoints : comparablePoints;
+}
+
+function getSummaryWindow(points, targetPoint, threshold) {
+  const targetIndex = points.findIndex(
+    (point) => point.label === targetPoint.label && point.hour === targetPoint.hour
+  );
+
+  if (targetIndex === -1) {
+    return formatSummaryTimeLabel(targetPoint.label);
+  }
+
+  let startIndex = targetIndex;
+  let endIndex = targetIndex;
+
+  while (
+    startIndex > 0 &&
+    Math.abs(points[startIndex - 1].duration - targetPoint.duration) <= threshold
+  ) {
+    startIndex -= 1;
+  }
+
+  while (
+    endIndex < points.length - 1 &&
+    Math.abs(points[endIndex + 1].duration - targetPoint.duration) <= threshold
+  ) {
+    endIndex += 1;
+  }
+
+  const startLabel = formatSummaryTimeLabel(points[startIndex].label);
+  const endLabel = formatSummaryTimeLabel(points[endIndex].label);
+
+  return startIndex === endIndex ? startLabel : `${startLabel} to ${endLabel}`;
+}
+
+function buildFallbackRouteSummary(data) {
+  const summaryPoints = getSummaryPoints(data);
+
+  if (summaryPoints.length === 0) {
+    return '';
+  }
+
+  const currentPoint =
+    typeof data?.[0]?.duration === 'number' && !data[0].isExcluded ? data[0] : null;
+  const bestPoint = summaryPoints.reduce((best, current) =>
+    current.duration < best.duration ? current : best
+  );
+  const worstPoint = summaryPoints.reduce((worst, current) =>
+    current.duration > worst.duration ? current : worst
+  );
+  const bestWindow = getSummaryWindow(
+    summaryPoints,
+    bestPoint,
+    Math.max(5, Math.round(bestPoint.duration * 0.08))
+  );
+  const peakWindow = getSummaryWindow(
+    summaryPoints,
+    worstPoint,
+    Math.max(7, Math.round(worstPoint.duration * 0.1))
+  );
+
+  if (currentPoint && currentPoint.duration <= bestPoint.duration + 5) {
+    return `Now is already one of the better times to leave. Traffic is heaviest around ${peakWindow}.`;
+  }
+
+  return `Best to leave around ${bestWindow}. Traffic is heaviest around ${peakWindow}.`;
 }
 
 function generateFallbackForecastData(routeData = null, departDate = null, timezone = 'UTC') {

@@ -9,6 +9,11 @@
       <h3>{{ chartTitle }}</h3>
       <p class="route-subtitle">{{ routeData.start }} → {{ routeData.end }} ({{ routeData.distance }})</p>
       <p class="route-subtitle">Current drive time: {{ formatDuration(currentDuration) }}</p>
+      <div v-if="routeSummary" class="route-summary-card">
+        <p class="route-summary-text">
+          {{ routeSummary }}
+        </p>
+      </div>
     </div>
 
     <div class="chart-footer">
@@ -165,6 +170,10 @@ const props = defineProps({
   timezone: {
     type: String,
     default: 'UTC'
+  },
+  routeSummary: {
+    type: String,
+    default: ''
   }
 });
 const chartTitle = computed(() => {
@@ -548,6 +557,32 @@ onBeforeUnmount(() => {
   font-size: 1rem;
   font-weight: 500;
   font-family: 'Inter', sans-serif;
+}
+
+.route-summary-card {
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+  border: 1px solid #dbeafe;
+}
+
+.route-summary-label {
+  margin: 0 0 0.35rem 0;
+  color: #4338ca;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.route-summary-text {
+  margin: 0;
+  color: #334155;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  font-weight: 500;
+  margin: 0 !important;
 }
 
 .chart-controls {
@@ -1014,8 +1049,16 @@ onBeforeUnmount(() => {
   
   .optimal-duration,
   .vs-current,
-  .rush-description {
+  .rush-description,
+  .route-summary-label,
+  .route-summary-text {
     font-size: 0.75rem;
+    margin: 0 !important;
+  }
+
+  .route-summary-card {
+    margin-top: 0.85rem;
+    padding: 0.9rem 1rem;
   }
 }
 
