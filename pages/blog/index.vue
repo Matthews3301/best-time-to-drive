@@ -15,6 +15,7 @@
     <main class="blog-main">
       <div class="blog-container">
         <div v-if="loading" class="loading-state">
+          <div class="spinner" aria-hidden="true"></div>
           <p>Loading blog posts...</p>
         </div>
 
@@ -183,6 +184,28 @@ const { data: blogPosts, pending: loading, error } = await useAsyncData('blog-po
     0 1px 3px rgba(0, 0, 0, 0.05),
     0 4px 12px rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-state {

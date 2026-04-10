@@ -27,6 +27,7 @@
     <main class="blog-post-main">
       <div class="blog-post-container">
         <div v-if="loading" class="loading-state">
+          <div class="spinner" aria-hidden="true"></div>
           <p>Loading blog post...</p>
         </div>
 
@@ -236,6 +237,28 @@ const renderedMarkdown = computed(() => {
   padding: 4rem 2rem;
   color: #64748b;
   font-size: 1.125rem;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-state {

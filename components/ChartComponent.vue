@@ -1,7 +1,8 @@
 <template>
   <div class="chart-container">
     <div v-if="forecastData.length === 0" class="chart-loading">
-      Calculating traffic forecast...
+      <div class="spinner" aria-hidden="true"></div>
+      <p>Calculating traffic forecast...</p>
     </div>
     <div v-else>
     <div class="chart-header">
@@ -487,6 +488,35 @@ onBeforeUnmount(() => {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+.chart-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 220px;
+  color: #64748b;
+}
+
+.chart-loading p {
+  margin: 0;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .chart-header {

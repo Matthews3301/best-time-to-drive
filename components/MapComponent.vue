@@ -228,14 +228,7 @@
             </div>
           </div>
           <div v-else class="loading-content">
-            <div class="loading-icon">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M16 13L12 17L8 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M12 17V9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
+            <div class="spinner" aria-hidden="true"></div>
             <p>Loading Google Maps...</p>
           </div>
         </div>
@@ -1913,30 +1906,19 @@ onBeforeUnmount(() => {
   gap: 1rem;
 }
 
-.loading-icon {
-  width: 3rem;
-  height: 3rem;
-  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #6366f1;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #3b82f6;
-  animation: pulse 2s infinite;
+  animation: spin 1s linear infinite;
   flex-shrink: 0;
 }
 
-.loading-icon svg {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -2161,14 +2143,12 @@ onBeforeUnmount(() => {
     min-width: 120px;
   }
   
-  .error-icon,
-  .loading-icon {
+  .error-icon {
     width: 2.5rem;
     height: 2.5rem;
   }
   
-  .error-icon svg,
-  .loading-icon svg {
+  .error-icon svg {
     width: 1.25rem;
     height: 1.25rem;
   }
@@ -2253,13 +2233,13 @@ onBeforeUnmount(() => {
 
 <style>
 .autocomplete-dropdown {
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.96), rgba(236, 248, 255, 0.82));
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.86), rgba(236, 248, 255, 0.68));
   border: 1px solid var(--app-border);
   border-radius: 10px;
   box-shadow: 0 16px 34px rgba(70, 89, 170, 0.16), 0 3px 10px rgba(15, 23, 42, 0.08);
   z-index: 9999;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .autocomplete-item {
