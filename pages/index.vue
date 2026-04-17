@@ -325,6 +325,15 @@ function getSummaryWindow(points, targetPoint, threshold) {
     endIndex += 1;
   }
 
+  if (startIndex !== endIndex) {
+    const startHour = points[startIndex].hour;
+    const endHour = points[endIndex].hour;
+    const hourSpan = (endHour - startHour + 24) % 24;
+    if (hourSpan > 12 || endIndex - startIndex > 6) {
+      return formatSummaryTimeLabel(targetPoint.label);
+    }
+  }
+
   const startLabel = formatSummaryTimeLabel(points[startIndex].label);
   const endLabel = formatSummaryTimeLabel(points[endIndex].label);
 
