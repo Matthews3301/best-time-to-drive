@@ -216,16 +216,6 @@
               </svg>
             </div>
             <p>{{ loadingError }}</p>
-            <div class="api-key-setup">
-              <h4>Setup Instructions:</h4>
-              <ol>
-                <li>Get a Google Maps API key from <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></li>
-                <li>Enable Maps JavaScript API, Places API, Directions API, and Geocoding API</li>
-                <li>Add your API key to the <code>.env</code> file:</li>
-                <pre>VITE_GOOGLE_MAPS_API_KEY=your_actual_api_key_here</pre>
-                <li>Restart the development server</li>
-              </ol>
-            </div>
           </div>
           <div v-else class="loading-content">
             <div class="spinner" aria-hidden="true"></div>

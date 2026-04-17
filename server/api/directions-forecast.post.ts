@@ -36,13 +36,13 @@ type ForecastSlot = {
 };
 
 type QueryMetrics = {
-  googleCalls: number;
+  apiCalls: number;
 };
 
 type ForecastComputationResult = {
   data: ForecastPoint[];
   cacheEntry: CachedForecastEntry;
-  googleCalls: number;
+  apiCalls: number;
 };
 
 const forecastInFlight = new Map<string, Promise<ForecastComputationResult>>();
@@ -106,99 +106,86 @@ async function fetchDurationMinutes(
   apiKey: string,
   metrics: QueryMetrics
 ) {
-  const buildUrl = (options: { departureTime?: number | 'now'; includeTrafficModel: boolean }) => {
+  // TomTom Routing API: uses departAt ISO timestamp for traffic-aware ETA prediction.
+  // Path format supports "lat,lng" strings from client (preferred by index.vue). Uses predicted traffic for future departAt.
+  const departureIso = new Date(departureUnix * 1000).toISOString();
+  const routePath = `${encodeURIComponent(origin)}:${encodeURIComponent(destination)}`;
+
+  const buildUrl = () => {
     const params = new URLSearchParams({
-      origin,
-      destination,
-      mode: 'driving',
-      alternatives: 'false',
-      key: apiKey
+      key: apiKey,
+      departAt: departureIso,
+      routeType: 'fastest',
+      traffic: 'true',
+      language: 'en-US'
     });
-
-    if (options.departureTime !== undefined) {
-      params.set('departure_time', String(options.departureTime));
-    }
-    if (options.includeTrafficModel) {
-      params.set('traffic_model', 'best_guess');
-    }
-
-    return `https://maps.googleapis.com/maps/api/directions/json?${params.toString()}`;
+    return `https://api.tomtom.com/routing/1/calculateRoute/${routePath}/json?${params.toString()}`;
   };
 
-  const requestWith = async (
-    options: { departureTime?: number | 'now'; includeTrafficModel: boolean }
-  ): Promise<number> => {
-    const url = buildUrl(options);
+  const requestWithRetry = async (): Promise<number> => {
+    const url = buildUrl();
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
-      metrics.googleCalls += 1;
-      const response = await fetch(url);
+      metrics.apiCalls += 1;
+      const response = await fetch(url, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
 
       if (!response.ok) {
         if (attempt < 2) {
-          await wait(300 * (attempt + 1));
+          await wait(500 * (attempt + 1));
           continue;
         }
         throw createError({
           statusCode: response.status,
-          statusMessage: 'Failed to fetch directions from Google'
+          statusMessage: `Failed to fetch route from TomTom (HTTP ${response.status})`
         });
       }
 
       const payload = await response.json();
-      const status = payload?.status;
 
-      if (status === 'OK') {
-        const firstLeg = payload?.routes?.[0]?.legs?.[0];
-        const durationSeconds = firstLeg?.duration_in_traffic?.value ?? firstLeg?.duration?.value;
+      // TomTom error format
+      if (payload.error || payload.message) {
+        const errorDetail = payload.error?.description || payload.message || 'Unknown error';
+        const errorCode = payload.error?.code || payload.code;
 
-        if (typeof durationSeconds !== 'number') {
-          throw createError({
-            statusCode: 502,
-            statusMessage: 'Directions response did not include duration'
-          });
+        if ((errorCode === 429 || errorCode === '429' || payload.statusCode === 429) && attempt < 2) {
+          await wait(1000 * (attempt + 2)); // longer backoff for rate limits
+          continue;
         }
 
-        return Math.max(1, Math.round(durationSeconds / 60));
+        throw createError({
+          statusCode: 502,
+          statusMessage: `TomTom Routing error: ${errorDetail}`
+        });
       }
 
-      if ((status === 'OVER_QUERY_LIMIT' || status === 'UNKNOWN_ERROR') && attempt < 2) {
-        await wait(600 * (attempt + 1));
-        continue;
+      const route = payload?.routes?.[0];
+      const leg = route?.legs?.[0];
+      const travelTimeSeconds = leg?.summary?.travelTimeInSeconds;
+
+      if (typeof travelTimeSeconds === 'number' && travelTimeSeconds > 0) {
+        const minutes = Math.max(1, Math.round(travelTimeSeconds / 60));
+        return minutes;
       }
 
-      const errorMessage = payload?.error_message ? ` (${payload.error_message})` : '';
       throw createError({
         statusCode: 502,
-        statusMessage: `Google Directions error: ${status || 'UNKNOWN'}${errorMessage}`
+        statusMessage: 'TomTom response did not include valid travelTimeInSeconds'
       });
     }
 
     throw createError({
       statusCode: 502,
-      statusMessage: 'Unable to calculate directions forecast'
+      statusMessage: 'Unable to calculate directions forecast with TomTom'
     });
   };
 
-  try {
-    return await requestWith({ departureTime: departureUnix, includeTrafficModel: true });
-  } catch (error: any) {
-    const message = String(error?.statusMessage || error?.message || '');
-    if (!message.includes('INVALID_REQUEST')) {
-      throw error;
-    }
-  }
-
-  try {
-    return await requestWith({ departureTime: 'now', includeTrafficModel: true });
-  } catch (error: any) {
-    const message = String(error?.statusMessage || error?.message || '');
-    if (!message.includes('INVALID_REQUEST')) {
-      throw error;
-    }
-  }
-
-  return requestWith({ includeTrafficModel: false });
+  // TomTom gracefully handles past departure times by using current traffic
+  // No need for complex INVALID_REQUEST fallbacks like Google
+  return await requestWithRetry();
 }
 
 function buildForecastSlots(
@@ -262,8 +249,8 @@ function pickInitialSampleIndices(slots: ForecastSlot[], nearbySeed?: CachedFore
 
   return toSortedUniqueIndices(
     [
-      allowedIndices[0],
-      allowedIndices[allowedIndices.length - 1],
+      allowedIndices[0] ?? -1,
+      allowedIndices[allowedIndices.length - 1] ?? -1,
       ...base,
       ...anchors,
       ...nearbyWindow
@@ -356,7 +343,7 @@ function buildCacheEntry(
   source: 'exact' | 'partial' | 'nearby',
   metrics: QueryMetrics,
   refinementLevel: number,
-  metadata: Omit<CachedForecastEntry['metadata'], 'googleCallCount' | 'refinementLevel' | 'exactSampleCount'>
+  metadata: Omit<CachedForecastEntry['metadata'], 'apiCallCount' | 'refinementLevel' | 'exactSampleCount'>
 ): CachedForecastEntry {
   const bestPoint = getBestAllowedPoint(points);
   const exactSampleCount = points.filter((point) => !point.isEstimated).length;
@@ -381,7 +368,7 @@ function buildCacheEntry(
         }
       : undefined,
     metadata: {
-      googleCallCount: metrics.googleCalls,
+      apiCallCount: metrics.apiCalls,
       refinementLevel,
       exactSampleCount,
       ...metadata
@@ -405,7 +392,7 @@ async function queryIndices(
     const chunk = pending.slice(start, start + chunkSize);
     const values = await Promise.all(
       chunk.map(async (index) => {
-        const slot = slots[index];
+        const slot = slots[index]!;
         const duration = await fetchDurationMinutes(origin, destination, slot.departureUnix, apiKey, metrics);
         return {
           index,
@@ -457,7 +444,7 @@ async function buildAdaptiveForecast(
 ) {
   const slots = buildForecastSlots(startTime, timeZone, excludeNightHours);
   const queried = new Map<number, ForecastPoint>();
-  const metrics: QueryMetrics = { googleCalls: 0 };
+  const metrics: QueryMetrics = { apiCalls: 0 };
 
   for (const seedPoint of partialSeed?.sampledPoints || []) {
     const slotIndex = slots.findIndex(
@@ -517,7 +504,7 @@ async function buildAdaptiveForecast(
   return {
     data: adaptivePoints,
     cacheEntry,
-    googleCalls: metrics.googleCalls
+    apiCalls: metrics.apiCalls
   };
 }
 
@@ -541,15 +528,13 @@ async function maybeRunShadowComparison(
   apiKey: string,
   adaptiveResult: ForecastComputationResult
 ) {
-  if (!DEFAULT_SHADOW_SAMPLE_RATE || Number.isNaN(DEFAULT_SHADOW_SAMPLE_RATE)) {
+  if (!DEFAULT_SHADOW_SAMPLE_RATE || Number.isNaN(DEFAULT_SHADOW_SAMPLE_RATE) || Math.random() > DEFAULT_SHADOW_SAMPLE_RATE) {
     return adaptiveResult.cacheEntry.metadata;
   }
 
-  if (Math.random() > DEFAULT_SHADOW_SAMPLE_RATE) {
-    return adaptiveResult.cacheEntry.metadata;
-  }
+  console.log(`[Forecast] 🔬 Running shadow full-24h comparison`);
 
-  const metrics: QueryMetrics = { googleCalls: 0 };
+  const metrics: QueryMetrics = { apiCalls: 0 };
   const fullForecast = await buildFullForecast(origin, destination, slots, apiKey, metrics);
   const comparison = compareForecasts(adaptiveResult.data, fullForecast);
 
@@ -580,6 +565,7 @@ async function resolveCachedOrComputeForecast(
 
   const cachedExact = await getCachedForecast('exact', exactFingerprint);
   if (cachedExact) {
+    console.log(`[Forecast] ✅ Cache HIT (exact)`);
     return {
       data: cachedExact.interpolatedPoints,
       cached: true,
@@ -587,7 +573,7 @@ async function resolveCachedOrComputeForecast(
         ...cachedExact.metadata,
         cacheStatus: 'exact',
         confidenceScore: cachedExact.confidenceScore,
-        requestGoogleCallCount: 0
+        requestApiCallCount: 0
       }
     };
   }
@@ -597,6 +583,7 @@ async function resolveCachedOrComputeForecast(
 
   if (forecastInFlight.has(exactFingerprint)) {
     const inFlight = await forecastInFlight.get(exactFingerprint)!;
+    console.log(`[Forecast] ⏳ In-flight request deduped`);
     return {
       data: inFlight.data,
       cached: true,
@@ -604,7 +591,7 @@ async function resolveCachedOrComputeForecast(
         ...inFlight.cacheEntry.metadata,
         cacheStatus: 'in_flight',
         confidenceScore: inFlight.cacheEntry.confidenceScore,
-        requestGoogleCallCount: 0
+        requestApiCallCount: 0
       }
     };
   }
@@ -622,7 +609,7 @@ async function resolveCachedOrComputeForecast(
           ...exactAfterWait.metadata,
           cacheStatus: 'exact_after_wait',
           confidenceScore: exactAfterWait.confidenceScore,
-          requestGoogleCallCount: 0
+          requestApiCallCount: 0
         }
       };
     }
@@ -635,7 +622,7 @@ async function resolveCachedOrComputeForecast(
           ...cachedPartial.metadata,
           cacheStatus: 'partial',
           confidenceScore: cachedPartial.confidenceScore,
-          requestGoogleCallCount: 0
+          requestApiCallCount: 0
         }
       };
     }
@@ -643,6 +630,7 @@ async function resolveCachedOrComputeForecast(
 
   const requestPromise = (async () => {
     try {
+      console.log(`[Forecast] 🔄 Computing new adaptive forecast`);
       const adaptiveResult = await buildAdaptiveForecast(
         origin,
         destination,
@@ -679,7 +667,7 @@ async function resolveCachedOrComputeForecast(
       return {
         data: exactEntry.interpolatedPoints,
         cacheEntry: exactEntry,
-        googleCalls: exactEntry.metadata.googleCallCount
+        apiCalls: exactEntry.metadata.apiCallCount ?? 0
       };
     } finally {
       if (lockAcquired) {
@@ -699,7 +687,7 @@ async function resolveCachedOrComputeForecast(
         ...result.cacheEntry.metadata,
         cacheStatus: nearbySeed ? 'nearby_seed' : cachedPartial ? 'partial_seed' : 'miss',
         confidenceScore: result.cacheEntry.confidenceScore,
-        requestGoogleCallCount: result.googleCalls
+        requestApiCallCount: result.apiCalls
       }
     };
   } finally {
@@ -708,10 +696,13 @@ async function resolveCachedOrComputeForecast(
 }
 
 export default defineEventHandler(async (event) => {
+  const startTime = Date.now();
   const isProduction = process.env.NODE_ENV === 'production';
+
   if (isProduction) {
     const requestOrigin = getHeader(event, 'origin');
     if (requestOrigin !== ALLOWED_PRODUCTION_ORIGIN) {
+      console.warn('[Forecast] Forbidden origin:', requestOrigin);
       throw createError({
         statusCode: 403,
         statusMessage: 'Forbidden origin'
@@ -721,6 +712,7 @@ export default defineEventHandler(async (event) => {
     const clientId = getClientIdentifier(event);
     const allowed = consumeRateLimit(clientId, Date.now());
     if (!allowed) {
+      console.warn('[Forecast] Rate limit exceeded for client:', clientId);
       throw createError({
         statusCode: 429,
         statusMessage: 'Too many requests'
@@ -733,6 +725,7 @@ export default defineEventHandler(async (event) => {
   const destination = body?.destination?.trim();
 
   if (!origin || !destination) {
+    console.error('[Forecast] Missing origin or destination');
     throw createError({
       statusCode: 400,
       statusMessage: 'Origin and destination are required'
@@ -745,15 +738,18 @@ export default defineEventHandler(async (event) => {
 
   const config = useRuntimeConfig();
   const apiKey =
+    config.tomTomApiKey ||
+    process.env.TOMTOM_API_KEY ||
     config.googleDirectionsApiKey ||
     process.env.GOOGLE_DIRECTIONS_API_KEY ||
     config.viteGoogleMapsApiKey ||
     process.env.VITE_GOOGLE_MAPS_API_KEY;
 
   if (!apiKey) {
+    console.error('[Forecast] ❌ No TomTom API key configured');
     throw createError({
       statusCode: 500,
-      statusMessage: 'Google Maps API key not configured'
+      statusMessage: 'TomTom API key not configured. Please set TOMTOM_API_KEY in your environment.'
     });
   }
 
@@ -766,9 +762,16 @@ export default defineEventHandler(async (event) => {
     apiKey
   );
 
+  const durationMs = Date.now() - startTime;
+  const apiCalls = result.metadata?.apiCallCount ?? result.metadata?.googleCallCount ?? 0;
+  const bestPoint = result.data?.reduce((best, p) => (!best || p.duration < best.duration) && !p.isExcluded ? p : best, null as any);
+  const bestTime = bestPoint ? `${bestPoint.label} (${bestPoint.duration}min)` : 'unknown';
+
+  console.log(`[Forecast] Completed in ${durationMs}ms | cache=${result.metadata?.cacheStatus || 'unknown'} | tomTomCalls=${apiCalls} | best=${bestTime} | confidence=${result.metadata?.confidenceScore || 0} | refinement=${result.metadata?.refinementLevel || 0}`);
+
   setHeader(event, 'x-forecast-cache-status', String(result.metadata?.cacheStatus || 'unknown'));
-  setHeader(event, 'x-forecast-google-calls', String(result.metadata?.googleCallCount ?? 0));
-  setHeader(event, 'x-forecast-request-google-calls', String(result.metadata?.requestGoogleCallCount ?? 0));
+  setHeader(event, 'x-forecast-api-calls', String(result.metadata?.apiCallCount ?? result.metadata?.googleCallCount ?? 0));
+  setHeader(event, 'x-forecast-request-api-calls', String(result.metadata?.requestApiCallCount ?? 0));
   setHeader(
     event,
     'x-forecast-confidence',

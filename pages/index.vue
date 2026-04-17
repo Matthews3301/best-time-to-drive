@@ -175,11 +175,11 @@ const analyticsData = computed(() => ({
   excludeNightHours: excludeNightHours.value,
   forecastIndex: forecastIndex.value,
   forecastCacheStatus: forecastDebug.value?.cacheStatus || null,
-  forecastRequestGoogleCalls: forecastDebug.value?.requestGoogleCallCount !== undefined
-    ? Number(forecastDebug.value.requestGoogleCallCount)
+  forecastRequestApiCalls: forecastDebug.value?.requestApiCallCount !== undefined
+    ? Number(forecastDebug.value.requestApiCallCount)
     : null,
-  forecastModelGoogleCalls: forecastDebug.value?.googleCallCount !== undefined
-    ? Number(forecastDebug.value.googleCallCount)
+  forecastApiCalls: forecastDebug.value?.apiCallCount !== undefined || forecastDebug.value?.googleCallCount !== undefined
+    ? Number(forecastDebug.value.apiCallCount ?? forecastDebug.value.googleCallCount)
     : null,
   forecastRefinementLevel: forecastDebug.value?.refinementLevel !== undefined
     ? Number(forecastDebug.value.refinementLevel)
@@ -239,16 +239,16 @@ async function fetchForecastData(routeData) {
       forecastDebug.value = {
         ...responseData.metadata,
         cacheStatus: response.headers.get('x-forecast-cache-status') || responseData.metadata?.cacheStatus || 'unknown',
-        googleCallCount: response.headers.get('x-forecast-google-calls') || responseData.metadata?.googleCallCount || null,
-        requestGoogleCallCount: response.headers.get('x-forecast-request-google-calls') || responseData.metadata?.requestGoogleCallCount || null,
+        apiCallCount: response.headers.get('x-forecast-api-calls') || responseData.metadata?.apiCallCount || responseData.metadata?.googleCallCount || null,
+        requestApiCallCount: response.headers.get('x-forecast-request-api-calls') || responseData.metadata?.requestApiCallCount || null,
         confidenceScore: response.headers.get('x-forecast-confidence') || responseData.metadata?.confidenceScore || null
       };
     } else {
       forecastData.value = generateFallbackForecastData(routeData, selectedDepartDate.value, timezoneValue);
       forecastDebug.value = {
         cacheStatus: 'fallback_response_shape',
-        requestGoogleCallCount: 0,
-        googleCallCount: 0,
+        requestApiCallCount: 0,
+        apiCallCount: 0,
         refinementLevel: 0,
         confidenceScore: 0
       };
@@ -258,8 +258,8 @@ async function fetchForecastData(routeData) {
     forecastData.value = generateFallbackForecastData(routeData, selectedDepartDate.value, timezoneValue);
     forecastDebug.value = {
       cacheStatus: 'fallback_error',
-      requestGoogleCallCount: 0,
-      googleCallCount: 0,
+      requestApiCallCount: 0,
+      apiCallCount: 0,
       refinementLevel: 0,
       confidenceScore: 0
     };

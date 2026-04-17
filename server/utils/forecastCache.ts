@@ -29,8 +29,10 @@ export type CachedForecastEntry = {
     hour: number;
   };
   metadata: {
-    googleCallCount: number;
-    requestGoogleCallCount?: number;
+    apiCallCount: number;
+    googleCallCount?: number; // backward compat
+    requestApiCallCount?: number;
+    requestGoogleCallCount?: number; // backward compat
     refinementLevel: number;
     exactSampleCount: number;
     nearbyFingerprint?: string;

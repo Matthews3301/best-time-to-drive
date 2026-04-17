@@ -20,6 +20,7 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    tomTomApiKey: process.env.TOMTOM_API_KEY,
     googleDirectionsApiKey: process.env.GOOGLE_DIRECTIONS_API_KEY,
     viteGoogleMapsApiKey: process.env.VITE_GOOGLE_MAPS_API_KEY,
     public: {
@@ -82,9 +83,11 @@ export default defineNuxtConfig({
         { rel: 'dns-prefetch', href: '//cdn-static.wework.com' },
         { rel: 'dns-prefetch', href: '//maps.googleapis.com' },
         { rel: 'dns-prefetch', href: '//maps.google.com' },
+        { rel: 'dns-prefetch', href: '//api.tomtom.com' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: true },
         { rel: 'preconnect', href: 'https://cdn-static.wework.com', crossorigin: true },
+        { rel: 'preconnect', href: 'https://api.tomtom.com' },
         { rel: 'preload', href: 'https://cdn-static.wework.com/content/fonts/serif-regular.woff2', as: 'font', type: 'font/woff2', crossorigin: true },
         { href: 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cardo:ital,wght@0,400;0,700;1,400&family=Kalam:wght@300;400;700&display=swap', rel: 'stylesheet' }
       ],
@@ -109,11 +112,11 @@ export default defineNuxtConfig({
             },
             "featureList": [
               "Free rush hour traffic estimator",
-              "Interactive Google Maps route selection",
+              "Interactive map route selection",
               "24-hour traffic forecast visualization",
               "Rush hour avoidance recommendations",
               "Traffic pattern analysis",
-              "Real-time traffic data integration",
+              "Real-time TomTom traffic data integration",
               "Mobile-responsive design",
               "Best departure time calculator",
               "Peak traffic hour identification",
@@ -149,7 +152,7 @@ export default defineNuxtConfig({
                   "name": "How accurate is the rush hour traffic estimator?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Our rush hour traffic estimator provides highly accurate traffic forecasts using real-time Google Maps data. It analyzes historical traffic patterns and current conditions to give you precise estimates of when traffic will be lightest and when you should leave for your journey."
+                    "text": "Our rush hour traffic estimator provides highly accurate traffic forecasts using real-time TomTom traffic data. It analyzes historical traffic patterns and current conditions to give you precise estimates of when traffic will be lightest and when you should leave for your journey."
                   }
                 },
                 {
