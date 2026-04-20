@@ -1169,10 +1169,8 @@ function updateRouteFromDirections (directions) {
 
 function scrollToResults () {
   const forecast = document.getElementById('forecast-chart')
-  const results = document.getElementById('results-card')
-  const target = forecast || results
-  if (target) {
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  if (forecast) {
+    forecast.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
 

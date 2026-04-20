@@ -55,6 +55,70 @@
           />
         </div>
 
+        <div class="chart-section drive-snacks-card" style="margin-top: 2rem;" id="snacks-card">
+          <div class="drive-snacks-header">
+            <p class="drive-snacks-heading">Snacks for the Drive</p>
+            <div class="drive-snacks-info">
+              <button
+                type="button"
+                class="drive-snacks-info-trigger"
+                aria-describedby="drive-snacks-disclaimer-tooltip"
+                aria-label="Show affiliate disclosure"
+              >
+                i
+              </button>
+              <p id="drive-snacks-disclaimer-tooltip" class="drive-snacks-tooltip">
+                As an Amazon Associate, Rush Hour Planner may earn from qualifying purchases.
+              </p>
+            </div>
+          </div>
+          <div class="drive-snacks-grid">
+            <article class="drive-snack-item">
+              <a
+                href="https://www.amazon.com/Jack-Links-Jerky-Original-Pounder/dp/B00PO9IEEG/?tag=rushhourplann-20"
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                class="drive-snack-link"
+                aria-label="View Jack Link's Beef Jerky, Original, 8oz Large Bag on Amazon"
+                @click="trackAffiliateProductClick('B00PO9IEEG', 'card')"
+              >
+                <img
+                  src="https://m.media-amazon.com/images/P/B00PO9IEEG.01._SCLZZZZZZZ__SX500_.jpg"
+                  alt="Jack Link's Beef Jerky, Original, 8oz Large Bag"
+                  class="drive-snack-image"
+                  loading="lazy"
+                />
+                <div class="drive-snack-overlay">
+                  <p class="drive-snack-name">Jack Link's Beef Jerky, Original, 8oz Large Bag</p>
+                  <p class="drive-snack-description">Easy high-protein snack for road trips and longer drives.</p>
+                </div>
+              </a>
+            </article>
+
+            <article class="drive-snack-item">
+              <a
+                href="https://www.amazon.com/Jacobs-Mini-Cheddars-25g-pack/dp/B01G259502/?tag=rushhourplann-20"
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                class="drive-snack-link"
+                aria-label="View Jacob's Mini Cheddars 25g (Pack of 16) on Amazon"
+                @click="trackAffiliateProductClick('B01G259502', 'card')"
+              >
+                <img
+                  src="https://m.media-amazon.com/images/I/41KjaJSnmzL.jpg"
+                  alt="Jacob's Mini Cheddars 25g (Pack of 16)"
+                  class="drive-snack-image"
+                  loading="lazy"
+                />
+                <div class="drive-snack-overlay">
+                  <p class="drive-snack-name">Jacob's Mini Cheddars 25g (Pack of 16)</p>
+                  <p class="drive-snack-description">Bite-size baked cheese crackers that are easy to stash in the car.</p>
+                </div>
+              </a>
+            </article>
+          </div>
+        </div>
+
         <div class="chart-section" style="margin-top: 2rem;" id="parking-card">
           <ParkingComponent :destination="selectedRoute.end" />
         </div>
@@ -69,10 +133,6 @@
             rel="noopener noreferrer"
             class="bmc-link"
           >Buy me a coffee</a>
-        </div>
-
-        <div class="chart-section" style="margin-top: 1.5rem;" id="results-card">
-          <AddToWebsite :target="selectedRoute.end" :forecast-data="forecastData" />
         </div>
       </div>
       
@@ -97,7 +157,6 @@ import { v4 as uuidv4 } from 'uuid';
 import MapComponent from '../components/MapComponent.vue';
 import ChartComponent from '../components/ChartComponent.vue';
 import ParkingComponent from '../components/ParkingComponent.vue';
-import AddToWebsite from '../components/AddToWebsite.vue';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
@@ -456,6 +515,20 @@ function selectSampleRoute(from, to) {
   }
 }
 
+const affiliateProducts = {
+  B00PO9IEEG: "Jack Link's Beef Jerky, Original, 8oz Large Bag",
+  B01G259502: "Jacob's Mini Cheddars 25g (Pack of 16)"
+};
+
+function trackAffiliateProductClick(productAsin, linkType) {
+  posthog?.capture('affiliate_product_click', {
+    productName: affiliateProducts[productAsin] || 'Unknown Product',
+    productAsin,
+    affiliateStoreId: 'rushhourplann-20',
+    linkType
+  });
+}
+
 watch(forecastIndex, () => {
   // Only send analytics when we have both start and end locations
   if (!selectedRoute.value?.start || !selectedRoute.value?.end) {
@@ -782,6 +855,148 @@ onMounted(() => {
     0 8px 16px rgba(15, 23, 42, 0.08);
 }
 
+.drive-snacks-card {
+  padding: 1.5rem;
+}
+
+.drive-snacks-heading {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+  flex: 1;
+  background: linear-gradient(135deg, #5a39eb, #8b5cf6, #14b8a6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: left;
+}
+
+.drive-snacks-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.drive-snacks-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.drive-snack-item {
+  min-width: 0;
+}
+
+.drive-snack-link {
+  display: block;
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #0f172a;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 22px rgba(88, 67, 219, 0.24);
+}
+
+.drive-snack-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(88, 67, 219, 0.3);
+}
+
+.drive-snack-link:active {
+  transform: translateY(-1px);
+}
+
+.drive-snack-image {
+  display: block;
+  width: 100%;
+  height: 240px;
+  object-fit: contain;
+  object-position: center;
+  background: #ffffff;
+}
+
+.drive-snack-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.75rem 0.85rem;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.drive-snack-name {
+  margin: 0;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.drive-snack-description {
+  margin: 0.35rem 0 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.drive-snacks-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.drive-snacks-info-trigger {
+  width: 0.95rem;
+  height: 0.95rem;
+  border: 1px solid rgba(100, 116, 139, 0.7);
+  border-radius: 999px;
+  padding: 0;
+  background: #ffffff;
+  color: #475569;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: default;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drive-snacks-info-trigger:focus-visible {
+  outline: 2px solid #6d4dff;
+  outline-offset: 2px;
+}
+
+.drive-snacks-tooltip {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  width: min(260px, 70vw);
+  margin: 0;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.5rem;
+  background: rgba(15, 23, 42, 0.94);
+  color: #ffffff;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.28);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-3px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.drive-snacks-info:hover .drive-snacks-tooltip,
+.drive-snacks-info:focus-within .drive-snacks-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
 .bmc-cta {
   margin: 1rem 0 0.5rem;
   padding: 1rem 1.25rem;
@@ -925,6 +1140,19 @@ onMounted(() => {
     padding: 1.5rem;
     overflow: hidden;
   }
+
+  .drive-snacks-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .drive-snack-image {
+    height: 220px;
+  }
+
+  .drive-snacks-heading {
+    font-size: 1.25rem;
+  }
   
   .placeholder-message {
     padding: 3rem 1.5rem;
@@ -991,6 +1219,26 @@ onMounted(() => {
   .chart-section {
     padding: 1.25rem;
     overflow: hidden;
+  }
+
+  .drive-snack-image {
+    height: 200px;
+  }
+
+  .drive-snack-overlay {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .drive-snack-name {
+    font-size: 0.9rem;
+  }
+
+  .drive-snack-description {
+    font-size: 0.75rem;
+  }
+
+  .drive-snacks-heading {
+    font-size: 1.125rem;
   }
 }
 </style> 
