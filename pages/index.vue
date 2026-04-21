@@ -75,7 +75,7 @@
           <div class="drive-snacks-grid">
             <article class="drive-snack-item">
               <a
-                href="https://www.amazon.com/Jack-Links-Jerky-Original-Pounder/dp/B00PO9IEEG/?tag=rushhourplann-20"
+                href="https://amzn.to/4mH6bYN"
                 target="_blank"
                 rel="noopener noreferrer sponsored"
                 class="drive-snack-link"
@@ -97,7 +97,7 @@
 
             <article class="drive-snack-item">
               <a
-                href="https://www.amazon.com/Jacobs-Mini-Cheddars-25g-pack/dp/B01G259502/?tag=rushhourplann-20"
+                href="https://amzn.to/4vxOEGq"
                 target="_blank"
                 rel="noopener noreferrer sponsored"
                 class="drive-snack-link"
