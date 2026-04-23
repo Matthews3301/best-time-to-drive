@@ -54,9 +54,50 @@ const DEFAULT_SHADOW_SAMPLE_RATE = Number(process.env.FORECAST_SHADOW_SAMPLE_RAT
 const PARTIAL_CACHE_TTL_SECONDS = 4 * 60 * 60;
 const NEARBY_CACHE_TTL_SECONDS = 48 * 60 * 60;
 const LOCK_TTL_SECONDS = 45;
+const TOMTOM_MAX_CONCURRENT = 1;
+const TOMTOM_MIN_INTERVAL_MS = 200;
+
+let activeTomTomRequests = 0;
+const tomTomRequestQueue: Array<() => void> = [];
+let lastTomTomRequestStartedAt = 0;
 
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function runWithTomTomThrottle<T>(request: () => Promise<T>): Promise<T> {
+  return await new Promise<T>((resolve, reject) => {
+    const run = async () => {
+      activeTomTomRequests += 1;
+      try {
+        const elapsedSinceLastStart = Date.now() - lastTomTomRequestStartedAt;
+        const spacingDelay = Math.max(0, TOMTOM_MIN_INTERVAL_MS - elapsedSinceLastStart);
+        if (spacingDelay > 0) {
+          await wait(spacingDelay);
+        }
+        lastTomTomRequestStartedAt = Date.now();
+        const result = await request();
+        resolve(result);
+      } catch (error) {
+        reject(error);
+      } finally {
+        activeTomTomRequests -= 1;
+        const next = tomTomRequestQueue.shift();
+        if (next) {
+          next();
+        }
+      }
+    };
+
+    if (activeTomTomRequests < TOMTOM_MAX_CONCURRENT) {
+      void run();
+      return;
+    }
+
+    tomTomRequestQueue.push(() => {
+      void run();
+    });
+  });
 }
 
 function getStartTime(departDate: string | null | undefined, timeZone: string) {
@@ -127,28 +168,43 @@ async function fetchDurationMinutes(
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
       metrics.apiCalls += 1;
-      const response = await fetch(url, {
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
+      const response = await runWithTomTomThrottle(async () =>
+        await fetch(url, {
+          headers: {
+            'Accept': 'application/json'
+          }
+        })
+      );
 
       if (!response.ok) {
+        let tomTomMessage = `HTTP ${response.status}${response.statusText ? ` ${response.statusText}` : ''}`;
+        try {
+          const rawError = await response.text();
+          if (rawError) {
+            try {
+              const parsed = JSON.parse(rawError);
+              tomTomMessage =
+                parsed?.error?.description ||
+                parsed?.message ||
+                parsed?.error_description ||
+                tomTomMessage;
+            } catch {
+              tomTomMessage = rawError.slice(0, 200);
+            }
+          }
+        } catch {
+          // keep default tomTomMessage when body cannot be read
+        }
+
         if (attempt < 2) {
-          console.warn(
-            `[Forecast] TomTom HTTP ${response.status} on attempt ${attempt + 1}/3, retrying`,
-            { origin, destination, departureIso }
-          );
+          console.warn(`[Forecast] TomTom retry ${attempt + 1}/3: ${tomTomMessage}`);
           await wait(500 * (attempt + 1));
           continue;
         }
-        console.error(
-          `[Forecast] TomTom HTTP ${response.status} on final attempt ${attempt + 1}/3`,
-          { origin, destination, departureIso }
-        );
+        console.error(`[Forecast] TomTom failure: ${tomTomMessage}`);
         throw createError({
           statusCode: response.status,
-          statusMessage: `Failed to fetch route from TomTom (HTTP ${response.status})`
+          statusMessage: `TomTom request failed: ${tomTomMessage}`
         });
       }
 
@@ -160,21 +216,12 @@ async function fetchDurationMinutes(
         const errorCode = payload.error?.code || payload.code;
 
         if ((errorCode === 429 || errorCode === '429' || payload.statusCode === 429) && attempt < 2) {
-          console.warn(
-            `[Forecast] TomTom rate-limited on attempt ${attempt + 1}/3, backing off`,
-            { origin, destination, departureIso, errorCode, errorDetail }
-          );
+          console.warn(`[Forecast] TomTom rate-limited ${attempt + 1}/3: ${errorDetail}`);
           await wait(1000 * (attempt + 2)); // longer backoff for rate limits
           continue;
         }
 
-        console.error('[Forecast] TomTom payload error', {
-          origin,
-          destination,
-          departureIso,
-          errorCode,
-          errorDetail
-        });
+        console.error(`[Forecast] TomTom payload error: ${errorDetail}`);
         throw createError({
           statusCode: 502,
           statusMessage: `TomTom Routing error: ${errorDetail}`
@@ -190,11 +237,7 @@ async function fetchDurationMinutes(
         return minutes;
       }
 
-      console.error('[Forecast] TomTom missing travelTimeInSeconds', {
-        origin,
-        destination,
-        departureIso
-      });
+      console.error('[Forecast] TomTom response missing travelTimeInSeconds');
       throw createError({
         statusCode: 502,
         statusMessage: 'TomTom response did not include valid travelTimeInSeconds'
@@ -212,13 +255,8 @@ async function fetchDurationMinutes(
   try {
     return await requestWithRetry();
   } catch (error: any) {
-    console.error('[Forecast] TomTom request failed', {
-      origin,
-      destination,
-      departureIso,
-      statusCode: error?.statusCode,
-      statusMessage: error?.statusMessage || error?.message || 'Unknown TomTom request error'
-    });
+    const reason = error?.statusMessage || error?.message || 'Unknown TomTom request error';
+    console.error(`[Forecast] TomTom request failed: ${reason}`);
     throw error;
   }
 }

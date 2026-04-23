@@ -226,6 +226,7 @@ const mapComponent = ref(null);
 const selectedDepartDate = ref(null);
 const forecastDebug = ref(null);
 const routeSummary = ref('');
+const forecastRequestId = ref(0);
 
 const analyticsData = computed(() => ({
   sessionUuid: sessionUuid.value,
@@ -249,8 +250,20 @@ const analyticsData = computed(() => ({
 }));
 
 function handleRouteSelected(routeData) {
+  const shouldHideCurrentResults =
+    Boolean(selectedRoute.value) &&
+    (
+      selectedRoute.value.start !== routeData.start ||
+      selectedRoute.value.end !== routeData.end
+    );
+
+  if (shouldHideCurrentResults) {
+    forecastData.value = [];
+    routeSummary.value = '';
+  }
+
   selectedRoute.value = routeData;
-  fetchForecastData(routeData);
+  void fetchForecastData(routeData);
 }
 
 function handleExcludeNightHoursChanged(exclude) {
@@ -260,18 +273,20 @@ function handleExcludeNightHoursChanged(exclude) {
     return;
   }
   if (selectedRoute.value) {
-    fetchForecastData(selectedRoute.value);
+    void fetchForecastData(selectedRoute.value);
   }
 }
 
 function handleDepartureDateChanged(date) {
   selectedDepartDate.value = date;
   if (selectedRoute.value) {
-    fetchForecastData(selectedRoute.value);
+    void fetchForecastData(selectedRoute.value);
   }
 }
 
 async function fetchForecastData(routeData) {
+  const requestId = ++forecastRequestId.value;
+
   console.log('Fetching forecast for route:', routeData);
   const timezoneValue = routeData.timezone || 'UTC';
   const originCoordinates = routeData?.coordinates?.start;
@@ -293,6 +308,10 @@ async function fetchForecastData(routeData) {
     });
     const responseData = response?._data;
 
+    if (requestId !== forecastRequestId.value) {
+      return;
+    }
+
     if (responseData?.success && Array.isArray(responseData.data)) {
       forecastData.value = applyExcludeNightHours(responseData.data, excludeNightHours.value);
       forecastDebug.value = {
@@ -313,6 +332,10 @@ async function fetchForecastData(routeData) {
       };
     }
   } catch (error) {
+    if (requestId !== forecastRequestId.value) {
+      return;
+    }
+
     console.error('Error fetching forecast data:', error);
     forecastData.value = generateFallbackForecastData(routeData, selectedDepartDate.value, timezoneValue);
     forecastDebug.value = {
@@ -322,6 +345,10 @@ async function fetchForecastData(routeData) {
       refinementLevel: 0,
       confidenceScore: 0
     };
+  }
+
+  if (requestId !== forecastRequestId.value) {
+    return;
   }
 
   routeSummary.value = buildFallbackRouteSummary(forecastData.value);
