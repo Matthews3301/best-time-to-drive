@@ -1,8 +1,11 @@
 <template>
   <div class="chart-container">
-    <div v-if="forecastData.length === 0" class="chart-loading">
+    <div v-if="isLoading" class="chart-loading">
       <div class="spinner" aria-hidden="true"></div>
       <p>Calculating traffic forecast...</p>
+    </div>
+    <div v-else-if="forecastData.length === 0" class="chart-empty">
+      <p>{{ routeSummary || 'Unable to generate a traffic forecast for this route. Please try a different route.' }}</p>
     </div>
     <div v-else>
     <div class="chart-header">
@@ -174,6 +177,10 @@ const props = defineProps({
   routeSummary: {
     type: String,
     default: ''
+  },
+  isLoading: {
+    type: Boolean,
+    default: false
   }
 });
 const chartTitle = computed(() => {
@@ -511,6 +518,22 @@ onBeforeUnmount(() => {
 
 .chart-loading p {
   margin: 0;
+}
+
+.chart-empty {
+  text-align: center;
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  padding: 0 1rem;
+}
+
+.chart-empty p {
+  margin: 0;
+  max-width: 560px;
+  line-height: 1.5;
 }
 
 .spinner {

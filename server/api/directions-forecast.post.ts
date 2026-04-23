@@ -163,6 +163,24 @@ async function fetchDurationMinutes(
     return `https://api.tomtom.com/routing/1/calculateRoute/${routePath}/json?${params.toString()}`;
   };
 
+  const isNoRouteFoundError = (
+    errorCode: unknown,
+    errorMessage: unknown,
+    rawPayloadSnippet = ''
+  ) => {
+    const normalizedCode = String(errorCode || '').toUpperCase();
+    const normalizedMessage = String(errorMessage || '').toUpperCase();
+    const normalizedRawPayload = String(rawPayloadSnippet || '').toUpperCase();
+    return (
+      normalizedCode === 'NO_ROUTE_FOUND' ||
+      normalizedMessage.includes('NO_ROUTE_FOUND') ||
+      normalizedRawPayload.includes('NO_ROUTE_FOUND')
+    );
+  };
+
+  const noRouteStatusMessage =
+    'No route forecast could be found for this trip. Please select a different route.';
+
   const requestWithRetry = async (): Promise<number> => {
     const url = buildUrl();
 
@@ -178,12 +196,17 @@ async function fetchDurationMinutes(
 
       if (!response.ok) {
         let tomTomMessage = `HTTP ${response.status}${response.statusText ? ` ${response.statusText}` : ''}`;
+        let tomTomCode: unknown = null;
+        let rawErrorSnippet = '';
         try {
           const rawError = await response.text();
           if (rawError) {
+            rawErrorSnippet = rawError.slice(0, 500);
             try {
               const parsed = JSON.parse(rawError);
+              tomTomCode = parsed?.detailedError?.code || parsed?.error?.code || parsed?.code || null;
               tomTomMessage =
+                parsed?.detailedError?.message ||
                 parsed?.error?.description ||
                 parsed?.message ||
                 parsed?.error_description ||
@@ -194,6 +217,17 @@ async function fetchDurationMinutes(
           }
         } catch {
           // keep default tomTomMessage when body cannot be read
+        }
+
+        if (isNoRouteFoundError(tomTomCode, tomTomMessage, rawErrorSnippet)) {
+          throw createError({
+            statusCode: 422,
+            statusMessage: noRouteStatusMessage,
+            data: {
+              code: 'NO_ROUTE_FOUND',
+              provider: 'tomtom'
+            }
+          });
         }
 
         if (attempt < 2) {
@@ -212,8 +246,19 @@ async function fetchDurationMinutes(
 
       // TomTom error format
       if (payload.error || payload.message) {
-        const errorDetail = payload.error?.description || payload.message || 'Unknown error';
-        const errorCode = payload.error?.code || payload.code;
+        const errorDetail = payload.detailedError?.message || payload.error?.description || payload.message || 'Unknown error';
+        const errorCode = payload.detailedError?.code || payload.error?.code || payload.code;
+
+        if (isNoRouteFoundError(errorCode, errorDetail)) {
+          throw createError({
+            statusCode: 422,
+            statusMessage: noRouteStatusMessage,
+            data: {
+              code: 'NO_ROUTE_FOUND',
+              provider: 'tomtom'
+            }
+          });
+        }
 
         if ((errorCode === 429 || errorCode === '429' || payload.statusCode === 429) && attempt < 2) {
           console.warn(`[Forecast] TomTom rate-limited ${attempt + 1}/3: ${errorDetail}`);

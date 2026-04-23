@@ -52,6 +52,7 @@
             :depart-date="selectedDepartDate"
             :timezone="selectedRoute.timezone"
             :route-summary="routeSummary"
+            :is-loading="isForecastLoading"
           />
         </div>
 
@@ -227,6 +228,7 @@ const selectedDepartDate = ref(null);
 const forecastDebug = ref(null);
 const routeSummary = ref('');
 const forecastRequestId = ref(0);
+const isForecastLoading = ref(false);
 
 const analyticsData = computed(() => ({
   sessionUuid: sessionUuid.value,
@@ -294,6 +296,9 @@ async function fetchForecastData(routeData) {
   const origin = originCoordinates ? `${originCoordinates.lat},${originCoordinates.lng}` : routeData.start;
   const destination = destinationCoordinates ? `${destinationCoordinates.lat},${destinationCoordinates.lng}` : routeData.end;
   routeSummary.value = '';
+  if (requestId === forecastRequestId.value) {
+    isForecastLoading.value = true;
+  }
 
   try {
     const response = await $fetch.raw('/api/directions-forecast', {
@@ -337,6 +342,35 @@ async function fetchForecastData(routeData) {
     }
 
     console.error('Error fetching forecast data:', error);
+
+    const statusMessage =
+      error?.data?.statusMessage ||
+      error?.statusMessage ||
+      error?.message ||
+      '';
+    const errorCode =
+      error?.data?.data?.code ||
+      error?.data?.code ||
+      '';
+    const isNoRouteForecastError =
+      String(errorCode).toUpperCase() === 'NO_ROUTE_FOUND' ||
+      String(statusMessage).toLowerCase().includes('no route forecast could be found');
+
+    if (isNoRouteForecastError) {
+      forecastData.value = [];
+      const noRouteMessage =
+        statusMessage || 'No route forecast could be found for this trip. Please select a different route.';
+      routeSummary.value = noRouteMessage;
+      forecastDebug.value = {
+        cacheStatus: 'no_route_found',
+        requestApiCallCount: 0,
+        apiCallCount: 0,
+        refinementLevel: 0,
+        confidenceScore: 0
+      };
+      return;
+    }
+
     forecastData.value = generateFallbackForecastData(routeData, selectedDepartDate.value, timezoneValue);
     forecastDebug.value = {
       cacheStatus: 'fallback_error',
@@ -345,6 +379,10 @@ async function fetchForecastData(routeData) {
       refinementLevel: 0,
       confidenceScore: 0
     };
+  } finally {
+    if (requestId === forecastRequestId.value) {
+      isForecastLoading.value = false;
+    }
   }
 
   if (requestId !== forecastRequestId.value) {
