@@ -510,7 +510,10 @@ function getDateForParam(token) {
   return d
 }
 
-const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+const currentDayOfMonth = new Date().getDate()
+const apiKey = currentDayOfMonth < 16
+  ? (import.meta.env.VITE_GOOGLE_MAPS_API_KEY_HS || import.meta.env.VITE_GOOGLE_MAPS_API_KEY_MS)
+  : (import.meta.env.VITE_GOOGLE_MAPS_API_KEY_MS || import.meta.env.VITE_GOOGLE_MAPS_API_KEY_HS)
 
 function getPredictionDescription(prediction) {
   return prediction.description

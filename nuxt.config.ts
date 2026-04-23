@@ -22,7 +22,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     tomTomApiKey: process.env.TOMTOM_API_KEY,
     googleDirectionsApiKey: process.env.GOOGLE_DIRECTIONS_API_KEY,
-    viteGoogleMapsApiKey: process.env.VITE_GOOGLE_MAPS_API_KEY,
+    viteGoogleMapsApiKeyHs: process.env.VITE_GOOGLE_MAPS_API_KEY_HS,
+    viteGoogleMapsApiKeyMs: process.env.VITE_GOOGLE_MAPS_API_KEY_MS,
     public: {
       posthogPublicKey: 'phc_FmUMk4eqO4o2qhDhzzp2nhXZmmQE9mA1CGwrxpyxuhd',
       posthogHost: 'https://us.i.posthog.com',

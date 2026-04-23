@@ -135,9 +135,17 @@ async function fetchDurationMinutes(
 
       if (!response.ok) {
         if (attempt < 2) {
+          console.warn(
+            `[Forecast] TomTom HTTP ${response.status} on attempt ${attempt + 1}/3, retrying`,
+            { origin, destination, departureIso }
+          );
           await wait(500 * (attempt + 1));
           continue;
         }
+        console.error(
+          `[Forecast] TomTom HTTP ${response.status} on final attempt ${attempt + 1}/3`,
+          { origin, destination, departureIso }
+        );
         throw createError({
           statusCode: response.status,
           statusMessage: `Failed to fetch route from TomTom (HTTP ${response.status})`
@@ -152,10 +160,21 @@ async function fetchDurationMinutes(
         const errorCode = payload.error?.code || payload.code;
 
         if ((errorCode === 429 || errorCode === '429' || payload.statusCode === 429) && attempt < 2) {
+          console.warn(
+            `[Forecast] TomTom rate-limited on attempt ${attempt + 1}/3, backing off`,
+            { origin, destination, departureIso, errorCode, errorDetail }
+          );
           await wait(1000 * (attempt + 2)); // longer backoff for rate limits
           continue;
         }
 
+        console.error('[Forecast] TomTom payload error', {
+          origin,
+          destination,
+          departureIso,
+          errorCode,
+          errorDetail
+        });
         throw createError({
           statusCode: 502,
           statusMessage: `TomTom Routing error: ${errorDetail}`
@@ -171,6 +190,11 @@ async function fetchDurationMinutes(
         return minutes;
       }
 
+      console.error('[Forecast] TomTom missing travelTimeInSeconds', {
+        origin,
+        destination,
+        departureIso
+      });
       throw createError({
         statusCode: 502,
         statusMessage: 'TomTom response did not include valid travelTimeInSeconds'
@@ -185,7 +209,18 @@ async function fetchDurationMinutes(
 
   // TomTom gracefully handles past departure times by using current traffic
   // No need for complex INVALID_REQUEST fallbacks like Google
-  return await requestWithRetry();
+  try {
+    return await requestWithRetry();
+  } catch (error: any) {
+    console.error('[Forecast] TomTom request failed', {
+      origin,
+      destination,
+      departureIso,
+      statusCode: error?.statusCode,
+      statusMessage: error?.statusMessage || error?.message || 'Unknown TomTom request error'
+    });
+    throw error;
+  }
 }
 
 function buildForecastSlots(
@@ -739,11 +774,7 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
   const apiKey =
     config.tomTomApiKey ||
-    process.env.TOMTOM_API_KEY ||
-    config.googleDirectionsApiKey ||
-    process.env.GOOGLE_DIRECTIONS_API_KEY ||
-    config.viteGoogleMapsApiKey ||
-    process.env.VITE_GOOGLE_MAPS_API_KEY;
+    process.env.TOMTOM_API_KEY
 
   if (!apiKey) {
     console.error('[Forecast] ❌ No TomTom API key configured');
