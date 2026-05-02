@@ -117,6 +117,50 @@
                 </div>
               </a>
             </article>
+
+            <article class="drive-snack-item">
+              <a
+                href="https://amzn.to/4eXQNp0"
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                class="drive-snack-link"
+                aria-label="View Dot&Dot Twist Memory Foam Travel Pillow on Amazon"
+                @click="trackAffiliateProductClick('B01IEJHJWK', 'card')"
+              >
+                <img
+                  src="https://m.media-amazon.com/images/I/717hwqy00DL._AC_SL1500_.jpg"
+                  alt="Dot&Dot Twist Memory Foam Travel Pillow"
+                  class="drive-snack-image"
+                  loading="lazy"
+                />
+                <div class="drive-snack-overlay">
+                  <p class="drive-snack-name">Dot&Dot Twist Memory Foam Travel Pillow</p>
+                  <p class="drive-snack-description">Supportive neck pillow to stay comfortable on long highway stretches.</p>
+                </div>
+              </a>
+            </article>
+
+            <article class="drive-snack-item">
+              <a
+                href="https://amzn.to/4woza8n"
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                class="drive-snack-link"
+                aria-label="View Owala Insulated Stainless Steel Coffee Tumbler on Amazon"
+                @click="trackAffiliateProductClick('B0DF49ML4P', 'card')"
+              >
+                <img
+                  src="https://m.media-amazon.com/images/P/B0DF49ML4P.01._SCLZZZZZZZ__SX500_.jpg"
+                  alt="Owala Insulated Stainless Steel Coffee Tumbler"
+                  class="drive-snack-image"
+                  loading="lazy"
+                />
+                <div class="drive-snack-overlay">
+                  <p class="drive-snack-name">Owala Insulated Stainless Steel Coffee Tumbler</p>
+                  <p class="drive-snack-description">Leak-resistant insulated tumbler to keep drinks hot and cold through the commute.</p>
+                </div>
+              </a>
+            </article>
           </div>
         </div>
 
