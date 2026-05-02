@@ -58,7 +58,7 @@
 
         <div class="chart-section drive-snacks-card" style="margin-top: 2rem;" id="snacks-card">
           <div class="drive-snacks-header">
-            <p class="drive-snacks-heading">Snacks for the Drive</p>
+            <p class="drive-snacks-heading">Road Trip Essentials</p>
             <div class="drive-snacks-info">
               <button
                 type="button"
