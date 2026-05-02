@@ -120,7 +120,7 @@
 
             <article class="drive-snack-item">
               <a
-                href="https://amzn.to/4eXQNp0"
+                href="https://www.amazon.com/dp/B01IEJHJWK?ref=t_ac_view_request_product_image&campaignId=amzn1.campaign.35DACQ74URNHN&linkCode=tr1&tag=rushhourplann-20&linkId=amzn1.campaign.35DACQ74URNHN_1777759017962"
                 target="_blank"
                 rel="noopener noreferrer sponsored"
                 class="drive-snack-link"
