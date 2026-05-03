@@ -6,9 +6,18 @@
       </h3>
     </div>
 
-    <div v-if="loading" class="loading-state">
-      <div class="spinner"></div>
-      <p>Finding parking options...</p>
+    <div v-if="loading" class="loading-state parking-content" aria-busy="true" aria-live="polite">
+      <div>
+        <div class="parking-locations">
+          <div class="parking-card parking-card-skeleton" v-for="option in 3" :key="`parking-skeleton-${option}`">
+            <div class="parking-skeleton skeleton-parking-name"></div>
+            <div class="parking-skeleton skeleton-detail-line"></div>
+            <div class="parking-skeleton skeleton-detail-line short"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="copy-html-button skeleton-copy-html-button" type="button" disabled aria-label="Copy HTML loading"></button>
     </div>
 
     <div v-else-if="error" class="error-state">
@@ -558,30 +567,72 @@ onUnmounted(() => {
 }
 
 .loading-state {
+  min-height: 714px;
+  pointer-events: none;
+}
+
+.loading-state .skeleton-copy-html-button {
+  margin-top: auto;
+}
+
+.parking-skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: linear-gradient(100deg, #e2e8f0 30%, #f8fafc 45%, #e2e8f0 60%);
+  background-size: 200% 100%;
+  animation: parking-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes parking-skeleton-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+.parking-card-skeleton {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 2rem;
-  gap: 1rem;
+  gap: 0.55rem;
+  min-height: 86px;
+  pointer-events: none;
 }
 
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #e2e8f0;
-  border-top-color: #6366f1;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.skeleton-parking-name {
+  width: min(340px, 72%);
+  height: 20px;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.skeleton-detail-line {
+  width: min(520px, 92%);
+  height: 14px;
 }
 
-.loading-state p {
-  color: #64748b;
-  font-size: 0.875rem;
+.skeleton-detail-line.short {
+  width: min(300px, 58%);
+}
+
+.copy-html-button.skeleton-copy-html-button {
+  background: linear-gradient(100deg, #e2e8f0 30%, #f8fafc 45%, #e2e8f0 60%);
+  background-size: 200% 100%;
+  animation: parking-skeleton-shimmer 1.4s ease-in-out infinite;
+  box-shadow: 0 8px 22px rgba(148, 163, 184, 0.18);
+  cursor: default;
+  opacity: 1;
+  min-height: 48px;
+}
+
+.copy-html-button.skeleton-copy-html-button:disabled {
+  cursor: default;
+}
+
+.copy-html-button.skeleton-copy-html-button:hover,
+.copy-html-button.skeleton-copy-html-button:active {
+  transform: none;
+  box-shadow: 0 8px 22px rgba(148, 163, 184, 0.18);
 }
 
 .error-state {
@@ -851,6 +902,10 @@ onUnmounted(() => {
 
 /* Tablet and mobile devices */
 @media (max-width: 768px) {
+  .loading-state {
+    min-height: 735px;
+  }
+
   .parking-title {
     font-size: 1.25rem;
   }
@@ -880,6 +935,10 @@ onUnmounted(() => {
   .location-icon {
     width: 16px;
     height: 16px;
+  }
+
+  .skeleton-parking-name {
+    height: 22px;
   }
 
   .parking-hours {
@@ -947,6 +1006,10 @@ onUnmounted(() => {
     word-break: break-word;
   }
 
+  .skeleton-parking-name {
+    height: 18px;
+  }
+
   .parking-hours {
     font-size: 0.75rem;
     padding: 0.1875rem 0;
@@ -974,7 +1037,6 @@ onUnmounted(() => {
     font-size: 0.8125rem;
   }
 
-  .loading-state,
   .error-state,
   .no-results,
   .initial-state {

@@ -45,7 +45,15 @@
       </div>
       
       <div v-if="selectedRoute">
-        <div class="chart-section" ref="chartSection" id="forecast-chart">
+        <div
+          class="chart-section"
+          :class="{
+            'forecast-chart-loading': isForecastLoading,
+            'forecast-chart-non-today': selectedDepartDate
+          }"
+          ref="chartSection"
+          id="forecast-chart"
+        >
           <ChartComponent 
             :route-data="selectedRoute"
             :forecast-data="forecastData"
@@ -958,6 +966,10 @@ onMounted(() => {
   -webkit-backdrop-filter: blur(12px) saturate(130%);
 }
 
+#forecast-chart.forecast-chart-loading {
+  min-height: 897px;
+}
+
 .chart-section:hover {
   box-shadow: 
     0 18px 34px rgba(82, 84, 170, 0.18),
@@ -1248,6 +1260,14 @@ onMounted(() => {
   .chart-section {
     padding: 1.5rem;
     overflow: hidden;
+  }
+
+  #forecast-chart.forecast-chart-loading {
+    min-height: 910px;
+  }
+
+  #forecast-chart.forecast-chart-loading.forecast-chart-non-today {
+    min-height: 709px;
   }
 
   .drive-snacks-grid {

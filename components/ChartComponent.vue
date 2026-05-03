@@ -1,13 +1,72 @@
 <template>
   <div class="chart-container">
-    <div v-if="isLoading" class="chart-loading">
-      <div class="spinner" aria-hidden="true"></div>
-      <p>Calculating traffic forecast...</p>
+    <div
+      v-if="isLoading"
+      class="chart-loading chart-ready"
+      :class="{ 'chart-loading-non-today': departDate }"
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <div class="chart-header chart-loading-header">
+        <h3>{{ chartTitle }}</h3>
+        <div class="skeleton skeleton-subtitle"></div>
+        <div class="skeleton skeleton-subtitle short"></div>
+        <div class="route-summary-card skeleton-summary-card">
+          <div class="skeleton skeleton-headline"></div>
+          <div class="skeleton skeleton-headline short"></div>
+        </div>
+      </div>
+
+      <div class="chart-footer">
+        <div class="insights">
+          <div class="insight-item skeleton-insight" v-for="item in departDate ? 1 : 3" :key="`loading-insight-${item}`">
+            <div class="skeleton skeleton-insight-icon"></div>
+            <div class="skeleton-insight-content">
+              <div class="skeleton skeleton-insight-label"></div>
+              <div class="skeleton skeleton-insight-value"></div>
+              <div class="skeleton skeleton-insight-meta"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-content">
+        <div class="chart-wrapper hide-hint">
+          <div class="chart-legend">
+            <div class="legend-item" v-for="item in 2" :key="`loading-legend-${item}`">
+              <div class="skeleton skeleton-legend-color"></div>
+              <div class="skeleton skeleton-legend-label"></div>
+            </div>
+          </div>
+
+          <div class="chart-area">
+            <div class="y-axis">
+              <div
+                class="skeleton skeleton-y-tick"
+                v-for="(position, tick) in ['85%', '58%', '31%', '4%']"
+                :key="`loading-y-${tick}`"
+                :style="{ bottom: position }"
+              ></div>
+            </div>
+
+            <div class="chart-bars-container">
+              <div class="chart-bars">
+                <div class="bar-wrapper" v-for="bar in 24" :key="`loading-bar-${bar}`">
+                  <div class="bar-container">
+                    <div class="skeleton skeleton-bar"></div>
+                  </div>
+                  <div class="skeleton skeleton-time-label" :class="{ 'invisible': bar % 3 !== 1 }"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <div v-else-if="forecastData.length === 0" class="chart-empty">
       <p>{{ routeSummary || 'Unable to generate a traffic forecast for this route. Please try a different route.' }}</p>
     </div>
-    <div v-else>
+    <div v-else class="chart-ready">
     <div class="chart-header">
       <h3>{{ chartTitle }}</h3>
       <p class="route-subtitle">{{ routeData.start }} → {{ routeData.end }} ({{ routeData.distance }})</p>
@@ -495,6 +554,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .chart-container {
+  --chart-state-min-height: 897px;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -507,22 +567,147 @@ onBeforeUnmount(() => {
 }
 
 .chart-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  min-height: 220px;
-  color: #64748b;
+  min-height: var(--chart-state-min-height);
 }
 
-.chart-loading p {
-  margin: 0;
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: linear-gradient(100deg, #e2e8f0 30%, #f8fafc 45%, #e2e8f0 60%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-subtitle {
+  width: min(560px, 100%);
+  height: 19px;
+  margin: 0 0 0.6rem 0;
+}
+
+.skeleton-subtitle.short {
+  width: min(320px, 70%);
+}
+
+.skeleton-summary-card {
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+}
+
+.skeleton-headline {
+  width: 100%;
+  height: 18px;
+  margin-bottom: 0.45rem;
+}
+
+.skeleton-headline.short {
+  width: 72%;
+  margin-bottom: 0;
+}
+
+.skeleton-y-tick {
+  position: absolute;
+  right: 8px;
+  width: 44px;
+  height: 10px;
+  transform: translateY(50%);
+}
+
+.skeleton-legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.skeleton-legend-label {
+  width: 120px;
+  height: 14px;
+}
+
+.skeleton-insight {
+  pointer-events: none;
+}
+
+.skeleton-insight-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.skeleton-insight-content {
+  flex: 1;
+}
+
+.skeleton-insight-label {
+  width: 125px;
+  height: 17px;
+  margin: 0 0 0.5rem 0;
+}
+
+.skeleton-insight-value {
+  width: 90px;
+  height: 25px;
+  margin-bottom: 0.35rem;
+}
+
+.skeleton-insight-meta {
+  width: 145px;
+  height: 14px;
+}
+
+.skeleton-bar {
+  width: 100%;
+  min-height: 4px;
+  border-radius: 6px 6px 0 0;
+}
+
+.bar-wrapper:nth-child(1) .skeleton-bar { height: 46%; }
+.bar-wrapper:nth-child(2) .skeleton-bar { height: 65%; }
+.bar-wrapper:nth-child(3) .skeleton-bar { height: 58%; }
+.bar-wrapper:nth-child(4) .skeleton-bar { height: 76%; }
+.bar-wrapper:nth-child(5) .skeleton-bar { height: 52%; }
+.bar-wrapper:nth-child(6) .skeleton-bar { height: 68%; }
+.bar-wrapper:nth-child(7) .skeleton-bar { height: 84%; }
+.bar-wrapper:nth-child(8) .skeleton-bar { height: 60%; }
+.bar-wrapper:nth-child(9) .skeleton-bar { height: 55%; }
+.bar-wrapper:nth-child(10) .skeleton-bar { height: 70%; }
+.bar-wrapper:nth-child(11) .skeleton-bar { height: 62%; }
+.bar-wrapper:nth-child(12) .skeleton-bar { height: 82%; }
+.bar-wrapper:nth-child(13) .skeleton-bar { height: 66%; }
+.bar-wrapper:nth-child(14) .skeleton-bar { height: 49%; }
+.bar-wrapper:nth-child(15) .skeleton-bar { height: 72%; }
+.bar-wrapper:nth-child(16) .skeleton-bar { height: 64%; }
+.bar-wrapper:nth-child(17) .skeleton-bar { height: 79%; }
+.bar-wrapper:nth-child(18) .skeleton-bar { height: 57%; }
+.bar-wrapper:nth-child(19) .skeleton-bar { height: 74%; }
+.bar-wrapper:nth-child(20) .skeleton-bar { height: 53%; }
+.bar-wrapper:nth-child(21) .skeleton-bar { height: 69%; }
+.bar-wrapper:nth-child(22) .skeleton-bar { height: 61%; }
+.bar-wrapper:nth-child(23) .skeleton-bar { height: 77%; }
+.bar-wrapper:nth-child(24) .skeleton-bar { height: 59%; }
+
+.skeleton-time-label {
+  width: 20px;
+  height: 10px;
+  margin: 8px auto 0 auto;
+  border-radius: 4px;
+}
+
+.skeleton-time-label.invisible {
+  opacity: 0;
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
 }
 
 .chart-empty {
   text-align: center;
-  min-height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -534,21 +719,6 @@ onBeforeUnmount(() => {
   margin: 0;
   max-width: 560px;
   line-height: 1.5;
-}
-
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #e2e8f0;
-  border-top-color: #6366f1;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .chart-header {
@@ -954,6 +1124,14 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
+  .chart-container {
+    --chart-state-min-height: 910px;
+  }
+
+  .chart-loading-non-today {
+    --chart-state-min-height: 709px;
+  }
+
   .chart-wrapper {
     padding: 1rem;
     position: relative;
@@ -998,6 +1176,10 @@ onBeforeUnmount(() => {
   
   .y-axis-label {
     font-size: 0.65rem;
+    right: 4px;
+  }
+
+  .skeleton-y-tick {
     right: 4px;
   }
   
@@ -1063,6 +1245,10 @@ onBeforeUnmount(() => {
   .insight-content h4 {
     font-size: 0.8rem;
   }
+
+  .skeleton-insight-label {
+    height: 15px;
+  }
   
   .optimal-time,
   .time-saved-value,
@@ -1088,6 +1274,14 @@ onBeforeUnmount(() => {
 @media (max-width: 480px) {
   .chart-header h3 {
     font-size: 1.2rem;
+  }
+
+  .skeleton-subtitle {
+    height: 14px;
+  }
+
+  .skeleton-headline {
+    height: 16px;
   }
   
   .chart-header p {
@@ -1126,6 +1320,10 @@ onBeforeUnmount(() => {
   
   .y-axis-label {
     font-size: 0.6rem;
+    right: 2px;
+  }
+
+  .skeleton-y-tick {
     right: 2px;
   }
   
