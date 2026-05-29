@@ -126,7 +126,7 @@
               </a>
             </article>
 
-            <article class="drive-snack-item">
+            <!-- <article class="drive-snack-item">
               <a
                 href="https://www.amazon.com/dp/B01IEJHJWK?ref=t_ac_view_request_product_image&campaignId=amzn1.campaign.35DACQ74URNHN&linkCode=tr1&tag=rushhourplann-20&linkId=amzn1.campaign.35DACQ74URNHN_1777759017962"
                 target="_blank"
@@ -146,9 +146,9 @@
                   <p class="drive-snack-description">Supportive neck pillow to stay comfortable on long highway stretches.</p>
                 </div>
               </a>
-            </article>
+            </article> -->
 
-            <article class="drive-snack-item">
+            <!-- <article class="drive-snack-item">
               <a
                 href="https://amzn.to/4woza8n"
                 target="_blank"
@@ -168,7 +168,7 @@
                   <p class="drive-snack-description">Leak-resistant insulated tumbler to keep drinks hot and cold through the commute.</p>
                 </div>
               </a>
-            </article>
+            </article> -->
           </div>
         </div>
 
