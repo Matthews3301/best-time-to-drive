@@ -27,7 +27,13 @@
         <line x1="12" y1="16" x2="12.01" y2="16"/>
       </svg>
       <p>{{ error }}</p>
-      <button @click="fetchParkingInfo" class="retry-button">Try Again</button>
+      <button
+        @click="fetchParkingInfo"
+        class="retry-button"
+        :disabled="retryAfterSeconds > 0"
+      >
+        {{ retryAfterSeconds > 0 ? `Try again in ${retryAfterSeconds}s` : 'Try Again' }}
+      </button>
     </div>
 
     <div v-else-if="parkingData" class="parking-content">
@@ -128,9 +134,52 @@ const parkingData = ref(null);
 const hasTriggeredLoad = ref(false);
 const parkingCardContainer = ref(null);
 const copyButtonText = ref('Copy HTML Code to Add to Your Website');
+const retryAfterSeconds = ref(0);
+let retryCountdownTimer = null;
+
+function clearRetryCountdown() {
+  if (retryCountdownTimer) {
+    clearInterval(retryCountdownTimer);
+    retryCountdownTimer = null;
+  }
+  retryAfterSeconds.value = 0;
+}
+
+function startRetryCountdown(seconds) {
+  clearRetryCountdown();
+  const waitSeconds = Math.max(1, Math.round(Number(seconds) || 0));
+  retryAfterSeconds.value = waitSeconds;
+  retryCountdownTimer = setInterval(() => {
+    if (retryAfterSeconds.value <= 1) {
+      clearRetryCountdown();
+      return;
+    }
+    retryAfterSeconds.value -= 1;
+  }, 1000);
+}
+
+function getParkingErrorMessage(payload, statusCode) {
+  const status = payload?.statusCode || statusCode;
+  const code = payload?.data?.code;
+  const serverMessage = payload?.statusMessage || payload?.message;
+
+  if (status === 429 || status === 503 || code === 'PROVIDER_RATE_LIMITED') {
+    return serverMessage || 'Parking information is temporarily unavailable due to high demand. Please try again in a few minutes.';
+  }
+
+  if (status === 400) {
+    return serverMessage || 'A destination is required to look up parking.';
+  }
+
+  if (serverMessage && serverMessage !== 'Failed to fetch parking information') {
+    return serverMessage;
+  }
+
+  return 'Parking information is temporarily unavailable. Please try again shortly.';
+}
 
 async function fetchParkingInfo() {
-  if (!props.destination) {
+  if (!props.destination || retryAfterSeconds.value > 0) {
     return;
   }
 
@@ -149,20 +198,24 @@ async function fetchParkingInfo() {
       })
     });
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch parking information');
-    }
+    const data = await response.json().catch(() => null);
 
-    const data = await response.json();
+    if (!response.ok) {
+      const retryAfter = data?.data?.retryAfterSeconds || (response.status === 429 || response.status === 503 ? 60 : 0);
+      if (retryAfter > 0) {
+        startRetryCountdown(retryAfter);
+      }
+      throw new Error(getParkingErrorMessage(data, response.status));
+    }
     
-    if (data.success && data.data) {
+    if (data?.success && data.data) {
       parkingData.value = data.data;
     } else {
-      throw new Error('Invalid response format');
+      throw new Error('Parking information came back in an unexpected format. Please try again.');
     }
   } catch (err) {
     console.error('Error fetching parking info:', err);
-    error.value = err.message || 'Failed to load parking information';
+    error.value = err.message || 'Parking information is temporarily unavailable. Please try again shortly.';
   } finally {
     loading.value = false;
   }
@@ -521,6 +574,7 @@ watch(() => props.destination, () => {
   parkingData.value = null;
   error.value = null;
   hasTriggeredLoad.value = false;
+  clearRetryCountdown();
 });
 
 // Set up scroll listener on mount
@@ -531,6 +585,7 @@ onMounted(() => {
 // Clean up scroll listener on unmount
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll);
+  clearRetryCountdown();
 });
 </script>
 
@@ -671,10 +726,18 @@ onUnmounted(() => {
   transition: all 0.2s;
 }
 
-.retry-button:hover {
+.retry-button:hover:not(:disabled) {
   background: #dc2626;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+.retry-button:disabled {
+  background: #f87171;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.8;
 }
 
 .parking-content {
