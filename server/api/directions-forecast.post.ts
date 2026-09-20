@@ -24,6 +24,7 @@ type ForecastRequestBody = {
   timezone?: string;
   departDate?: string | null;
   excludeNightHours?: boolean;
+  avoidTolls?: boolean;
 };
 
 type ForecastSlot = {
@@ -145,7 +146,8 @@ async function fetchDurationMinutes(
   destination: string,
   departureUnix: number,
   apiKey: string,
-  metrics: QueryMetrics
+  metrics: QueryMetrics,
+  avoidTolls = false
 ) {
   // TomTom Routing API: uses departAt ISO timestamp for traffic-aware ETA prediction.
   // Path format supports "lat,lng" strings from client (preferred by index.vue). Uses predicted traffic for future departAt.
@@ -160,6 +162,9 @@ async function fetchDurationMinutes(
       traffic: 'true',
       language: 'en-US'
     });
+    if (avoidTolls) {
+      params.set('avoid', 'tollRoads');
+    }
     return `https://api.tomtom.com/routing/1/calculateRoute/${routePath}/json?${params.toString()}`;
   };
 
@@ -501,7 +506,8 @@ async function queryIndices(
   origin: string,
   destination: string,
   apiKey: string,
-  metrics: QueryMetrics
+  metrics: QueryMetrics,
+  avoidTolls = false
 ) {
   const pending = indices.filter((index) => !queried.has(index));
   const chunkSize = 3;
@@ -511,7 +517,7 @@ async function queryIndices(
     const values = await Promise.all(
       chunk.map(async (index) => {
         const slot = slots[index]!;
-        const duration = await fetchDurationMinutes(origin, destination, slot.departureUnix, apiKey, metrics);
+        const duration = await fetchDurationMinutes(origin, destination, slot.departureUnix, apiKey, metrics, avoidTolls);
         return {
           index,
           point: createForecastPoint(slot, duration, false)
@@ -530,7 +536,8 @@ async function buildFullForecast(
   destination: string,
   slots: ForecastSlot[],
   apiKey: string,
-  metrics: QueryMetrics
+  metrics: QueryMetrics,
+  avoidTolls = false
 ) {
   const queried = new Map<number, ForecastPoint>();
   await queryIndices(
@@ -540,7 +547,8 @@ async function buildFullForecast(
     origin,
     destination,
     apiKey,
-    metrics
+    metrics,
+    avoidTolls
   );
   return slots.map((slot) => queried.get(slot.index) || createForecastPoint(slot, 0, true));
 }
@@ -558,7 +566,8 @@ async function buildAdaptiveForecast(
   weekdayBucket: string,
   partialSeed: CachedForecastEntry | null,
   nearbySeed: CachedForecastEntry | null,
-  savePartial: (entry: CachedForecastEntry) => Promise<void>
+  savePartial: (entry: CachedForecastEntry) => Promise<void>,
+  avoidTolls = false
 ) {
   const slots = buildForecastSlots(startTime, timeZone, excludeNightHours);
   const queried = new Map<number, ForecastPoint>();
@@ -577,7 +586,7 @@ async function buildAdaptiveForecast(
   }
 
   const initialIndices = pickInitialSampleIndices(slots, nearbySeed);
-  await queryIndices(initialIndices, slots, queried, origin, destination, apiKey, metrics);
+  await queryIndices(initialIndices, slots, queried, origin, destination, apiKey, metrics, avoidTolls);
 
   const stageOnePoints = interpolatePoints(slots, queried);
   await savePartial(
@@ -592,7 +601,7 @@ async function buildAdaptiveForecast(
 
   const refinementIndices = pickRefinementIndices(slots, queried);
   if (refinementIndices.length > 0) {
-    await queryIndices(refinementIndices, slots, queried, origin, destination, apiKey, metrics);
+    await queryIndices(refinementIndices, slots, queried, origin, destination, apiKey, metrics, avoidTolls);
   }
 
   let adaptivePoints = interpolatePoints(slots, queried);
@@ -606,7 +615,7 @@ async function buildAdaptiveForecast(
       slots.length
     );
     if (extraIndices.length > 0) {
-      await queryIndices(extraIndices, slots, queried, origin, destination, apiKey, metrics);
+      await queryIndices(extraIndices, slots, queried, origin, destination, apiKey, metrics, avoidTolls);
       adaptivePoints = interpolatePoints(slots, queried);
     }
   }
@@ -644,7 +653,8 @@ async function maybeRunShadowComparison(
   destination: string,
   slots: ForecastSlot[],
   apiKey: string,
-  adaptiveResult: ForecastComputationResult
+  adaptiveResult: ForecastComputationResult,
+  avoidTolls = false
 ) {
   if (!DEFAULT_SHADOW_SAMPLE_RATE || Number.isNaN(DEFAULT_SHADOW_SAMPLE_RATE) || Math.random() > DEFAULT_SHADOW_SAMPLE_RATE) {
     return adaptiveResult.cacheEntry.metadata;
@@ -653,7 +663,7 @@ async function maybeRunShadowComparison(
   console.log(`[Forecast] 🔬 Running shadow full-24h comparison`);
 
   const metrics: QueryMetrics = { apiCalls: 0 };
-  const fullForecast = await buildFullForecast(origin, destination, slots, apiKey, metrics);
+  const fullForecast = await buildFullForecast(origin, destination, slots, apiKey, metrics, avoidTolls);
   const comparison = compareForecasts(adaptiveResult.data, fullForecast);
 
   return {
@@ -669,7 +679,8 @@ async function resolveCachedOrComputeForecast(
   timeZone: string,
   departDate: string | null,
   excludeNightHours: boolean,
-  apiKey: string
+  apiKey: string,
+  avoidTolls = false
 ) {
   const startTime = getStartTime(departDate, timeZone);
   const { exactFingerprint, nearbyFingerprint, departBucket, weekdayBucket } = buildForecastFingerprints({
@@ -678,7 +689,8 @@ async function resolveCachedOrComputeForecast(
     timeZone,
     startTime,
     departDate,
-    excludeNightHours
+    excludeNightHours,
+    avoidTolls
   });
 
   const cachedExact = await getCachedForecast('exact', exactFingerprint);
@@ -764,11 +776,12 @@ async function resolveCachedOrComputeForecast(
         nearbySeed,
         async (partialEntry) => {
           await setCachedForecast('partial', exactFingerprint, partialEntry, PARTIAL_CACHE_TTL_SECONDS);
-        }
+        },
+        avoidTolls
       );
 
       const slots = buildForecastSlots(startTime, timeZone, excludeNightHours);
-      const metadata = await maybeRunShadowComparison(origin, destination, slots, apiKey, adaptiveResult);
+      const metadata = await maybeRunShadowComparison(origin, destination, slots, apiKey, adaptiveResult, avoidTolls);
       const exactEntry = {
         ...adaptiveResult.cacheEntry,
         metadata
@@ -853,6 +866,7 @@ export default defineEventHandler(async (event) => {
   const timeZone = body?.timezone || 'UTC';
   const departDate = body?.departDate || null;
   const excludeNightHours = Boolean(body?.excludeNightHours);
+  const avoidTolls = Boolean(body?.avoidTolls);
 
   const config = useRuntimeConfig();
   const apiKey =
@@ -873,7 +887,8 @@ export default defineEventHandler(async (event) => {
     timeZone,
     departDate,
     excludeNightHours,
-    apiKey
+    apiKey,
+    avoidTolls
   );
 
   const durationMs = Date.now() - startTime;

@@ -287,6 +287,7 @@ const analyticsData = computed(() => ({
   startLocation: selectedRoute.value?.start,
   endLocation: selectedRoute.value?.end,
   excludeNightHours: excludeNightHours.value,
+  avoidTolls: Boolean(selectedRoute.value?.avoidTolls),
   forecastIndex: forecastIndex.value,
   forecastCacheStatus: forecastDebug.value?.cacheStatus || null,
   forecastRequestApiCalls: forecastDebug.value?.requestApiCallCount !== undefined
@@ -308,7 +309,8 @@ function handleRouteSelected(routeData) {
     Boolean(selectedRoute.value) &&
     (
       selectedRoute.value.start !== routeData.start ||
-      selectedRoute.value.end !== routeData.end
+      selectedRoute.value.end !== routeData.end ||
+      Boolean(selectedRoute.value.avoidTolls) !== Boolean(routeData.avoidTolls)
     );
 
   if (shouldHideCurrentResults) {
@@ -360,7 +362,8 @@ async function fetchForecastData(routeData) {
         destination,
         timezone: timezoneValue,
         departDate: selectedDepartDate.value ? dayjs(selectedDepartDate.value).format('YYYY-MM-DD') : null,
-        excludeNightHours: excludeNightHours.value
+        excludeNightHours: excludeNightHours.value,
+        avoidTolls: Boolean(routeData?.avoidTolls)
       }
     });
     const responseData = response?._data;
@@ -618,6 +621,7 @@ function handleRouteSelectedError(error) {
     startLocation: selectedRoute.value?.start || 'unknown',
     endLocation: selectedRoute.value?.end || 'unknown',
     excludeNightHours: excludeNightHours.value || null,
+    avoidTolls: Boolean(selectedRoute.value?.avoidTolls),
     error: error
   });
 }

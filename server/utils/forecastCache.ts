@@ -72,6 +72,7 @@ type ForecastFingerprintInput = {
   startTime: dayjs.Dayjs;
   departDate?: string | null;
   excludeNightHours: boolean;
+  avoidTolls?: boolean;
 };
 
 const CACHE_VERSION = process.env.FORECAST_CACHE_VERSION || 'v1';
@@ -249,6 +250,8 @@ export function buildForecastFingerprints(input: ForecastFingerprintInput) {
   const weekdayBucket = getWeekdayBucket(input.startTime);
   const departBucket = getDepartBucket(input.startTime, input.timeZone, input.departDate);
   const excludeBucket = input.excludeNightHours ? 'exclude' : 'all';
+  // Only append when avoiding tolls so existing allow-tolls cache keys stay valid.
+  const tollsBucket = input.avoidTolls ? 'avoidTolls' : null;
   const directionBucket = `${originExact}->${destinationExact}`;
   const exactFingerprint = hashValue(
     [
@@ -256,8 +259,9 @@ export function buildForecastFingerprints(input: ForecastFingerprintInput) {
       directionBucket,
       weekdayBucket,
       departBucket,
-      excludeBucket
-    ].join('|')
+      excludeBucket,
+      tollsBucket
+    ].filter(Boolean).join('|')
   );
   const nearbyFingerprint = hashValue(
     [
@@ -265,8 +269,9 @@ export function buildForecastFingerprints(input: ForecastFingerprintInput) {
       `${originNearby}->${destinationNearby}`,
       weekdayBucket,
       excludeBucket,
-      getDistanceBucket(input.origin, input.destination)
-    ].join('|')
+      getDistanceBucket(input.origin, input.destination),
+      tollsBucket
+    ].filter(Boolean).join('|')
   );
 
   return {

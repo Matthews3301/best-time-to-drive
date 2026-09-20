@@ -158,17 +158,31 @@
               </select>
             </div>
 
-            <div class="checkbox-group">
-              <label class="checkbox-label">
-                <input 
-                  type="checkbox" 
-                  v-model="excludeNightHours"
-                  @change="onExcludeNightHoursChange"
-                  class="checkbox-input"
-                />
-                <span class="checkbox-custom"></span>
-                <span class="checkbox-text">Exclude 11pm-6am</span>
-              </label>
+            <div class="checkbox-row">
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    v-model="excludeNightHours"
+                    @change="onExcludeNightHoursChange"
+                    class="checkbox-input"
+                  />
+                  <span class="checkbox-custom"></span>
+                  <span class="checkbox-text">Exclude 11pm-6am</span>
+                </label>
+              </div>
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    v-model="avoidTolls"
+                    @change="onAvoidTollsChange"
+                    class="checkbox-input"
+                  />
+                  <span class="checkbox-custom"></span>
+                  <span class="checkbox-text">Avoid toll roads</span>
+                </label>
+              </div>
             </div>
           </div>
         </div>
@@ -307,6 +321,7 @@ const isCalculating       = ref(false)
 const currentRoute        = ref(null)
 const googleMapsLoaded    = ref(false)
 const excludeNightHours   = ref(true)
+const avoidTolls          = ref(false)
 const selectedDepartureTime = ref('Now')
 const currentLocationUsed = ref(false)
 
@@ -993,17 +1008,17 @@ function checkAndIncrementRouteLimit() {
 /* ------------------------------------------------------------------
  * API Optimization helpers
  * ----------------------------------------------------------------*/
-function getCacheKey(start, end) {
-  return `${start.trim().toLowerCase()}|${end.trim().toLowerCase()}`
+function getCacheKey(start, end, shouldAvoidTolls = false) {
+  return `${start.trim().toLowerCase()}|${end.trim().toLowerCase()}|tolls:${shouldAvoidTolls ? 'avoid' : 'allow'}`
 }
 
-function getCachedRoute(start, end) {
-  const key = getCacheKey(start, end)
+function getCachedRoute(start, end, shouldAvoidTolls = false) {
+  const key = getCacheKey(start, end, shouldAvoidTolls)
   return routeCache.value.get(key)
 }
 
-function setCachedRoute(start, end, data) {
-  const key = getCacheKey(start, end)
+function setCachedRoute(start, end, data, shouldAvoidTolls = false) {
+  const key = getCacheKey(start, end, shouldAvoidTolls)
   routeCache.value.set(key, {
     data,
     timestamp: Date.now()
@@ -1039,22 +1054,25 @@ function calculateRouteDebounced() {
 }
 
 function calculateRoute () {
-  if (!canCalculateRoute.value || isCalculating.value) return
-  
+  if (!canCalculateRoute.value) return
+
+  const shouldAvoidTolls = avoidTolls.value
+  const calculationKey = getCacheKey(startLocation.value, endLocation.value, shouldAvoidTolls)
+
   // Check cache first
-  const cached = getCachedRoute(startLocation.value, endLocation.value)
+  const cached = getCachedRoute(startLocation.value, endLocation.value, shouldAvoidTolls)
   if (cached && isCacheValid(cached)) {
     console.log('Using cached route')
     directionsRenderer.value.setDirections(cached.data)
     return
   }
-  
-  // Create a unique key for this calculation
-  const calculationKey = getCacheKey(startLocation.value, endLocation.value)
-  
-  // Prevent duplicate in-flight requests
-  if (currentCalculationKey === calculationKey) {
-    console.log('Route calculation already in progress')
+
+  if (isCalculating.value) {
+    if (currentCalculationKey === calculationKey) {
+      console.log('Route calculation already in progress')
+      return
+    }
+    calculateRouteDebounced()
     return
   }
   
@@ -1078,7 +1096,7 @@ function calculateRoute () {
     destination: endLocation.value,
     travelMode: google.maps.TravelMode.DRIVING,
     avoidHighways: false,
-    avoidTolls: false,
+    avoidTolls: shouldAvoidTolls,
     provideRouteAlternatives: false,
     drivingOptions: {
       departureTime: new Date(),
@@ -1092,7 +1110,7 @@ function calculateRoute () {
     
     if (status === 'OK') {
       // Cache the result
-      setCachedRoute(startLocation.value, endLocation.value, result)
+      setCachedRoute(startLocation.value, endLocation.value, result, shouldAvoidTolls)
       directionsRenderer.value.setDirections(result)
     } else {
       console.error('Directions request failed due to ' + status)
@@ -1161,7 +1179,8 @@ function updateRouteFromDirections (directions) {
     },
     polyline: route.overview_polyline,
     steps: leg.steps,
-    timezone: 'UTC' // default
+    timezone: 'UTC', // default
+    avoidTolls: avoidTolls.value
   };
 
   // Fetch timezone
@@ -1211,6 +1230,12 @@ function updateURLWithLocations () {
     params.delete('exclude')
   }
 
+  if (avoidTolls.value) {
+    params.set('avoidTolls', 'true')
+  } else {
+    params.delete('avoidTolls')
+  }
+
   // Persist departure selection as weekday token if not Now
   const departToken = labelToParam(selectedDepartureTime.value)
   if (departToken) params.set('depart', departToken)
@@ -1225,6 +1250,7 @@ function loadLocationsFromURL () {
   const fromParam    = params.get('from')
   const toParam      = params.get('to')
   const excludeParam = params.get('exclude')
+  const avoidTollsParam = params.get('avoidTolls')
   const departParam  = params.get('depart')
 
   if (fromParam) startLocation.value = decodeURIComponent(fromParam)
@@ -1233,6 +1259,10 @@ function loadLocationsFromURL () {
   if (excludeParam !== null) {
     excludeNightHours.value = excludeParam === 'true'
     emit('exclude-night-hours-changed', excludeNightHours.value)
+  }
+
+  if (avoidTollsParam !== null) {
+    avoidTolls.value = avoidTollsParam === 'true'
   }
 
   if (departParam) {
@@ -1260,6 +1290,13 @@ function onEndLocationChange () {
 function onExcludeNightHoursChange () {
   emit('exclude-night-hours-changed', excludeNightHours.value)
   updateURLWithLocations()
+}
+
+function onAvoidTollsChange () {
+  updateURLWithLocations()
+  if (startLocation.value.trim() && endLocation.value.trim()) {
+    calculateRouteDebounced()
+  }
 }
 
 function handleStartInputBlur() {
@@ -1723,6 +1760,13 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 1rem;
   margin-top: 1rem;
+}
+
+.checkbox-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem 1.5rem;
 }
 
 .checkbox-group {

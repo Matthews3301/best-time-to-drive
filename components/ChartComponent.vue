@@ -69,7 +69,10 @@
     <div v-else class="chart-ready">
     <div class="chart-header">
       <h3>{{ chartTitle }}</h3>
-      <p class="route-subtitle">{{ routeData.start }} → {{ routeData.end }} ({{ routeData.distance }})</p>
+      <p class="route-subtitle">
+        {{ routeData.start }} → {{ routeData.end }} ({{ routeData.distance }})
+        <span v-if="routeData.avoidTolls"> · avoiding tolls</span>
+      </p>
       <p class="route-subtitle">Current drive time: {{ formatDuration(currentDuration) }}</p>
       <div v-if="routeSummary" class="route-summary-card">
         <p class="route-summary-text">
