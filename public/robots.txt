@@ -1,2 +1,4 @@
+# LLM-readable site overview: https://rushhourplanner.com/llms.txt
+
 User-Agent: *
 Disallow:

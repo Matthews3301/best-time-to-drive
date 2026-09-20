@@ -76,6 +76,7 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: 'canonical', href: 'https://rushhourplanner.com' },
+        { rel: 'describedby', href: 'https://rushhourplanner.com/llms.txt', type: 'text/markdown', title: 'LLM-readable site overview' },
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg?v=5' },
         { rel: 'alternate icon', type: 'image/svg+xml', href: '/favicon.svg?v=5' },
         { rel: 'mask-icon', href: '/favicon.svg?v=5', color: '#4f46e5' },
@@ -106,6 +107,7 @@ export default defineNuxtConfig({
             "operatingSystem": "Web Browser",
             "browserRequirements": "Requires JavaScript. Requires HTML5.",
             "softwareVersion": "1.0.0",
+            "isAccessibleForFree": true,
             "offers": {
               "@type": "Offer",
               "price": "0",
@@ -140,11 +142,18 @@ export default defineNuxtConfig({
               "name": "Rush Hour Traffic Estimator",
               "url": "https://rushhourplanner.com/"
             },
-            "potentialAction": {
-              "@type": "SearchAction",
-              "target": "https://rushhourplanner.com/?from={start_location}&to={end_location}",
-              "query-input": "required name=start_location,end_location"
-            },
+            "potentialAction": [
+              {
+                "@type": "SearchAction",
+                "target": "https://rushhourplanner.com/?from={start_location}&to={end_location}",
+                "query-input": "required name=start_location,end_location"
+              },
+              {
+                "@type": "DonateAction",
+                "name": "Buy me a coffee",
+                "target": "https://buymeacoffee.com/rush.hour.planner"
+              }
+            ],
             "mainEntity": {
               "@type": "FAQPage",
               "mainEntity": [
