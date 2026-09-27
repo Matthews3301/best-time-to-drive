@@ -64,6 +64,8 @@
           />
         </div>
 
+        <!-- Amazon affiliate section paused. Remove v-if="false" on this wrapper to restore it. -->
+        <template v-if="false">
         <div class="chart-section drive-snacks-card" style="margin-top: 2rem;" id="snacks-card">
           <div class="drive-snacks-header">
             <p class="drive-snacks-heading">Road Trip Essentials</p>
@@ -170,6 +172,24 @@
               </a>
             </article> -->
           </div>
+        </div>
+        </template>
+
+        <div
+          v-if="showAdSense"
+          class="chart-section adsense-card"
+          style="margin-top: 2rem;"
+          id="adsense-card"
+        >
+          <p class="adsense-label">Advertisement</p>
+          <ins
+            class="adsbygoogle"
+            style="display:block"
+            :data-ad-client="adsenseClient"
+            :data-ad-slot="adsenseSlot"
+            data-ad-format="auto"
+            data-full-width-responsive="true"
+          />
         </div>
 
         <div class="chart-section" style="margin-top: 2rem;" id="parking-card">
@@ -636,6 +656,7 @@ function selectSampleRoute(from, to) {
   }
 }
 
+// Amazon affiliate tracking. Used only by the paused snacks section above.
 const affiliateProducts = {
   B00PO9IEEG: "Jack Link's Beef Jerky, Original, 8oz Large Bag",
   B01G259502: "Jacob's Mini Cheddars 25g (Pack of 16)"
@@ -649,6 +670,45 @@ function trackAffiliateProductClick(productAsin, linkType) {
     linkType
   });
 }
+
+const runtimeConfig = useRuntimeConfig();
+const adsenseClient = runtimeConfig.public.adsenseClient;
+const adsenseSlot = runtimeConfig.public.adsenseSlot;
+const showAdSense = computed(() => Boolean(adsenseClient && adsenseSlot));
+
+if (adsenseClient) {
+  useHead({
+    link: [
+      { rel: 'preconnect', href: 'https://pagead2.googlesyndication.com' }
+    ],
+    script: [
+      {
+        src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`,
+        async: true,
+        crossorigin: 'anonymous'
+      }
+    ]
+  });
+}
+
+function requestAdSense() {
+  if (!showAdSense.value || !import.meta.client) return;
+  nextTick(() => {
+    const ad = document.querySelector('#adsense-card ins.adsbygoogle');
+    if (!ad || ad.getAttribute('data-adsbygoogle-status')) return;
+    const win = window;
+    win.adsbygoogle = win.adsbygoogle || [];
+    try {
+      win.adsbygoogle.push({});
+    } catch (error) {
+      console.error('AdSense request failed:', error);
+    }
+  });
+}
+
+watch(selectedRoute, (route) => {
+  if (route) requestAdSense();
+}, { flush: 'post' });
 
 watch(forecastIndex, () => {
   // Only send analytics when we have both start and end locations
@@ -982,6 +1042,19 @@ onMounted(() => {
 
 .drive-snacks-card {
   padding: 1.5rem;
+}
+
+.adsense-card {
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.adsense-label {
+  margin: 0 0 0.75rem;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .drive-snacks-heading {
