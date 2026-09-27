@@ -176,7 +176,6 @@
         </template>
 
         <div
-          v-if="showAdSense"
           class="chart-section adsense-card"
           style="margin-top: 2rem;"
           id="adsense-card"
@@ -185,8 +184,8 @@
           <ins
             class="adsbygoogle"
             style="display:block"
-            :data-ad-client="adsenseClient"
-            :data-ad-slot="adsenseSlot"
+            :data-ad-client="ADSENSE_CLIENT"
+            :data-ad-slot="ADSENSE_SLOT"
             data-ad-format="auto"
             data-full-width-responsive="true"
           />
@@ -230,6 +229,7 @@ import { v4 as uuidv4 } from 'uuid';
 import MapComponent from '../components/MapComponent.vue';
 import ChartComponent from '../components/ChartComponent.vue';
 import ParkingComponent from '../components/ParkingComponent.vue';
+import { ADSENSE_CLIENT, ADSENSE_SLOT } from '../utils/adsense';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
@@ -671,28 +671,21 @@ function trackAffiliateProductClick(productAsin, linkType) {
   });
 }
 
-const runtimeConfig = useRuntimeConfig();
-const adsenseClient = runtimeConfig.public.adsenseClient;
-const adsenseSlot = runtimeConfig.public.adsenseSlot;
-const showAdSense = computed(() => Boolean(adsenseClient && adsenseSlot));
-
-if (adsenseClient) {
-  useHead({
-    link: [
-      { rel: 'preconnect', href: 'https://pagead2.googlesyndication.com' }
-    ],
-    script: [
-      {
-        src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`,
-        async: true,
-        crossorigin: 'anonymous'
-      }
-    ]
-  });
-}
+useHead({
+  link: [
+    { rel: 'preconnect', href: 'https://pagead2.googlesyndication.com' }
+  ],
+  script: [
+    {
+      src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`,
+      async: true,
+      crossorigin: 'anonymous'
+    }
+  ]
+});
 
 function requestAdSense() {
-  if (!showAdSense.value || !import.meta.client) return;
+  if (!import.meta.client) return;
   nextTick(() => {
     const ad = document.querySelector('#adsense-card ins.adsbygoogle');
     if (!ad || ad.getAttribute('data-adsbygoogle-status')) return;

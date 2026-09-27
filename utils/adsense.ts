@@ -1,0 +1,2 @@
+export const ADSENSE_CLIENT = 'ca-pub-4396405754277073';
+export const ADSENSE_SLOT = '2982984964';

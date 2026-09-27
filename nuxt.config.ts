@@ -27,9 +27,7 @@ export default defineNuxtConfig({
     public: {
       posthogPublicKey: 'phc_FmUMk4eqO4o2qhDhzzp2nhXZmmQE9mA1CGwrxpyxuhd',
       posthogHost: 'https://us.i.posthog.com',
-      posthogDefaults: '2025-05-24',
-      adsenseClient: process.env.NUXT_PUBLIC_ADSENSE_CLIENT || '',
-      adsenseSlot: process.env.NUXT_PUBLIC_ADSENSE_SLOT || ''
+      posthogDefaults: '2025-05-24'
     }
   },
 
